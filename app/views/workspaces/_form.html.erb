@@ -1,0 +1,36 @@
+<%= form_with model: workspace do |form| %>
+  <% if workspace.errors.any? %>
+    <section role="alert">
+      <h2>
+        Không thể lưu Workspace
+      </h2>
+
+      <ul>
+        <% workspace.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <div>
+    <%= form.label :name, "Tên Workspace" %>
+
+    <%= form.text_field :name,
+      required: true,
+      maxlength: 100,
+      autofocus: true %>
+  </div>
+
+  <div>
+    <%= form.label :description, "Mô tả" %>
+
+    <%= form.text_area :description,
+      rows: 6,
+      maxlength: 1_000 %>
+  </div>
+
+  <div>
+    <%= form.submit "Tạo Workspace" %>
+  </div>
+<% end %>

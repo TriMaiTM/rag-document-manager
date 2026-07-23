@@ -24,6 +24,12 @@
   </head>
 
   <body>
+    <% flash.each do |type, message| %>
+      <div class="flash flash--<%= type %>" role="status">
+        <%= message %>
+      </div>
+    <% end %>
+    
     <%= yield %>
-  </body>
+</body>
 </html>
