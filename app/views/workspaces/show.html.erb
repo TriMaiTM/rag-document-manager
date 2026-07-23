@@ -1,0 +1,26 @@
+<main>
+  <article>
+    <header>
+      <h1><%= @workspace.name %></h1>
+    </header>
+
+    <% if @workspace.description.present? %>
+      <section>
+        <h2>Mô tả</h2>
+
+        <%= simple_format @workspace.description %>
+      </section>
+    <% else %>
+      <p>Workspace này chưa có mô tả.</p>
+    <% end %>
+
+    <footer>
+      <p>
+        Được tạo lúc:
+        <%= @workspace.created_at.strftime("%d/%m/%Y %H:%M") %>
+      </p>
+
+      <%= link_to "Danh sách Workspace", workspaces_path %>
+    </footer>
+  </article>
+</main>

@@ -1,0 +1,29 @@
+<main>
+  <header>
+    <h1>Danh sách Workspace</h1>
+
+    <p>
+      Các không gian làm việc hiện có trong Codexys.
+    </p>
+  </header>
+
+  <% if @workspaces.any? %>
+    <ul id="workspaces">
+      <% @workspaces.each do |workspace| %>
+        <li>
+          <h2>
+            <%= link_to workspace.name, workspace_path(workspace) %>
+          </h2>
+
+          <% if workspace.description.present? %>
+            <p><%= truncate(workspace.description, length: 120) %></p>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>Hiện chưa có workspace nào.</p>
+  <% end %>
+
+  <%= link_to "Quay lại trang chủ", root_path %>
+</main>
