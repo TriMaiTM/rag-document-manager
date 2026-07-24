@@ -41,7 +41,11 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "update" do
     assert_changes -> { @user.reload.password_digest } do
-      put password_path(@user.password_reset_token), params: { password: "new", password_confirmation: "new" }
+      put password_path(@user.password_reset_token),
+        params: {
+          password: "new-password",
+          password_confirmation: "new-password"
+        }
       assert_redirected_to new_session_path
     end
 
@@ -58,6 +62,19 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_notice "Passwords did not match"
+  end
+
+  test "update with a password that is too short" do
+    token = @user.password_reset_token
+
+    assert_no_changes -> { @user.reload.password_digest } do
+      put password_path(token),
+        params: {
+          password: "short",
+          password_confirmation: "short"
+        }
+      assert_redirected_to edit_password_path(token)
+    end
   end
 
   private
