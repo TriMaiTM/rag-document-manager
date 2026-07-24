@@ -1,0 +1,19 @@
+one_owner:
+  user: one
+  workspace: one
+  role: owner
+
+one_member:
+  user: two
+  workspace: one
+  role: member
+
+one_admin:
+  user: three
+  workspace: one
+  role: admin
+
+two_owner:
+  user: two
+  workspace: two
+  role: owner

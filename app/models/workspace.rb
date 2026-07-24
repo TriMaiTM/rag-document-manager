@@ -1,4 +1,11 @@
 class Workspace < ApplicationRecord
-    validates :name, presence: true, length: { minimum: 2, maximum: 100 }
-    validates :description, length: { maximum: 1_000 }, allow_blank: true
+  has_many :memberships, dependent: :destroy
+  has_many :users, through: :memberships
+
+  validates :name, presence: true, length: { minimum: 2, maximum: 100 }
+  validates :description, length: { maximum: 1_000 }, allow_blank: true
+
+  def membership_for(user)
+    memberships.find_by(user: user)
+  end
 end

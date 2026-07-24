@@ -22,6 +22,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Danh sách Workspace"
     assert_select "a", text: @workspace.name
+    assert_select "a", text: workspaces(:two).name, count: 0
   end
 
   test "renders workspace details" do
@@ -42,15 +43,18 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
   test "creates workspace with valid parameters" do
     assert_difference("Workspace.count", 1) do
-      post workspaces_url, params: {
-        workspace: {
-          name: "New Workspace",
-          description: "Workspace được tạo trong test."
+      assert_difference("Membership.count", 1) do
+        post workspaces_url, params: {
+          workspace: {
+            name: "New Workspace",
+            description: "Workspace được tạo trong test."
+          }
         }
-      }
+      end
     end
 
     created_workspace = Workspace.order(:created_at).last
+    assert created_workspace.membership_for(@user).owner?
     assert_redirected_to workspace_url(created_workspace)
     follow_redirect!
 
@@ -61,7 +65,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "does not create workspace with invalid parameters" do
-    assert_no_difference("Workspace.count") do
+    assert_no_difference([ "Workspace.count", "Membership.count" ]) do
       post workspaces_url, params: {
         workspace: {
           name: "",
@@ -121,14 +125,65 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroys workspace" do
+    membership_count = @workspace.memberships.count
+
     assert_difference("Workspace.count", -1) do
-      delete workspace_url(@workspace)
+      assert_difference("Membership.count", -membership_count) do
+        delete workspace_url(@workspace)
+      end
     end
+
     assert_redirected_to workspaces_url
     follow_redirect!
     assert_response :success
     assert_select "[role='status']",
       text: "Workspace đã được xóa thành công."
     assert_select "h1", "Danh sách Workspace"
+  end
+
+  test "returns not found for a workspace outside current user scope" do
+    get workspace_url(workspaces(:two))
+
+    assert_response :not_found
+  end
+
+  test "member can view but cannot change workspace" do
+    sign_out
+    sign_in_as users(:two)
+
+    get workspace_url(@workspace)
+    assert_response :success
+    assert_select "a", text: "Chỉnh sửa Workspace", count: 0
+    assert_select "button", text: "Xóa Workspace", count: 0
+
+    get edit_workspace_url(@workspace)
+    assert_response :forbidden
+
+    assert_no_changes -> { @workspace.reload.name } do
+      patch workspace_url(@workspace),
+        params: { workspace: { name: "Forbidden change" } }
+    end
+    assert_response :forbidden
+
+    assert_no_difference("Workspace.count") do
+      delete workspace_url(@workspace)
+    end
+    assert_response :forbidden
+  end
+
+  test "admin can update but cannot destroy workspace" do
+    sign_out
+    sign_in_as users(:three)
+
+    patch workspace_url(@workspace),
+      params: { workspace: { name: "Admin updated workspace" } }
+
+    assert_redirected_to workspace_url(@workspace)
+    assert_equal "Admin updated workspace", @workspace.reload.name
+
+    assert_no_difference("Workspace.count") do
+      delete workspace_url(@workspace)
+    end
+    assert_response :forbidden
   end
 end
