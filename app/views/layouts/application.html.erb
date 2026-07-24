@@ -24,12 +24,23 @@
   </head>
 
   <body>
+    <nav>
+      <%= link_to "Trang chủ", root_path %>
+
+      <% if authenticated? %>
+        <%= link_to "Workspaces", workspaces_path %>
+        <%= button_to "Đăng xuất", session_path, method: :delete %>
+      <% else %>
+        <%= link_to "Đăng nhập", new_session_path %>
+      <% end %>
+    </nav>
+
     <% flash.each do |type, message| %>
       <div class="flash flash--<%= type %>" role="status">
         <%= message %>
       </div>
     <% end %>
-    
+
     <%= yield %>
-</body>
+  </body>
 </html>

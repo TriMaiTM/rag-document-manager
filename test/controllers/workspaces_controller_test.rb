@@ -2,7 +2,18 @@ require "test_helper"
 
 class WorkspacesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    @user = users(:one)
     @workspace = workspaces(:one)
+
+    sign_in_as @user
+  end
+
+  test "requires authentication" do
+    sign_out
+
+    get workspaces_url
+
+    assert_redirected_to new_session_url
   end
 
   test "renders workspace index" do
