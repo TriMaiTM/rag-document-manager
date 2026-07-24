@@ -27,7 +27,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Tạo Workspace"
     assert_select "form"
-  end 
+  end
 
   test "creates workspace with valid parameters" do
     assert_difference("Workspace.count", 1) do
@@ -62,10 +62,50 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select "[role='alert']"
   end
+
+  test "renders edit workspace form" do
+    get edit_workspace_url(@workspace)
+
+    assert_response :success
+    assert_select "h1", "Chỉnh sửa Workspace"
+    assert_select "form"
+    assert_select "input[name='workspace[name]'][value=?]", @workspace.name
+  end
+
+  test "updates workspace with valid parameters" do
+    patch workspace_url(@workspace), params: {
+      workspace: {
+        name: "Updated Workspace",
+        description: "Mô tả đã được cập nhật."
+      }
+    }
+
+    assert_redirected_to workspace_url(@workspace)
+
+    @workspace.reload
+    assert_equal "Updated Workspace", @workspace.name
+    assert_equal "Mô tả đã được cập nhật.", @workspace.description
+
+    follow_redirect!
+
+    assert_response :success
+    assert_select "h1", "Updated Workspace"
+    assert_select "[role='status']",
+      text: "Workspace đã được cập nhật thành công."
+  end
+
+  test "does not update workspace with invalid parameters" do
+    original_name = @workspace.name
+
+    patch workspace_url(@workspace), params: {
+      workspace: {
+        name: "",
+        description: "Tên không hợp lệ."
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "[role='alert']"
+    assert_equal original_name, @workspace.reload.name
+  end
 end
-
-
-
-
-
-

@@ -31,6 +31,6 @@
   </div>
 
   <div>
-    <%= form.submit "Tạo Workspace" %>
+    <%= form.submit workspace.persisted? ? "Cập nhật Workspace" : "Tạo Workspace" %>
   </div>
 <% end %>

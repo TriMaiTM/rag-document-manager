@@ -1,0 +1,15 @@
+<main>
+  <header>
+    <h1>Chỉnh sửa Workspace</h1>
+
+    <p>
+      Cập nhật tên và mô tả của <strong><%= @workspace.name %></strong>.
+    </p>
+  </header>
+
+  <%= render "form", workspace: @workspace %>
+
+  <nav>
+    <%= link_to "Hủy", workspace_path(@workspace) %>
+  </nav>
+</main>
