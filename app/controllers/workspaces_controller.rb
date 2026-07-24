@@ -1,5 +1,5 @@
 class WorkspacesController < ApplicationController
-  before_action :set_workspace, only: [ :show, :edit, :update ]
+  before_action :set_workspace, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @workspaces = Workspace.order(created_at: :desc)
@@ -33,6 +33,14 @@ class WorkspacesController < ApplicationController
     else
       render :edit, status: :unprocessable_entity
     end
+  end
+
+  def destroy
+    @workspace.destroy!
+
+    redirect_to workspaces_path,
+      notice: "Workspace đã được xóa thành công.",
+      status: :see_other
   end
 
   private

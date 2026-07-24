@@ -5,7 +5,8 @@
     </header>
 
     <nav>
-      <%= link_to "Chỉnh sửa Workspace", edit_workspace_path(@workspace) %>
+      <%= link_to "Chỉnh sửa Workspace",
+        edit_workspace_path(@workspace) %>
     </nav>
 
     <% if @workspace.description.present? %>
@@ -26,5 +27,22 @@
 
       <%= link_to "Danh sách Workspace", workspaces_path %>
     </footer>
+
+    <section>
+      <h2>Vùng nguy hiểm</h2>
+
+      <p>
+        Workspace sau khi xóa sẽ không thể khôi phục.
+      </p>
+
+      <%= button_to "Xóa Workspace",
+        workspace_path(@workspace),
+        method: :delete,
+        form: {
+          data: {
+            turbo_confirm: "Bạn có chắc muốn xóa Workspace này?"
+          }
+        } %>
+    </section>
   </article>
 </main>

@@ -108,4 +108,16 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[role='alert']"
     assert_equal original_name, @workspace.reload.name
   end
+
+  test "destroys workspace" do
+    assert_difference("Workspace.count", -1) do
+      delete workspace_url(@workspace)
+    end
+    assert_redirected_to workspaces_url
+    follow_redirect!
+    assert_response :success
+    assert_select "[role='status']",
+      text: "Workspace đã được xóa thành công."
+    assert_select "h1", "Danh sách Workspace"
+  end
 end
