@@ -1,0 +1,61 @@
+<main>
+  <article>
+    <header>
+      <h1><%= @document.title %></h1>
+
+      <p>
+        Trạng thái:
+        <strong>
+          <%= document_status_label(@document) %>
+        </strong>
+      </p>
+    </header>
+
+    <dl>
+      <dt>Tên tệp</dt>
+      <dd><%= @document.file.filename %></dd>
+
+      <dt>Dung lượng</dt>
+      <dd><%= document_file_size(@document) %></dd>
+
+      <dt>Người tải lên</dt>
+      <dd><%= @document.uploaded_by.email_address %></dd>
+
+      <dt>Thời gian tải lên</dt>
+      <dd>
+        <%= @document.created_at.strftime(
+          "%d/%m/%Y %H:%M"
+        ) %>
+      </dd>
+    </dl>
+
+    <nav>
+      <%= link_to "Tải PDF xuống",
+        download_workspace_document_path(
+          @workspace,
+          @document
+        ) %>
+
+      <%= link_to "Danh sách tài liệu",
+        workspace_documents_path(@workspace) %>
+    </nav>
+
+    <% if policy(@document).destroy? %>
+      <section>
+        <h2>Vùng nguy hiểm</h2>
+
+        <%= button_to "Xóa tài liệu",
+          workspace_document_path(
+            @workspace,
+            @document
+          ),
+          method: :delete,
+          form: {
+            data: {
+              turbo_confirm: "Xóa tài liệu này?"
+            }
+          } %>
+      </section>
+    <% end %>
+  </article>
+</main>

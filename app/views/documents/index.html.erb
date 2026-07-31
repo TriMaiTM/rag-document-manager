@@ -1,0 +1,58 @@
+<main>
+  <header>
+    <h1>Tài liệu</h1>
+
+    <p>
+      Tài liệu thuộc Workspace
+      <strong><%= @workspace.name %></strong>.
+    </p>
+
+    <% if policy(@document_context).create? %>
+      <%= link_to "Tải tài liệu lên",
+        new_workspace_document_path(@workspace) %>
+    <% end %>
+  </header>
+
+  <% if @documents.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Tiêu đề</th>
+          <th>Tệp</th>
+          <th>Dung lượng</th>
+          <th>Trạng thái</th>
+          <th>Ngày tải lên</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @documents.each do |document| %>
+          <tr id="<%= dom_id(document) %>">
+            <td>
+              <%= link_to document.title,
+                workspace_document_path(
+                  @workspace,
+                  document
+                ) %>
+            </td>
+
+            <td><%= document.file.filename %></td>
+            <td><%= document_file_size(document) %></td>
+            <td><%= document_status_label(document) %></td>
+
+            <td>
+              <%= document.created_at.strftime(
+                "%d/%m/%Y %H:%M"
+              ) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>Workspace chưa có tài liệu nào.</p>
+  <% end %>
+
+  <%= link_to "Quay lại Workspace",
+    workspace_path(@workspace) %>
+</main>;

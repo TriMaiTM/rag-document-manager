@@ -3,6 +3,10 @@
     <header>
       <h1><%= @workspace.name %></h1>
     </header>
+    <nav>
+      <%= link_to "Tài liệu",
+        workspace_documents_path(@workspace) %>
+    </nav>
 
     <% if policy(@workspace).update? %>
       <nav>

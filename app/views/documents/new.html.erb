@@ -1,0 +1,17 @@
+<main>
+  <header>
+    <h1>Tải tài liệu lên</h1>
+
+    <p>
+      Thêm tài liệu PDF vào
+      <strong><%= @workspace.name %></strong>.
+    </p>
+  </header>
+
+  <%= render "form",
+    workspace: @workspace,
+    document: @document %>
+
+  <%= link_to "Quay lại danh sách",
+    workspace_documents_path(@workspace) %>
+</main>

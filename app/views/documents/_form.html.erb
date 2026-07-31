@@ -1,0 +1,33 @@
+<%= form_with model: [ workspace, document ] do |form| %>
+  <% if document.errors.any? %>
+    <section role="alert">
+      <h2>Không thể tải tài liệu lên</h2>
+
+      <ul>
+        <% document.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <div>
+    <%= form.label :title, "Tiêu đề" %>
+    <%= form.text_field :title,
+      required: true,
+      maxlength: 200,
+      autofocus: true,
+      placeholder: "Ruby on Rails Guide" %>
+  </div>
+
+  <div>
+    <%= form.label :file, "Tệp PDF" %>
+    <%= form.file_field :file,
+      required: true,
+      accept: "application/pdf,.pdf" %>
+
+    <p>Chỉ nhận PDF, dung lượng tối đa 20 MB.</p>
+  </div>
+
+  <%= form.submit "Tải tài liệu lên" %>
+<% end %>
