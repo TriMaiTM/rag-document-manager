@@ -3,6 +3,11 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :memberships, dependent: :restrict_with_error
   has_many :workspaces, through: :memberships
+  has_many :uploaded_documents,
+    class_name: "Document",
+    foreign_key: :uploaded_by_id,
+    inverse_of: :uploaded_by,
+    dependent: :restrict_with_error
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
