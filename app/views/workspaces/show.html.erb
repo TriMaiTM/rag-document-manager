@@ -11,6 +11,13 @@
       </nav>
     <% end %>
 
+    <% if policy(@workspace).manage_members? %>
+      <nav>
+        <%= link_to "Quản lý thành viên",
+          workspace_memberships_path(@workspace) %>
+      </nav>
+    <% end %>
+
     <% if @workspace.description.present? %>
       <section>
         <h2>Mô tả</h2>

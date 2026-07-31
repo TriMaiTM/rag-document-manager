@@ -11,3 +11,7 @@ two:
 three:
   email_address: three@example.com
   password_digest: <%= password_digest %>
+
+four:
+  email_address: four@example.com
+  password_digest: <%= password_digest %>

@@ -9,7 +9,8 @@ Phase này tạo nền tảng phân quyền cho ứng dụng nhiều người d�
 - Mỗi membership giữ một trong ba vai trò: `owner`, `admin`, `member`.
 - Người dùng chỉ truy vấn được workspace mà họ là thành viên.
 
-Màn hình thêm, đổi vai trò và xóa thành viên sẽ được xây ở phase tiếp theo.
+Màn hình thêm, đổi vai trò và xóa thành viên được mô tả trong
+`docs/PHASE_2_MEMBER_MANAGEMENT.md`.
 
 ## Mô hình dữ liệu
 
@@ -69,5 +70,5 @@ Luôn dùng policy scope hoặc association bắt đầu từ user/workspace hi�
 3. Đăng nhập bằng user khác và xác nhận workspace đó không xuất hiện.
 4. Thử mở URL trực tiếp của workspace không tham gia và xác nhận nhận `404`.
 
-Các vai trò Admin và Member hiện được kiểm tra đầy đủ bằng test tự động. Giao diện
-quản lý thành viên sẽ giúp kiểm tra các vai trò này thủ công ở phase tiếp theo.
+Các vai trò Admin và Member được kiểm tra bằng test tự động và có thể cấu hình qua
+màn hình quản lý thành viên.

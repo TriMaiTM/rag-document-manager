@@ -154,6 +154,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     get workspace_url(@workspace)
     assert_response :success
     assert_select "a", text: "Chỉnh sửa Workspace", count: 0
+    assert_select "a", text: "Quản lý thành viên", count: 0
     assert_select "button", text: "Xóa Workspace", count: 0
 
     get edit_workspace_url(@workspace)

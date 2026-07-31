@@ -1,0 +1,100 @@
+<main>
+  <header>
+    <h1>Thành viên Workspace</h1>
+
+    <p>
+      Quản lý thành viên của <strong><%= @workspace.name %></strong>.
+    </p>
+  </header>
+
+  <section>
+    <h2>Thêm thành viên</h2>
+
+    <% if @membership.errors.any? %>
+      <div role="alert">
+        <h3>Không thể thêm hoặc cập nhật thành viên</h3>
+
+        <ul>
+          <% @membership.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with scope: :membership,
+      url: workspace_memberships_path(@workspace) do |form| %>
+      <div>
+        <%= form.label :email_address, "Email người dùng" %>
+        <%= form.email_field :email_address,
+          required: true,
+          value: @email_address,
+          autocomplete: "email",
+          placeholder: "member@example.com" %>
+      </div>
+
+      <div>
+        <%= form.label :role, "Vai trò" %>
+        <%= form.select :role,
+          options_for_select(
+            manageable_role_options,
+            @membership.role || "member"
+          ) %>
+      </div>
+
+      <%= form.submit "Thêm thành viên" %>
+    <% end %>
+  </section>
+
+  <section>
+    <h2>Danh sách thành viên</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Vai trò</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @memberships.each do |membership| %>
+          <tr id="<%= dom_id(membership) %>">
+            <td><%= membership.user.email_address %></td>
+            <td><%= membership_role_label(membership) %></td>
+            <td>
+              <% if policy(membership).update? %>
+                <%= form_with model: [ @workspace, membership ] do |form| %>
+                  <%= form.label :role, "Đổi vai trò", class: "visually-hidden" %>
+                  <%= form.select :role,
+                    options_for_select(
+                      manageable_role_options,
+                      membership.role
+                    ) %>
+                  <%= form.submit "Cập nhật" %>
+                <% end %>
+              <% end %>
+
+              <% if policy(membership).destroy? %>
+                <%= button_to "Xóa",
+                  workspace_membership_path(@workspace, membership),
+                  method: :delete,
+                  form: {
+                    data: {
+                      turbo_confirm: "Xóa thành viên này khỏi Workspace?"
+                    }
+                  } %>
+              <% end %>
+
+              <% if membership.owner? %>
+                <span>Owner không thể thay đổi hoặc xóa</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
+  <%= link_to "Quay lại Workspace", workspace_path(@workspace) %>
+</main>

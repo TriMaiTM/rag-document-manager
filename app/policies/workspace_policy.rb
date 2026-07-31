@@ -17,6 +17,10 @@ class WorkspacePolicy < ApplicationPolicy
     membership&.owner?
   end
 
+  def manage_members?
+    membership&.owner? || membership&.admin?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope
