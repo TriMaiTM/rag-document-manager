@@ -62,4 +62,26 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.valid?
     assert_includes user.errors[:password_confirmation], "doesn't match Password"
   end
+
+  test "defaults to regular user system role" do
+    user = User.new
+
+    assert_predicate user, :user?
+  end
+
+  test "accepts system admin role" do
+    user = users(:one)
+    user.system_role = :system_admin
+
+    assert user.valid?
+    assert_predicate user, :system_admin?
+  end
+
+  test "rejects an invalid system role" do
+    user = users(:one)
+    user.system_role = "invalid_role"
+
+    assert_not user.valid?
+    assert_includes user.errors[:system_role], "is not included in the list"
+  end
 end

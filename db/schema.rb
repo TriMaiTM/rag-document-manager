@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_063400) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_075242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -19,6 +19,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_063400) do
   # Note that some types may not work with other database engines. Be careful if changing database.
   create_enum "document_status", ["pending", "processing", "completed", "failed"]
   create_enum "membership_role", ["owner", "admin", "member"]
+  create_enum "user_system_role", ["user", "system_admin"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -107,6 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_063400) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.enum "system_role", default: "user", null: false, enum_type: "user_system_role"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
