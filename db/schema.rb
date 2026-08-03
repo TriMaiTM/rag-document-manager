@@ -10,13 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "chat_message_role", ["user", "assistant"]
   create_enum "document_status", ["pending", "processing", "completed", "failed"]
   create_enum "membership_role", ["owner", "admin", "member"]
   create_enum "user_system_role", ["user", "system_admin"]
@@ -47,6 +48,57 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_103000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "chat_message_sources", force: :cascade do |t|
+    t.bigint "chat_message_id", null: false
+    t.text "content", null: false
+    t.float "cosine_distance", null: false
+    t.datetime "created_at", null: false
+    t.bigint "document_chunk_id"
+    t.bigint "document_id"
+    t.string "document_title", null: false
+    t.integer "page_number", null: false
+    t.integer "rank", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chat_message_id", "document_chunk_id"], name: "index_chat_message_sources_unique_chunk", unique: true, where: "(document_chunk_id IS NOT NULL)"
+    t.index ["chat_message_id", "rank"], name: "index_chat_message_sources_unique_rank", unique: true
+    t.index ["chat_message_id"], name: "index_chat_message_sources_on_chat_message_id"
+    t.index ["document_chunk_id"], name: "index_chat_message_sources_on_document_chunk_id"
+    t.index ["document_id"], name: "index_chat_message_sources_on_document_id"
+    t.check_constraint "char_length(btrim(document_title::text)) > 0 AND char_length(btrim(content)) > 0", name: "chat_message_sources_snapshots_not_blank"
+    t.check_constraint "cosine_distance >= 0::double precision AND cosine_distance <= 2::double precision", name: "chat_message_sources_distance_in_range"
+    t.check_constraint "page_number > 0", name: "chat_message_sources_page_number_positive"
+    t.check_constraint "rank > 0", name: "chat_message_sources_rank_positive"
+  end
+
+  create_table "chat_messages", force: :cascade do |t|
+    t.integer "candidate_tokens", default: 0, null: false
+    t.bigint "chat_session_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.string "model"
+    t.integer "prompt_tokens", default: 0, null: false
+    t.enum "role", null: false, enum_type: "chat_message_role"
+    t.integer "total_tokens", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["chat_session_id", "created_at"], name: "index_chat_messages_on_session_and_created_at"
+    t.index ["chat_session_id"], name: "index_chat_messages_on_chat_session_id"
+    t.check_constraint "char_length(btrim(content)) > 0", name: "chat_messages_content_not_blank"
+    t.check_constraint "prompt_tokens >= 0 AND candidate_tokens >= 0 AND total_tokens >= 0", name: "chat_messages_token_counts_non_negative"
+    t.check_constraint "role = 'assistant'::chat_message_role OR model IS NULL AND prompt_tokens = 0 AND candidate_tokens = 0 AND total_tokens = 0", name: "chat_messages_user_metadata_absent"
+  end
+
+  create_table "chat_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["user_id"], name: "index_chat_sessions_on_user_id"
+    t.index ["workspace_id", "user_id", "updated_at"], name: "index_chat_sessions_on_workspace_user_updated_at"
+    t.index ["workspace_id"], name: "index_chat_sessions_on_workspace_id"
+    t.check_constraint "char_length(btrim(title::text)) > 0", name: "chat_sessions_title_not_blank"
   end
 
   create_table "document_chunks", force: :cascade do |t|
@@ -123,6 +175,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_103000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "chat_message_sources", "chat_messages", on_delete: :cascade
+  add_foreign_key "chat_message_sources", "document_chunks", on_delete: :nullify
+  add_foreign_key "chat_message_sources", "documents", on_delete: :nullify
+  add_foreign_key "chat_messages", "chat_sessions", on_delete: :cascade
+  add_foreign_key "chat_sessions", "users"
+  add_foreign_key "chat_sessions", "workspaces", on_delete: :cascade
   add_foreign_key "document_chunks", "documents", on_delete: :cascade
   add_foreign_key "documents", "users", column: "uploaded_by_id"
   add_foreign_key "documents", "workspaces"

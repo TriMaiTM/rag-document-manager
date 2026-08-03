@@ -9,6 +9,9 @@
 
       <%= link_to "Tìm kiếm ngữ nghĩa",
         workspace_semantic_search_path(@workspace) %>
+
+      <%= link_to "Hỏi đáp tài liệu",
+        workspace_chat_sessions_path(@workspace) %>
     </nav>
 
     <% if policy(@workspace).update? %>

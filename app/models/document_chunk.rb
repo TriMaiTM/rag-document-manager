@@ -2,6 +2,8 @@ class DocumentChunk < ApplicationRecord
   belongs_to :document,
     inverse_of: :document_chunks
 
+  has_many :chat_message_sources, dependent: :nullify
+
   has_neighbors :embedding
 
   validates :content, presence: true

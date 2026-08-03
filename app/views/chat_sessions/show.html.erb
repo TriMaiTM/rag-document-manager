@@ -1,0 +1,97 @@
+<main>
+  <header>
+    <h1><%= @chat_session.title %></h1>
+
+    <%= link_to "Lịch sử hỏi đáp",
+      workspace_chat_sessions_path(@workspace) %>
+  </header>
+
+  <section aria-label="Nội dung hỏi đáp">
+    <% @chat_messages.each do |chat_message| %>
+      <article id="<%= dom_id(chat_message) %>">
+        <header>
+          <h2><%= chat_message_role_label(chat_message) %></h2>
+
+          <small>
+            <%= chat_message.created_at.strftime("%d/%m/%Y %H:%M") %>
+          </small>
+        </header>
+
+        <%= simple_format chat_message.content %>
+
+        <% if chat_message.assistant? && chat_message.model.present? %>
+          <details>
+            <summary>Thông tin xử lý</summary>
+            <p>Model: <%= chat_message.model %></p>
+            <p>Tổng tokens: <%= chat_message.total_tokens %></p>
+          </details>
+        <% end %>
+
+        <% if chat_message.chat_message_sources.any? %>
+          <section>
+            <h3>Nguồn tham khảo</h3>
+
+            <% chat_message.chat_message_sources.each do |source| %>
+              <article id="<%= dom_id(source) %>">
+                <h4>
+                  [<%= source.rank %>]
+
+                  <% if source.document.present? %>
+                    <%= link_to source.document_title,
+                      workspace_document_path(
+                        @workspace,
+                        source.document
+                      ) %>
+                  <% else %>
+                    <%= source.document_title %>
+                  <% end %>
+                </h4>
+
+                <p>
+                  Trang <%= source.page_number %>
+                  · Độ tương đồng
+                  <%= chat_source_similarity_percentage(source) %>
+                </p>
+
+                <%= simple_format source.content %>
+              </article>
+            <% end %>
+          </section>
+        <% end %>
+      </article>
+    <% end %>
+  </section>
+
+  <section>
+    <h2>Đặt câu hỏi khác</h2>
+
+    <%= form_with url: workspace_chat_session_chat_messages_path(
+      @workspace,
+      @chat_session
+    ) do |form| %>
+      <div>
+        <%= form.label :question, "Câu hỏi mới" %>
+        <%= form.text_area :question,
+          required: true,
+          minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
+          maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
+          rows: 4 %>
+      </div>
+
+      <%= form.submit "Gửi câu hỏi" %>
+    <% end %>
+  </section>
+
+  <section>
+    <h2>Xóa lịch sử</h2>
+
+    <%= button_to "Xóa phiên hỏi đáp",
+      workspace_chat_session_path(@workspace, @chat_session),
+      method: :delete,
+      form: {
+        data: {
+          turbo_confirm: "Bạn có chắc muốn xóa phiên hỏi đáp này?"
+        }
+      } %>
+  </section>
+</main>

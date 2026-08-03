@@ -1,0 +1,109 @@
+class ChatSessionsController < ApplicationController
+  before_action :set_workspace
+  before_action :set_chat_session, only: [ :show, :destroy ]
+
+  after_action :verify_authorized
+
+  def index
+    prepare_index
+    authorize @chat_session_context
+  end
+
+  def show
+    authorize @chat_session
+    prepare_show
+  end
+
+  def create
+    candidate = chat_session_context
+    authorize candidate
+
+    result = Chat::Ask.new(
+      workspace: @workspace,
+      user: Current.user,
+      question: question
+    ).call
+
+    redirect_to workspace_chat_session_path(
+      @workspace,
+      result.chat_session
+    ), notice: "Câu hỏi đã được trả lời và lưu vào lịch sử."
+  rescue SemanticSearch::Search::InvalidQueryError => error
+    render_index_error(error.message, :unprocessable_entity)
+  rescue Rag::AnswerQuestion::GenerationError,
+    Ai::GeminiClient::Error,
+    Ai::GenerateQueryEmbedding::Error,
+    Codexys::GeminiConfiguration::MissingApiKeyError => error
+    log_chat_error(error)
+    render_index_error(
+      "Gemini chưa thể trả lời lúc này. Vui lòng thử lại.",
+      :bad_gateway
+    )
+  end
+
+  def destroy
+    authorize @chat_session
+    @chat_session.destroy!
+
+    redirect_to workspace_chat_sessions_path(@workspace),
+      notice: "Phiên hỏi đáp đã được xóa.",
+      status: :see_other
+  end
+
+  private
+
+  def set_workspace
+    @workspace = policy_scope(Workspace).find(params[:workspace_id])
+    Current.workspace = @workspace
+  end
+
+  def set_chat_session
+    @chat_session = policy_scope(ChatSession)
+      .where(workspace: @workspace)
+      .find(params[:id])
+  end
+
+  def prepare_index
+    @chat_session_context = chat_session_context
+    @chat_sessions = policy_scope(ChatSession)
+      .where(workspace: @workspace)
+      .order(updated_at: :desc)
+    @question ||= ""
+  end
+
+  def prepare_show
+    @chat_messages = @chat_session
+      .chat_messages
+      .preload(chat_message_sources: :document)
+    @question = ""
+  end
+
+  def chat_session_context
+    @workspace.chat_sessions.new(user: Current.user)
+  end
+
+  def question
+    params[:question].to_s
+  end
+
+  def render_index_error(message, status)
+    @question = question
+    @chat_error = message
+    prepare_index
+
+    render :index, status: status
+  end
+
+  def log_chat_error(error)
+    original_error = if error.respond_to?(:original_error)
+      error.original_error
+    else
+      error
+    end
+
+    Rails.logger.warn(
+      "Chat question failed: " \
+        "#{original_error.class}: #{original_error.message}"
+    )
+  end
+end

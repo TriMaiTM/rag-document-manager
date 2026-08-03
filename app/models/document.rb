@@ -8,6 +8,7 @@ class Document < ApplicationRecord
     inverse_of: :uploaded_documents
 
   has_many :document_chunks, dependent: :destroy, inverse_of: :document
+  has_many :chat_message_sources, dependent: :nullify
 
   has_one_attached :file
 

@@ -9,6 +9,7 @@ class User < ApplicationRecord
 
   has_many :memberships, dependent: :restrict_with_error
   has_many :workspaces, through: :memberships
+  has_many :chat_sessions, dependent: :restrict_with_error
   has_many :uploaded_documents,
            class_name: "Document",
            foreign_key: :uploaded_by_id,

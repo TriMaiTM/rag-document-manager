@@ -1,0 +1,60 @@
+<main>
+  <header>
+    <h1>Hỏi đáp tài liệu</h1>
+
+    <p>
+      Đặt câu hỏi dựa trên tài liệu trong Workspace
+      <strong><%= @workspace.name %></strong>.
+    </p>
+  </header>
+
+  <% if @chat_error.present? %>
+    <p role="alert"><%= @chat_error %></p>
+  <% end %>
+
+  <section>
+    <h2>Bắt đầu phiên mới</h2>
+
+    <%= form_with url: workspace_chat_sessions_path(@workspace) do |form| %>
+      <div>
+        <%= form.label :question, "Câu hỏi" %>
+        <%= form.text_area :question,
+          value: @question,
+          required: true,
+          minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
+          maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
+          rows: 4,
+          placeholder: "Ví dụ: Tài liệu giải thích semantic search như thế nào?" %>
+      </div>
+
+      <%= form.submit "Hỏi Codexys" %>
+    <% end %>
+  </section>
+
+  <section>
+    <h2>Lịch sử của bạn</h2>
+
+    <% if @chat_sessions.any? %>
+      <ul>
+        <% @chat_sessions.each do |chat_session| %>
+          <li>
+            <%= link_to chat_session.title,
+              workspace_chat_session_path(
+                @workspace,
+                chat_session
+              ) %>
+
+            <small>
+              Cập nhật lúc
+              <%= chat_session.updated_at.strftime("%d/%m/%Y %H:%M") %>
+            </small>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Bạn chưa có phiên hỏi đáp nào.</p>
+    <% end %>
+  </section>
+
+  <%= link_to "Quay lại Workspace", workspace_path(@workspace) %>
+</main>

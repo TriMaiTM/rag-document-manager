@@ -2,6 +2,7 @@ class Workspace < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :users, through: :memberships
   has_many :documents, dependent: :destroy
+  has_many :chat_sessions, dependent: :destroy
 
   validates :name, presence: true, length: { minimum: 2, maximum: 100 }
   validates :description, length: { maximum: 1_000 }, allow_blank: true
