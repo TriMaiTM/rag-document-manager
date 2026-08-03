@@ -7,11 +7,13 @@ class GeminiConfigurationTest < ActiveSupport::TestCase
     assert_equal "google", config.provider
     assert_equal "gemini-embedding-001", config.embedding_model
     assert_equal 1_536, config.embedding_dimensions
+    assert_equal "gemini-3.5-flash-lite", config.chat_model
     assert_equal(
       "https://generativelanguage.googleapis.com/v1beta",
       config.base_url
     )
     assert_equal 30, config.timeout_seconds
+    assert_equal 60, config.generation_timeout_seconds
     assert_equal 2, config.max_retries
   end
 
@@ -63,12 +65,16 @@ class GeminiConfigurationTest < ActiveSupport::TestCase
     config = build_configuration(
       env: {
         "GEMINI_API_BASE_URL" => "https://example.test/v1beta",
+        "GEMINI_CHAT_MODEL" => "custom-chat-model",
+        "GEMINI_GENERATION_TIMEOUT_SECONDS" => "75",
         "GEMINI_TIMEOUT_SECONDS" => "45",
         "GEMINI_MAX_RETRIES" => "4"
       }
     )
 
     assert_equal "https://example.test/v1beta", config.base_url
+    assert_equal "custom-chat-model", config.chat_model
+    assert_equal 75, config.generation_timeout_seconds
     assert_equal 45, config.timeout_seconds
     assert_equal 4, config.max_retries
   end

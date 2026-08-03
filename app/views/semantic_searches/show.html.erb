@@ -1,0 +1,77 @@
+<main>
+  <header>
+    <h1>Tìm kiếm ngữ nghĩa</h1>
+
+    <p>
+      Tìm các đoạn tài liệu gần nghĩa nhất trong Workspace
+      <strong><%= @workspace.name %></strong>.
+    </p>
+  </header>
+
+  <%= form_with url: workspace_semantic_search_path(@workspace),
+    method: :get do |form| %>
+    <div>
+      <%= form.label :query, "Bạn muốn tìm nội dung gì?" %>
+      <%= form.search_field :query,
+        value: @query,
+        required: true,
+        minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
+        maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
+        placeholder: "Ví dụ: Cách Rails bảo vệ dữ liệu người dùng" %>
+    </div>
+
+    <%= form.submit "Đặt câu hỏi" %>
+  <% end %>
+
+  <% if @search_error.present? %>
+    <p role="alert"><%= @search_error %></p>
+  <% elsif @searched %>
+    <section>
+      <h2>Câu trả lời</h2>
+
+      <% if @answer_error.present? %>
+        <p role="alert"><%= @answer_error %></p>
+      <% else %>
+        <%= simple_format @answer %>
+      <% end %>
+
+      <p>
+        <small>
+          Câu trả lời được tạo từ các nguồn bên dưới và có thể chưa hoàn toàn
+          chính xác.
+        </small>
+      </p>
+    </section>
+
+    <% if @chunks.any? %>
+      <section>
+        <h2>Nguồn tham khảo</h2>
+
+        <% @chunks.each do |chunk| %>
+          <article id="<%= dom_id(chunk, :search_result) %>">
+            <header>
+              <h3>
+                [<%= @chunks.index(chunk) + 1 %>]
+                <%= link_to chunk.document.title,
+                  workspace_document_path(
+                    @workspace,
+                    chunk.document
+                  ) %>
+              </h3>
+
+              <p>
+                Trang <%= chunk.page_number %>
+                · Độ tương đồng
+                <%= semantic_similarity_percentage(chunk) %>
+              </p>
+            </header>
+
+            <%= simple_format chunk.content %>
+          </article>
+        <% end %>
+      </section>
+    <% end %>
+  <% end %>
+
+  <%= link_to "Quay lại Workspace", workspace_path(@workspace) %>
+</main>

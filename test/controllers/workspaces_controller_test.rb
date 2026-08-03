@@ -30,6 +30,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", @workspace.name
+    assert_select "a", text: "Tìm kiếm ngữ nghĩa"
     assert_select "a", text: "Danh sách Workspace"
   end
 

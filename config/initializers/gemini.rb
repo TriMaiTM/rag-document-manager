@@ -4,11 +4,15 @@ module Codexys
 
     DEFAULT_BASE_URL =
       "https://generativelanguage.googleapis.com/v1beta"
+    DEFAULT_CHAT_MODEL = "gemini-3.5-flash-lite"
     DEFAULT_TIMEOUT_SECONDS = 30
+    DEFAULT_GENERATION_TIMEOUT_SECONDS = 60
     DEFAULT_MAX_RETRIES = 2
 
     attr_reader :api_key,
       :base_url,
+      :chat_model,
+      :generation_timeout_seconds,
       :timeout_seconds,
       :max_retries
 
@@ -28,10 +32,23 @@ module Codexys
         DEFAULT_BASE_URL
       )
 
+      @chat_model = env.fetch(
+        "GEMINI_CHAT_MODEL",
+        DEFAULT_CHAT_MODEL
+      )
+
       @timeout_seconds = Integer(
         env.fetch(
           "GEMINI_TIMEOUT_SECONDS",
           DEFAULT_TIMEOUT_SECONDS.to_s
+        ),
+        10
+      )
+
+      @generation_timeout_seconds = Integer(
+        env.fetch(
+          "GEMINI_GENERATION_TIMEOUT_SECONDS",
+          DEFAULT_GENERATION_TIMEOUT_SECONDS.to_s
         ),
         10
       )
@@ -83,9 +100,19 @@ module Codexys
           "GEMINI_API_BASE_URL must not be blank"
       end
 
+      if chat_model.blank?
+        raise ArgumentError,
+          "GEMINI_CHAT_MODEL must not be blank"
+      end
+
       if timeout_seconds <= 0
         raise ArgumentError,
           "GEMINI_TIMEOUT_SECONDS must be greater than zero"
+      end
+
+      if generation_timeout_seconds <= 0
+        raise ArgumentError,
+          "GEMINI_GENERATION_TIMEOUT_SECONDS must be greater than zero"
       end
 
       return unless max_retries.negative?
