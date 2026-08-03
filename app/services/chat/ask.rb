@@ -21,10 +21,7 @@ module Chat
       @user = user
       @question = question
       @chat_session = chat_session
-      @answerer = answerer || Rag::AnswerQuestion.new(
-        workspace: workspace,
-        question: question
-      )
+      @answerer = answerer
     end
 
     def call
@@ -39,8 +36,26 @@ module Chat
     attr_reader :workspace,
       :user,
       :question,
-      :chat_session,
-      :answerer
+      :chat_session
+
+    def answerer
+      @answerer ||= Rag::AnswerQuestion.new(
+        workspace: workspace,
+        question: question,
+        history: recent_history
+      )
+    end
+
+    def recent_history
+      return [] unless chat_session
+
+      chat_session
+        .chat_messages
+        .reorder(created_at: :desc, id: :desc)
+        .limit(Rag::ConversationContext::MAX_MESSAGES)
+        .to_a
+        .reverse
+    end
 
     def validate_chat_session!
       return unless chat_session

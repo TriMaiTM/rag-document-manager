@@ -85,6 +85,52 @@ class Chat::AskTest < ActiveSupport::TestCase
     end
   end
 
+  test "passes only the existing session recent history to RAG" do
+    chat_session = ChatSession.create!(
+      workspace: @workspace,
+      user: @user,
+      title: "Contextual chat"
+    )
+    8.times do |index|
+      chat_session.chat_messages.create!(
+        role: index.even? ? :user : :assistant,
+        content: "Message #{index}"
+      )
+    end
+    other_session = ChatSession.create!(
+      workspace: @workspace,
+      user: @user,
+      title: "Other chat"
+    )
+    other_session.chat_messages.create!(
+      role: :user,
+      content: "Must not leak"
+    )
+
+    answerer = FakeAnswerer.new(rag_result(chunks: []))
+    answerer_arguments = nil
+    answerer_factory = lambda do |**arguments|
+      answerer_arguments = arguments
+      answerer
+    end
+
+    Rag::AnswerQuestion.stub(:new, answerer_factory) do
+      Chat::Ask.new(
+        workspace: @workspace,
+        user: @user,
+        question: "Follow-up",
+        chat_session: chat_session
+      ).call
+    end
+
+    assert_equal @workspace, answerer_arguments[:workspace]
+    assert_equal "Follow-up", answerer_arguments[:question]
+    assert_equal (2..7).map { |index| "Message #{index}" },
+      answerer_arguments[:history].map(&:content)
+    assert_not_includes answerer_arguments[:history].map(&:content),
+      "Must not leak"
+  end
+
   test "rejects a session owned by another user" do
     chat_session = ChatSession.create!(
       workspace: @workspace,

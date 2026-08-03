@@ -11,6 +11,22 @@ module SemanticSearch
     MAX_LIMIT = 10
     MAX_COSINE_DISTANCE = 0.65
 
+    def self.normalize_query!(query)
+      normalized_query = query.to_s.squish
+
+      if normalized_query.length < MIN_QUERY_LENGTH
+        raise InvalidQueryError,
+          "Nội dung tìm kiếm phải có ít nhất #{MIN_QUERY_LENGTH} ký tự."
+      end
+
+      if normalized_query.length > MAX_QUERY_LENGTH
+        raise InvalidQueryError,
+          "Nội dung tìm kiếm không được vượt quá #{MAX_QUERY_LENGTH} ký tự."
+      end
+
+      normalized_query
+    end
+
     def initialize(
       workspace:,
       query:,
@@ -24,8 +40,7 @@ module SemanticSearch
     end
 
     def call
-      normalized_query = query.to_s.squish
-      validate_query!(normalized_query)
+      normalized_query = self.class.normalize_query!(query)
 
       embedding = generator.call(query: normalized_query).vector
       chunks = nearest_chunks(embedding)
@@ -36,18 +51,6 @@ module SemanticSearch
     private
 
     attr_reader :workspace, :query, :generator, :limit
-
-    def validate_query!(normalized_query)
-      if normalized_query.length < MIN_QUERY_LENGTH
-        raise InvalidQueryError,
-          "Nội dung tìm kiếm phải có ít nhất #{MIN_QUERY_LENGTH} ký tự."
-      end
-
-      return if normalized_query.length <= MAX_QUERY_LENGTH
-
-      raise InvalidQueryError,
-        "Nội dung tìm kiếm không được vượt quá #{MAX_QUERY_LENGTH} ký tự."
-    end
 
     def normalize_limit(value)
       [ Integer(value), MAX_LIMIT ].min.clamp(1, MAX_LIMIT)

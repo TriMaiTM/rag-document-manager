@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Rag::AnswerQuestionTest < ActiveSupport::TestCase
+  Message = Data.define(:role, :content)
+
   class FakeService
     attr_reader :arguments, :called
 
@@ -91,6 +93,53 @@ class Rag::AnswerQuestionTest < ActiveSupport::TestCase
     assert_same chunks, error.chunks
     assert_instance_of Ai::GeminiClient::NetworkError,
       error.original_error
+  end
+
+  test "uses recent history for retrieval and answer generation" do
+    history = [
+      Message.new(
+        role: "user",
+        content: "Devise lưu mật khẩu thế nào?"
+      ),
+      Message.new(
+        role: "assistant",
+        content: "Devise hashes passwords [1]."
+      )
+    ]
+    chunks = [ Object.new ]
+    searcher = FakeService.new(
+      SemanticSearch::Search::Result.new(
+        query: "contextual retrieval query",
+        chunks: chunks
+      )
+    )
+    generator = FakeService.new(generation_result)
+    search_arguments = nil
+    search_factory = lambda do |**arguments|
+      search_arguments = arguments
+      searcher
+    end
+
+    result = SemanticSearch::Search.stub(:new, search_factory) do
+      Rag::AnswerQuestion.new(
+        workspace: workspaces(:one),
+        question: "  Còn đăng nhập thì sao?  ",
+        history: history,
+        answer_generator: generator
+      ).call
+    end
+
+    assert_equal "Còn đăng nhập thì sao?", result.query
+    assert_includes search_arguments[:query],
+      "Còn đăng nhập thì sao?"
+    assert_includes search_arguments[:query],
+      "Devise lưu mật khẩu thế nào?"
+    assert_equal "Còn đăng nhập thì sao?",
+      generator.arguments[:question]
+    assert_includes generator.arguments[:conversation_history],
+      "Người dùng: Devise lưu mật khẩu thế nào?"
+    assert_includes generator.arguments[:conversation_history],
+      "Trợ lý: Devise hashes passwords [1]."
   end
 
   private

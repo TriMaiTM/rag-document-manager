@@ -28,29 +28,37 @@ module Rag
     def initialize(
       workspace:,
       question:,
+      history: [],
       searcher: nil,
       answer_generator: Ai::GenerateGroundedAnswer.new
     )
+      @workspace = workspace
       @question = question
-      @searcher = searcher || SemanticSearch::Search.new(
-        workspace: workspace,
-        query: question,
-        limit: Ai::GenerateGroundedAnswer::MAX_CONTEXTS
-      )
+      @history = history
+      @searcher = searcher
       @answer_generator = answer_generator
     end
 
     def call
-      search_result = searcher.call
+      normalized_question =
+        SemanticSearch::Search.normalize_query!(question)
+      context = Rag::ConversationContext.new(messages: history)
+      search_result = search(
+        context.retrieval_query(normalized_question)
+      )
 
       if search_result.chunks.empty?
-        return empty_result(search_result.query)
+        return empty_result(normalized_question)
       end
 
-      generation = generate_answer(search_result)
+      generation = generate_answer(
+        search_result,
+        normalized_question,
+        context.transcript
+      )
 
       Result.new(
-        query: search_result.query,
+        query: normalized_question,
         answer: generation.answer,
         chunks: search_result.chunks,
         model: generation.model,
@@ -62,18 +70,37 @@ module Rag
 
     private
 
-    attr_reader :question, :searcher, :answer_generator
+    attr_reader :workspace,
+      :question,
+      :history,
+      :searcher,
+      :answer_generator
 
-    def generate_answer(search_result)
+    def search(retrieval_query)
+      service = searcher || SemanticSearch::Search.new(
+        workspace: workspace,
+        query: retrieval_query,
+        limit: Ai::GenerateGroundedAnswer::MAX_CONTEXTS
+      )
+
+      service.call
+    end
+
+    def generate_answer(
+      search_result,
+      normalized_question,
+      conversation_history
+    )
       answer_generator.call(
-        question: search_result.query,
-        chunks: search_result.chunks
+        question: normalized_question,
+        chunks: search_result.chunks,
+        conversation_history: conversation_history
       )
     rescue Ai::GeminiClient::Error,
       Ai::GenerateGroundedAnswer::Error,
       Codexys::GeminiConfiguration::MissingApiKeyError => error
       raise GenerationError.new(
-        query: search_result.query,
+        query: normalized_question,
         chunks: search_result.chunks,
         original_error: error
       )

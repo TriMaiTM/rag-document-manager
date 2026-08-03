@@ -63,14 +63,14 @@
   </section>
 
   <section>
-    <h2>Đặt câu hỏi khác</h2>
+    <h2>Hỏi tiếp</h2>
 
     <%= form_with url: workspace_chat_session_chat_messages_path(
       @workspace,
       @chat_session
     ) do |form| %>
       <div>
-        <%= form.label :question, "Câu hỏi mới" %>
+        <%= form.label :question, "Câu hỏi tiếp theo" %>
         <%= form.text_area :question,
           required: true,
           minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
