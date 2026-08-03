@@ -45,6 +45,7 @@ gem "image_processing", "~> 1.2"
 gem "pdf-reader", "~> 2.15"
 gem "pgvector"
 gem "neighbor"
+gem "openai"
 
 
 group :development, :test do
