@@ -1,16 +1,16 @@
 require "test_helper"
 
-class OpenaiConfigurationTest < ActiveSupport::TestCase
+class GeminiConfigurationTest < ActiveSupport::TestCase
   test "uses project defaults" do
     config = build_configuration
 
-    assert_equal "openai", config.provider
-    assert_equal(
-      "text-embedding-3-small",
-      config.embedding_model
-    )
+    assert_equal "google", config.provider
+    assert_equal "gemini-embedding-001", config.embedding_model
     assert_equal 1_536, config.embedding_dimensions
-    assert_equal "gpt-5.6-terra", config.chat_model
+    assert_equal(
+      "https://generativelanguage.googleapis.com/v1beta",
+      config.base_url
+    )
     assert_equal 30, config.timeout_seconds
     assert_equal 2, config.max_retries
   end
@@ -18,10 +18,10 @@ class OpenaiConfigurationTest < ActiveSupport::TestCase
   test "prefers API key from environment" do
     config = build_configuration(
       env: {
-        "OPENAI_API_KEY" => "environment-key"
+        "GEMINI_API_KEY" => "environment-key"
       },
       credentials: {
-        openai: {
+        gemini: {
           api_key: "credentials-key"
         }
       }
@@ -33,7 +33,7 @@ class OpenaiConfigurationTest < ActiveSupport::TestCase
   test "falls back to Rails credentials" do
     config = build_configuration(
       credentials: {
-        openai: {
+        gemini: {
           api_key: "credentials-key"
         }
       }
@@ -53,22 +53,22 @@ class OpenaiConfigurationTest < ActiveSupport::TestCase
     config = build_configuration(environment: "production")
 
     assert_raises(
-      Codexys::OpenaiConfiguration::MissingApiKeyError
+      Codexys::GeminiConfiguration::MissingApiKeyError
     ) do
       config.validate!
     end
   end
 
-  test "reads model and request options from environment" do
+  test "reads request options from environment" do
     config = build_configuration(
       env: {
-        "OPENAI_CHAT_MODEL" => "custom-model",
-        "OPENAI_TIMEOUT_SECONDS" => "45",
-        "OPENAI_MAX_RETRIES" => "4"
+        "GEMINI_API_BASE_URL" => "https://example.test/v1beta",
+        "GEMINI_TIMEOUT_SECONDS" => "45",
+        "GEMINI_MAX_RETRIES" => "4"
       }
     )
 
-    assert_equal "custom-model", config.chat_model
+    assert_equal "https://example.test/v1beta", config.base_url
     assert_equal 45, config.timeout_seconds
     assert_equal 4, config.max_retries
   end
@@ -80,7 +80,7 @@ class OpenaiConfigurationTest < ActiveSupport::TestCase
     credentials: {},
     environment: "test"
   )
-    Codexys::OpenaiConfiguration.new(
+    Codexys::GeminiConfiguration.new(
       env: env,
       credentials: credentials,
       environment: environment

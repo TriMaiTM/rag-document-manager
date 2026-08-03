@@ -2,7 +2,11 @@ require "test_helper"
 
 class DocumentsControllerTest <
   ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
+    clear_enqueued_jobs
+
     @workspace = workspaces(:one)
     @document = create_document(
       @workspace,
@@ -48,14 +52,16 @@ class DocumentsControllerTest <
       "application/pdf"
     )
 
-    assert_difference("Document.count", 1) do
-      post workspace_documents_url(@workspace),
-        params: {
-          document: {
-            title: "Uploaded PDF",
-            file: pdf
+    assert_enqueued_jobs 1, only: ProcessDocumentJob do
+      assert_difference("Document.count", 1) do
+        post workspace_documents_url(@workspace),
+          params: {
+            document: {
+              title: "Uploaded PDF",
+              file: pdf
+            }
           }
-        }
+      end
     end
 
     document = @workspace

@@ -35,6 +35,8 @@ class DocumentsController < ApplicationController
     ).call
 
     if @document.persisted?
+      ProcessDocumentJob.perform_later(@document)
+
       redirect_to workspace_document_path(
         @workspace,
         @document

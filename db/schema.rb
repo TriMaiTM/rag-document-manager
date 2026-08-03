@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_075242) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -67,7 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_075242) do
     t.index ["embedding"], name: "index_document_chunks_on_embedding", opclass: :vector_cosine_ops, using: :hnsw
     t.check_constraint "\"position\" > 0", name: "document_chunks_position_positive"
     t.check_constraint "char_length(btrim(content)) > 0", name: "document_chunks_content_not_blank"
-    t.check_constraint "embedding IS NULL AND embedding_provider IS NULL AND embedding_model IS NULL AND embedding_dimensions IS NULL OR embedding IS NOT NULL AND embedding_provider::text = 'openai'::text AND embedding_model::text = 'text-embedding-3-small'::text AND embedding_dimensions = 1536", name: "document_chunks_embedding_metadata_consistent"
+    t.check_constraint "embedding IS NULL AND embedding_provider IS NULL AND embedding_model IS NULL AND embedding_dimensions IS NULL OR embedding IS NOT NULL AND embedding_provider::text = 'google'::text AND embedding_model::text = 'gemini-embedding-001'::text AND embedding_dimensions = 1536", name: "document_chunks_embedding_metadata_consistent"
     t.check_constraint "page_number > 0", name: "document_chunks_page_number_positive"
     t.check_constraint "processing_version > 0", name: "document_chunks_processing_version_positive"
   end

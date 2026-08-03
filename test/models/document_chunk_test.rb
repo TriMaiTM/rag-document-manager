@@ -109,12 +109,12 @@ class DocumentChunkTest < ActiveSupport::TestCase
 
     assert_includes(
       @chunk.errors[:embedding_provider],
-      "phải là openai"
+      "phải là google"
     )
 
     assert_includes(
       @chunk.errors[:embedding_model],
-      "phải là text-embedding-3-small"
+      "phải là gemini-embedding-001"
     )
   end
 
