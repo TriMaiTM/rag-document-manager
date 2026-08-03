@@ -7,6 +7,8 @@ class Document < ApplicationRecord
     class_name: "User",
     inverse_of: :uploaded_documents
 
+  has_many :document_chunks, dependent: :destroy, inverse_of: :document
+
   has_one_attached :file
 
   enum :status, {

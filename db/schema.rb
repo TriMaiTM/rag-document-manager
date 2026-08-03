@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_31_023354) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_31_083043) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "vector"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -40,6 +41,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_023354) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "document_chunks", force: :cascade do |t|
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.bigint "document_id", null: false
+    t.vector "embedding", limit: 1536
+    t.integer "embedding_dimensions"
+    t.string "embedding_model"
+    t.string "embedding_provider"
+    t.integer "page_number", null: false
+    t.integer "position", null: false
+    t.integer "processing_version", default: 1, null: false
+    t.datetime "updated_at", null: false
+    t.index ["document_id", "processing_version", "page_number"], name: "index_document_chunks_on_document_page"
+    t.index ["document_id", "processing_version", "position"], name: "index_document_chunks_unique_position", unique: true
+    t.index ["document_id"], name: "index_document_chunks_on_document_id"
+    t.index ["embedding"], name: "index_document_chunks_on_embedding", opclass: :vector_cosine_ops, using: :hnsw
+    t.check_constraint "\"position\" > 0", name: "document_chunks_position_positive"
+    t.check_constraint "char_length(btrim(content)) > 0", name: "document_chunks_content_not_blank"
+    t.check_constraint "embedding IS NULL AND embedding_provider IS NULL AND embedding_model IS NULL AND embedding_dimensions IS NULL OR embedding IS NOT NULL AND embedding_provider::text = 'openai'::text AND embedding_model::text = 'text-embedding-3-small'::text AND embedding_dimensions = 1536", name: "document_chunks_embedding_metadata_consistent"
+    t.check_constraint "page_number > 0", name: "document_chunks_page_number_positive"
+    t.check_constraint "processing_version > 0", name: "document_chunks_processing_version_positive"
   end
 
   create_table "documents", force: :cascade do |t|
@@ -99,6 +123,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_023354) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "document_chunks", "documents", on_delete: :cascade
   add_foreign_key "documents", "users", column: "uploaded_by_id"
   add_foreign_key "documents", "workspaces"
   add_foreign_key "memberships", "users"
