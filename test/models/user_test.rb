@@ -1,14 +1,16 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  test "downcases and strips email_address" do
-    user = User.new(email_address: " DOWNCASED@EXAMPLE.COM ")
-    assert_equal("downcased@example.com", user.email_address)
+  test "downcases and strips email" do
+    user = User.new(email: " DOWNCASED@EXAMPLE.COM ")
+    user.valid?
+
+    assert_equal("downcased@example.com", user.email)
   end
 
   test "is valid with an email and password" do
     user = User.new(
-      email_address: "new-user@example.com",
+      email: "new-user@example.com",
       password: "password",
       password_confirmation: "password"
     )
@@ -18,29 +20,29 @@ class UserTest < ActiveSupport::TestCase
 
   test "requires a valid email" do
     user = User.new(
-      email_address: "invalid-email",
+      email: "invalid-email",
       password: "password",
       password_confirmation: "password"
     )
 
     assert_not user.valid?
-    assert_includes user.errors[:email_address], "is invalid"
+    assert_includes user.errors[:email], "is invalid"
   end
 
   test "requires a unique email regardless of case" do
     user = User.new(
-      email_address: " ONE@EXAMPLE.COM ",
+      email: " ONE@EXAMPLE.COM ",
       password: "password",
       password_confirmation: "password"
     )
 
     assert_not user.valid?
-    assert_includes user.errors[:email_address], "has already been taken"
+    assert_includes user.errors[:email], "has already been taken"
   end
 
   test "requires a password with at least eight characters" do
     user = User.new(
-      email_address: "short-password@example.com",
+      email: "short-password@example.com",
       password: "short",
       password_confirmation: "short"
     )
@@ -50,13 +52,14 @@ class UserTest < ActiveSupport::TestCase
       "is too short (minimum is 8 characters)"
   end
 
-  test "requires password confirmation when setting a password" do
+  test "requires matching password confirmation" do
     user = User.new(
-      email_address: "missing-confirmation@example.com",
-      password: "password"
+      email: "mismatched-confirmation@example.com",
+      password: "password",
+      password_confirmation: "different-password"
     )
 
     assert_not user.valid?
-    assert_includes user.errors[:password_confirmation], "can't be blank"
+    assert_includes user.errors[:password_confirmation], "doesn't match Password"
   end
 end

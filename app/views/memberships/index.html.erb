@@ -25,10 +25,10 @@
     <%= form_with scope: :membership,
       url: workspace_memberships_path(@workspace) do |form| %>
       <div>
-        <%= form.label :email_address, "Email người dùng" %>
-        <%= form.email_field :email_address,
+        <%= form.label :email, "Email người dùng" %>
+        <%= form.email_field :email,
           required: true,
-          value: @email_address,
+          value: @email,
           autocomplete: "email",
           placeholder: "member@example.com" %>
       </div>
@@ -60,7 +60,7 @@
       <tbody>
         <% @memberships.each do |membership| %>
           <tr id="<%= dom_id(membership) %>">
-            <td><%= membership.user.email_address %></td>
+            <td><%= membership.user.email %></td>
             <td><%= membership_role_label(membership) %></td>
             <td>
               <% if policy(membership).update? %>

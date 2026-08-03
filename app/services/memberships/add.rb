@@ -1,14 +1,14 @@
 module Memberships
   class Add
-    def initialize(workspace:, email_address:, role:)
+    def initialize(workspace:, email:, role:)
       @workspace = workspace
-      @email_address = email_address
+      @email = email
       @role = role
     end
 
     def call
       membership = workspace.memberships.new(role: role)
-      user = User.find_by(email_address: normalized_email_address)
+      user = User.find_by(email: normalized_email)
 
       unless user
         membership.errors.add(
@@ -25,10 +25,10 @@ module Memberships
 
     private
 
-    attr_reader :workspace, :email_address, :role
+    attr_reader :workspace, :email, :role
 
-    def normalized_email_address
-      email_address.to_s.strip.downcase
+    def normalized_email
+      email.to_s.strip.downcase
     end
   end
 end

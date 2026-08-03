@@ -1,5 +1,5 @@
 class HomeController < ApplicationController
-  allow_unauthenticated_access
+  skip_before_action :authenticate_user!
 
   def index
     @application_name = "Codexys"

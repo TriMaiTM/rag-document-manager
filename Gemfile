@@ -74,3 +74,5 @@ group :test do
   gem "minitest-mock"
   gem "prawn", "~> 2.5"
 end
+
+gem "devise", "~> 5.0"

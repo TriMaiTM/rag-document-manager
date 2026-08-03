@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::Base
-  include Authentication
   include Pundit::Authorization
+
+  before_action :authenticate_user!, unless: :devise_controller?
+  before_action :set_current_user
 
   rescue_from Pundit::NotAuthorizedError,
     with: :render_forbidden
@@ -14,7 +16,11 @@ class ApplicationController < ActionController::Base
   private
 
   def pundit_user
-    Current.user
+    current_user
+  end
+
+  def set_current_user
+    Current.user = current_user
   end
 
   def render_forbidden

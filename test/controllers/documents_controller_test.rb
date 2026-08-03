@@ -18,7 +18,7 @@ class DocumentsControllerTest <
 
     get workspace_documents_url(@workspace)
 
-    assert_redirected_to new_session_url
+    assert_redirected_to new_user_session_url
   end
 
   test "owner views document list" do

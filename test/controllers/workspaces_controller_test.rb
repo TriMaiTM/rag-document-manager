@@ -13,7 +13,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
     get workspaces_url
 
-    assert_redirected_to new_session_url
+    assert_redirected_to new_user_session_url
   end
 
   test "renders workspace index" do

@@ -15,7 +15,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
 
     get workspace_memberships_url(@workspace)
 
-    assert_redirected_to new_session_url
+    assert_redirected_to new_user_session_url
   end
 
   test "owner can view member management" do
@@ -23,9 +23,9 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Thành viên Workspace"
-    assert_select "td", users(:one).email_address
-    assert_select "td", users(:two).email_address
-    assert_select "td", users(:three).email_address
+    assert_select "td", users(:one).email
+    assert_select "td", users(:two).email
+    assert_select "td", users(:three).email
   end
 
   test "admin can view member management" do
@@ -59,7 +59,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("Membership.count", 1) do
       post workspace_memberships_url(@workspace), params: {
         membership: {
-          email_address: " FOUR@EXAMPLE.COM ",
+          email: " FOUR@EXAMPLE.COM ",
           role: "member"
         }
       }
@@ -74,7 +74,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference("Membership.count") do
       post workspace_memberships_url(@workspace), params: {
         membership: {
-          email_address: "missing@example.com",
+          email: "missing@example.com",
           role: "member"
         }
       }
@@ -88,7 +88,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference("Membership.count") do
       post workspace_memberships_url(@workspace), params: {
         membership: {
-          email_address: users(:two).email_address,
+          email: users(:two).email,
           role: "admin"
         }
       }
@@ -102,7 +102,7 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference("Membership.count") do
       post workspace_memberships_url(@workspace), params: {
         membership: {
-          email_address: users(:four).email_address,
+          email: users(:four).email,
           role: "owner"
         }
       }

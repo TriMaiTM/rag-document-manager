@@ -1,17 +1,17 @@
-<% password_digest = BCrypt::Password.create("password") %>
+<% encrypted_password = Devise::Encryptor.digest(User, "password") %>
 
 one:
-  email_address: one@example.com
-  password_digest: <%= password_digest %>
+  email: one@example.com
+  encrypted_password: <%= encrypted_password %>
 
 two:
-  email_address: two@example.com
-  password_digest: <%= password_digest %>
+  email: two@example.com
+  encrypted_password: <%= encrypted_password %>
 
 three:
-  email_address: three@example.com
-  password_digest: <%= password_digest %>
+  email: three@example.com
+  encrypted_password: <%= encrypted_password %>
 
 four:
-  email_address: four@example.com
-  password_digest: <%= password_digest %>
+  email: four@example.com
+  encrypted_password: <%= encrypted_password %>

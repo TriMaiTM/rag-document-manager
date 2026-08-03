@@ -25,7 +25,7 @@ Tài liệu này tổng hợp toàn bộ **96 Test Cases** của hệ thống th
 | :-: | :--- | :--- | :--- | :--- |
 | 1 | TC-USR-01 | Chuẩn hóa email | Email có chữ hoa và khoảng trắng dư (vd: ` USER@ExAmPlE.CoM `) | Email được lưu tự động thành chữ thường và đã loại bỏ khoảng trắng (`user@example.com`). |
 | 2 | TC-USR-02 | Kiểm tra User hợp lệ | Cung cấp đầy đủ email đúng định dạng và password | Record User hợp lệ (`valid? == true`), không có lỗi validation. |
-| 3 | TC-USR-03 | Kiểm tra định dạng email | Email trống hoặc sai định dạng (vd: `invalid_email`) | Record không hợp lệ, trả về lỗi validation cho trường `email_address`. |
+| 3 | TC-USR-03 | Kiểm tra định dạng email | Email trống hoặc sai định dạng (vd: `invalid_email`) | Record không hợp lệ, trả về lỗi validation cho trường `email`. |
 | 4 | TC-USR-04 | Kiểm tra email duy nhất | Đăng ký email đã tồn tại trong DB (không phân biệt hoa/thường) | Không cho phép lưu, báo lỗi email đã được sử dụng. |
 | 5 | TC-USR-05 | Kiểm tra độ dài mật khẩu | Mật khẩu ít hơn 8 ký tự (vd: `1234567`) | Record không hợp lệ, yêu cầu mật khẩu phải từ 8 ký tự trở lên. |
 | 6 | TC-USR-06 | Xác nhận mật khẩu | Mật khẩu mới và mật khẩu xác nhận không trùng khớp | Record không hợp lệ, yêu cầu password confirmation phải khớp. |
@@ -183,40 +183,17 @@ Tài liệu này tổng hợp toàn bộ **96 Test Cases** của hệ thống th
 | :-: | :--- | :--- | :--- | :--- |
 | 69 | TC-CTL-HOM-01 | Trang chủ công khai | `GET /` | Trả về HTTP 200 OK, hiển thị giao diện trang chủ không cần đăng nhập. |
 
-### 4.2 `SessionsControllerTest`
-📍 **File nguồn**: [sessions_controller_test.rb](file:///mnt/d/HK9/TTTN/test/controllers/sessions_controller_test.rb)
+### 4.2 `DeviseAuthenticationTest`
+📍 **File nguồn**: [devise_authentication_test.rb](file:///mnt/d/HK9/TTTN/test/controllers/devise_authentication_test.rb)
 
 | STT | Mã TC | Tên / Mô Tả Test Case | Endpoint / Request | Kết Quả Kỳ Vọng (Expected Result) |
 | :-: | :--- | :--- | :--- | :--- |
-| 70 | TC-CTL-SES-01 | Form đăng nhập | `GET /session/new` | HTTP 200 OK, hiển thị form nhập Email/Password. |
-| 71 | TC-CTL-SES-02 | Đăng nhập hợp lệ | `POST /session` (Đúng Email/Pass) | HTTP 302 Redirect, khởi tạo session thành công. |
-| 72 | TC-CTL-SES-03 | Đăng nhập sai thông tin | `POST /session` (Sai Pass) | HTTP 422 Unprocessable Entity, báo lỗi đăng nhập. |
-| 73 | TC-CTL-SES-04 | Đăng xuất | `DELETE /session` | HTTP 302 Redirect, hủy session thành công. |
-
-### 4.3 `RegistrationsControllerTest`
-📍 **File nguồn**: [registrations_controller_test.rb](file:///mnt/d/HK9/TTTN/test/controllers/registrations_controller_test.rb)
-
-| STT | Mã TC | Tên / Mô Tả Test Case | Endpoint / Request | Kết Quả Kỳ Vọng (Expected Result) |
-| :-: | :--- | :--- | :--- | :--- |
-| 74 | TC-CTL-REG-01 | Form đăng ký | `GET /registration/new` | HTTP 200 OK, mở form đăng ký tài khoản. |
-| 75 | TC-CTL-REG-02 | Đăng ký tài khoản thành công | `POST /registration` (Params chuẩn) | Tạo User mới, tạo Session và Redirect về trang chủ. |
-| 76 | TC-CTL-REG-03 | Đăng ký dữ liệu không hợp lệ | `POST /registration` (Pass ngắn) | HTTP 422 Unprocessable Entity, hiển thị lỗi validation. |
-| 77 | TC-CTL-REG-04 | Đăng ký trùng Email | `POST /registration` (Email đã có) | HTTP 422 Unprocessable Entity, báo Email đã tồn tại. |
-| 78 | TC-CTL-REG-05 | Đã đăng nhập truy cập đăng ký | `GET /registration/new` (Đã login) | HTTP 302 Redirect chuyển hướng người dùng đã đăng nhập. |
-
-### 4.4 `PasswordsControllerTest`
-📍 **File nguồn**: [passwords_controller_test.rb](file:///mnt/d/HK9/TTTN/test/controllers/passwords_controller_test.rb)
-
-| STT | Mã TC | Tên / Mô Tả Test Case | Endpoint / Request | Kết Quả Kỳ Vọng (Expected Result) |
-| :-: | :--- | :--- | :--- | :--- |
-| 79 | TC-CTL-PWD-01 | Form quên mật khẩu | `GET /passwords/new` | HTTP 200 OK. |
-| 80 | TC-CTL-PWD-02 | Yêu cầu reset password | `POST /passwords` (Email đúng) | Gửi mail hướng dẫn và Redirect thông báo. |
-| 81 | TC-CTL-PWD-03 | Quên pass email không có | `POST /passwords` (Email lạ) | Redirect thông báo an toàn, KHÔNG gửi mail (tránh lộ thông tin). |
-| 82 | TC-CTL-PWD-04 | Form đổi pass hợp lệ | `GET /passwords/:token/edit` | HTTP 200 OK khi token còn hiệu lực. |
-| 83 | TC-CTL-PWD-05 | Form đổi pass token sai | `GET /passwords/invalid/edit` | Redirect về trang quên pass, báo token hết hạn/sai. |
-| 84 | TC-CTL-PWD-06 | Đổi mật khẩu thành công | `PUT /passwords/:token` (Pass khớp) | Cập nhật mật khẩu mới thành công, Redirect trang chủ. |
-| 85 | TC-CTL-PWD-07 | Đổi pass không trùng khớp | `PUT /passwords/:token` (Xác nhận sai)| HTTP 422 Unprocessable Entity. |
-| 86 | TC-CTL-PWD-08 | Đổi pass quá ngắn | `PUT /passwords/:token` (Pass < 8 ký tự)| HTTP 422 Unprocessable Entity. |
+| 70 | TC-CTL-DEV-01 | Form đăng nhập Devise | `GET /users/sign_in` | HTTP 200 OK và hiển thị form đăng nhập. |
+| 71 | TC-CTL-DEV-02 | Đăng nhập hợp lệ | `POST /users/sign_in` | Redirect về trang chủ và truy cập được trang yêu cầu authentication. |
+| 72 | TC-CTL-DEV-03 | Đăng nhập sai mật khẩu | `POST /users/sign_in` | HTTP 422 Unprocessable Content, không tạo phiên đăng nhập. |
+| 73 | TC-CTL-DEV-04 | Đăng xuất | `DELETE /users/sign_out` | Redirect về trang chủ và không còn truy cập được trang bảo vệ. |
+| 74 | TC-CTL-DEV-05 | Đăng ký tài khoản | `POST /users` | Tạo User với `encrypted_password` và redirect về trang chủ. |
+| 75 | TC-CTL-DEV-06 | Yêu cầu đặt lại mật khẩu | `POST /users/password` | Devise gửi một email hướng dẫn và redirect về đăng nhập. |
 
 ### 4.5 `WorkspacesControllerTest`
 📍 **File nguồn**: [workspaces_controller_test.rb](file:///mnt/d/HK9/TTTN/test/controllers/workspaces_controller_test.rb)

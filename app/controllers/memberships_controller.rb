@@ -15,10 +15,10 @@ class MembershipsController < ApplicationController
     candidate = @workspace.memberships.new(role: attributes[:role])
     authorize candidate
 
-    @email_address = attributes[:email_address]
+    @email = attributes[:email]
     @membership = Memberships::Add.new(
       workspace: @workspace,
-      email_address: @email_address,
+      email: @email,
       role: attributes[:role]
     ).call
 
@@ -39,7 +39,7 @@ class MembershipsController < ApplicationController
       redirect_to workspace_memberships_path(@workspace),
         notice: "Vai trò thành viên đã được cập nhật."
     else
-      @email_address = nil
+      @email = nil
       load_memberships
       render :index, status: :unprocessable_entity
     end
@@ -70,7 +70,7 @@ class MembershipsController < ApplicationController
   end
 
   def membership_params
-    params.expect(membership: [ :email_address, :role ])
+    params.expect(membership: [ :email, :role ])
   end
 
   def role_param

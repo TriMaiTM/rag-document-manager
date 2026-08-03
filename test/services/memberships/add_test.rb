@@ -5,7 +5,7 @@ class Memberships::AddTest < ActiveSupport::TestCase
     assert_difference("Membership.count", 1) do
       membership = Memberships::Add.new(
         workspace: workspaces(:one),
-        email_address: " FOUR@EXAMPLE.COM ",
+        email: " FOUR@EXAMPLE.COM ",
         role: "member"
       ).call
 
@@ -19,7 +19,7 @@ class Memberships::AddTest < ActiveSupport::TestCase
     assert_no_difference("Membership.count") do
       membership = Memberships::Add.new(
         workspace: workspaces(:one),
-        email_address: "missing@example.com",
+        email: "missing@example.com",
         role: "member"
       ).call
 
@@ -33,7 +33,7 @@ class Memberships::AddTest < ActiveSupport::TestCase
     assert_no_difference("Membership.count") do
       membership = Memberships::Add.new(
         workspace: workspaces(:one),
-        email_address: users(:two).email_address,
+        email: users(:two).email,
         role: "admin"
       ).call
 
