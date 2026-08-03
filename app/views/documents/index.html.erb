@@ -38,7 +38,9 @@
 
             <td><%= document.file.filename %></td>
             <td><%= document_file_size(document) %></td>
-            <td><%= document_status_label(document) %></td>
+            <td>
+              <%= render "processing_status", document: document %>
+            </td>
 
             <td>
               <%= document.created_at.strftime(

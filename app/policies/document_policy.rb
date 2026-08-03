@@ -11,6 +11,10 @@ class DocumentPolicy < ApplicationPolicy
     show?
   end
 
+  def processing_status?
+    show?
+  end
+
   def retry_processing?
     membership&.owner? || membership&.admin?
   end

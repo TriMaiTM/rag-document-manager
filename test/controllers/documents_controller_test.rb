@@ -32,6 +32,8 @@ class DocumentsControllerTest <
     assert_select "h1", "Tài liệu"
     assert_select "a", @document.title
     assert_select "a", "Tải tài liệu lên"
+    assert_select "[data-controller='document-status']",
+      count: 1
   end
 
   test "owner views document details" do
@@ -44,6 +46,43 @@ class DocumentsControllerTest <
     assert_select "h1", @document.title
     assert_select "a", "Tải PDF xuống"
     assert_select "button", "Xóa tài liệu"
+    assert_select "[data-controller='document-status']",
+      text: "Chờ xử lý"
+  end
+
+  test "returns processing status for a workspace member" do
+    get processing_status_workspace_document_url(
+      @workspace,
+      @document,
+      format: :json
+    )
+
+    assert_response :success
+    response_body = response.parsed_body
+
+    assert_equal "pending", response_body.fetch("status")
+    assert_equal "Chờ xử lý", response_body.fetch("label")
+    assert_equal false, response_body.fetch("terminal")
+    assert_predicate response_body.fetch("updated_at"), :present?
+    assert_match(/no-cache/, response.headers.fetch("Cache-Control"))
+  end
+
+  test "returns a terminal status without polling markup" do
+    @document.update!(status: :completed)
+
+    get processing_status_workspace_document_url(
+      @workspace,
+      @document,
+      format: :json
+    )
+
+    assert_response :success
+    assert_equal true, response.parsed_body.fetch("terminal")
+    assert_equal "Hoàn thành", response.parsed_body.fetch("label")
+
+    get workspace_document_url(@workspace, @document)
+    assert_select "[data-controller='document-status']", count: 0
+    assert_select "span", text: "Hoàn thành"
   end
 
   test "owner sees retry action only for a failed document" do
@@ -80,10 +119,9 @@ class DocumentsControllerTest <
       end
     end
 
-    document = @workspace
-      .documents
-      .order(:created_at)
-      .last
+    document = @workspace.documents.find_by!(
+      title: "Uploaded PDF"
+    )
 
     assert document.pending?
     assert document.file.attached?
@@ -227,6 +265,13 @@ class DocumentsControllerTest <
     )
     assert_response :success
 
+    get processing_status_workspace_document_url(
+      @workspace,
+      @document,
+      format: :json
+    )
+    assert_response :success
+
     get new_workspace_document_url(@workspace)
     assert_response :forbidden
 
@@ -272,6 +317,16 @@ class DocumentsControllerTest <
     get workspace_documents_url(@workspace)
 
     assert_response :not_found
+
+    sign_in_as users(:four)
+
+    get processing_status_workspace_document_url(
+      @workspace,
+      @document,
+      format: :json
+    )
+
+    assert_response :not_found
   end
 
   test "cannot access document through another workspace" do
@@ -287,6 +342,16 @@ class DocumentsControllerTest <
     get workspace_document_url(
       @workspace,
       second_document
+    )
+
+    assert_response :not_found
+
+    sign_in_as users(:two)
+
+    get processing_status_workspace_document_url(
+      @workspace,
+      second_document,
+      format: :json
     )
 
     assert_response :not_found

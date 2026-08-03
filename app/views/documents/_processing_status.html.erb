@@ -1,0 +1,14 @@
+<% polling = document.pending? || document.processing? %>
+
+<%= tag.span document_status_label(document),
+  id: dom_id(document, :processing_status),
+  aria: { live: "polite" },
+  data: polling ? {
+    controller: "document-status",
+    document_status_url_value:
+      processing_status_workspace_document_path(
+        document.workspace,
+        document
+      ),
+    document_status_interval_value: 2_000
+  } : {} %>

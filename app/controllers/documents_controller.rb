@@ -1,7 +1,13 @@
 class DocumentsController < ApplicationController
   before_action :set_workspace
   before_action :set_document,
-    only: [ :show, :download, :retry_processing, :destroy ]
+    only: [
+      :show,
+      :download,
+      :processing_status,
+      :retry_processing,
+      :destroy
+    ]
 
   after_action :verify_authorized
 
@@ -53,6 +59,18 @@ class DocumentsController < ApplicationController
       filename: @document.file.filename.to_s,
       type: Document::PDF_CONTENT_TYPE,
       disposition: "attachment"
+  end
+
+  def processing_status
+    authorize @document
+    expires_now
+
+    render json: {
+      status: @document.status,
+      label: helpers.document_status_label(@document),
+      terminal: @document.completed? || @document.failed?,
+      updated_at: @document.updated_at.iso8601
+    }
   end
 
   def retry_processing
