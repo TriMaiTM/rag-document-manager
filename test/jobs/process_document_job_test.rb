@@ -105,6 +105,50 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     embed_service.verify
   end
 
+  test "processes a retry without duplicating chunks in the new version" do
+    @document.document_chunks.create!(
+      content: "Content from the failed version",
+      page_number: 1,
+      position: 1,
+      processing_version: 1
+    )
+    @document.update!(status: :failed)
+
+    Documents::RetryProcessing.new(document: @document).call
+
+    generator = Object.new
+    generator.define_singleton_method(:call) do |inputs:|
+      vectors = inputs.map do
+        Array.new(Ai::EmbeddingConfig::DIMENSIONS, 0.01)
+      end
+
+      Ai::GenerateEmbeddings::Result.new(
+        vectors: vectors,
+        model: Ai::EmbeddingConfig::MODEL,
+        prompt_tokens: inputs.size,
+        total_tokens: inputs.size
+      )
+    end
+
+    Ai::GenerateEmbeddings.stub(:new, -> { generator }) do
+      ProcessDocumentJob.perform_now(@document)
+    end
+
+    @document.reload
+    current_chunks = @document.document_chunks.where(
+      processing_version: @document.processing_version
+    )
+
+    assert @document.completed?
+    assert_equal 2, @document.processing_version
+    assert_equal [ 1, 2 ],
+      @document.document_chunks.distinct.order(:processing_version)
+        .pluck(:processing_version)
+    assert_equal current_chunks.count,
+      current_chunks.distinct.count(:position)
+    assert current_chunks.all? { |chunk| chunk.embedding.present? }
+  end
+
   private
 
   def build_pdf

@@ -15,6 +15,7 @@ class DocumentPolicyTest < ActiveSupport::TestCase
     assert policy.index?
     assert policy.show?
     assert policy.download?
+    assert policy.retry_processing?
     assert policy.create?
     assert policy.destroy?
   end
@@ -28,6 +29,7 @@ class DocumentPolicyTest < ActiveSupport::TestCase
     assert policy.index?
     assert policy.show?
     assert policy.download?
+    assert policy.retry_processing?
     assert policy.create?
     assert policy.destroy?
   end
@@ -41,6 +43,7 @@ class DocumentPolicyTest < ActiveSupport::TestCase
     assert policy.index?
     assert policy.show?
     assert policy.download?
+    assert_not policy.retry_processing?
     assert_not policy.create?
     assert_not policy.destroy?
   end
@@ -54,6 +57,7 @@ class DocumentPolicyTest < ActiveSupport::TestCase
     assert_not policy.index?
     assert_not policy.show?
     assert_not policy.download?
+    assert_not policy.retry_processing?
     assert_not policy.create?
     assert_not policy.destroy?
   end

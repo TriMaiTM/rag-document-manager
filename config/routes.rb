@@ -11,6 +11,7 @@ Rails.application.routes.draw do
     resources :memberships, only: [ :index, :create, :update, :destroy ]
     resources :documents, only: [ :index, :show, :new, :create, :destroy ] do
       get :download, on: :member
+      post :retry_processing, on: :member
     end
   end
 end

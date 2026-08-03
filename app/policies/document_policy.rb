@@ -11,6 +11,10 @@ class DocumentPolicy < ApplicationPolicy
     show?
   end
 
+  def retry_processing?
+    membership&.owner? || membership&.admin?
+  end
+
   def create?
     membership&.owner? || membership&.admin?
   end

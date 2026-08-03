@@ -40,6 +40,24 @@
         workspace_documents_path(@workspace) %>
     </nav>
 
+    <% if @document.failed? && policy(@document).retry_processing? %>
+      <section>
+        <h2>Xử lý lại tài liệu</h2>
+
+        <p>
+          Lần xử lý trước không thành công. Bạn có thể đưa tài liệu vào
+          hàng đợi để hệ thống thử lại.
+        </p>
+
+        <%= button_to "Thử xử lý lại",
+          retry_processing_workspace_document_path(
+            @workspace,
+            @document
+          ),
+          method: :post %>
+      </section>
+    <% end %>
+
     <% if policy(@document).destroy? %>
       <section>
         <h2>Vùng nguy hiểm</h2>

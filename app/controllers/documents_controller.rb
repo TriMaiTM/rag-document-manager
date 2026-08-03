@@ -1,7 +1,7 @@
 class DocumentsController < ApplicationController
   before_action :set_workspace
   before_action :set_document,
-    only: [ :show, :download, :destroy ]
+    only: [ :show, :download, :retry_processing, :destroy ]
 
   after_action :verify_authorized
 
@@ -53,6 +53,21 @@ class DocumentsController < ApplicationController
       filename: @document.file.filename.to_s,
       type: Document::PDF_CONTENT_TYPE,
       disposition: "attachment"
+  end
+
+  def retry_processing
+    authorize @document
+
+    Documents::RetryProcessing.new(document: @document).call
+    ProcessDocumentJob.perform_later(@document)
+
+    redirect_to workspace_document_path(@workspace, @document),
+      notice: "Tài liệu đã được đưa vào hàng đợi xử lý lại.",
+      status: :see_other
+  rescue Documents::RetryProcessing::InvalidStatusError => error
+    redirect_to workspace_document_path(@workspace, @document),
+      alert: error.message,
+      status: :see_other
   end
 
   def destroy

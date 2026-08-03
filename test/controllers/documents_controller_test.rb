@@ -46,6 +46,22 @@ class DocumentsControllerTest <
     assert_select "button", "Xóa tài liệu"
   end
 
+  test "owner sees retry action only for a failed document" do
+    get workspace_document_url(@workspace, @document)
+    assert_select "button", text: "Thử xử lý lại", count: 0
+
+    @document.update!(
+      status: :failed,
+      error_code: "network_error",
+      error_message: "Request timed out"
+    )
+
+    get workspace_document_url(@workspace, @document)
+
+    assert_response :success
+    assert_select "button", "Thử xử lý lại"
+  end
+
   test "owner uploads a real PDF" do
     pdf = file_fixture_upload(
       "sample.pdf",
@@ -146,6 +162,50 @@ class DocumentsControllerTest <
     )
   end
 
+  test "owner retries a failed document" do
+    @document.update!(
+      status: :failed,
+      error_code: "network_error",
+      error_message: "Request timed out"
+    )
+
+    assert_enqueued_jobs 1, only: ProcessDocumentJob do
+      post retry_processing_workspace_document_url(
+        @workspace,
+        @document
+      )
+    end
+
+    assert_redirected_to workspace_document_url(
+      @workspace,
+      @document
+    )
+    assert @document.reload.pending?
+    assert_equal 2, @document.processing_version
+    assert_nil @document.error_code
+    assert_nil @document.error_message
+  end
+
+  test "owner cannot retry a document that has not failed" do
+    assert_no_enqueued_jobs only: ProcessDocumentJob do
+      post retry_processing_workspace_document_url(
+        @workspace,
+        @document
+      )
+    end
+
+    assert_redirected_to workspace_document_url(
+      @workspace,
+      @document
+    )
+    assert_equal(
+      "Chỉ có thể xử lý lại tài liệu đang ở trạng thái thất bại.",
+      flash[:alert]
+    )
+    assert @document.reload.pending?
+    assert_equal 1, @document.processing_version
+  end
+
   test "member can read and download but cannot manage" do
     sign_out
     sign_in_as users(:two)
@@ -191,6 +251,18 @@ class DocumentsControllerTest <
       )
     end
     assert_response :forbidden
+
+    @document.update!(status: :failed)
+
+    assert_no_enqueued_jobs only: ProcessDocumentJob do
+      post retry_processing_workspace_document_url(
+        @workspace,
+        @document
+      )
+    end
+    assert_response :forbidden
+    assert @document.reload.failed?
+    assert_equal 1, @document.processing_version
   end
 
   test "outsider receives not found" do
