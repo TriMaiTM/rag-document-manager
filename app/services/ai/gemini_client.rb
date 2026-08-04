@@ -18,6 +18,8 @@ module Ai
       end
     end
 
+    class RetryableRequestError < RequestError; end
+
     class InvalidResponseError < Error; end
 
     class NetworkError < Error
@@ -49,6 +51,7 @@ module Ai
     )
 
     RETRYABLE_STATUSES = [ 500, 502, 503, 504 ].freeze
+    JOB_RETRYABLE_STATUSES = [ 429, *RETRYABLE_STATUSES ].freeze
     NETWORK_ERRORS = [
       IOError,
       SystemCallError,
@@ -302,9 +305,15 @@ module Ai
 
     def raise_request_error!(response, payload)
       error = payload.fetch("error", {})
+      status = response.code.to_i
+      error_class = if JOB_RETRYABLE_STATUSES.include?(status)
+        RetryableRequestError
+      else
+        RequestError
+      end
 
-      raise RequestError.new(
-        status: response.code.to_i,
+      raise error_class.new(
+        status: status,
         api_code: error["status"],
         message: error.fetch(
           "message",

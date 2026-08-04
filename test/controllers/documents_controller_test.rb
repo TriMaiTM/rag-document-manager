@@ -153,6 +153,10 @@ class DocumentsControllerTest <
     assert document.pending?
     assert document.file.attached?
     assert_equal users(:one), document.uploaded_by
+    processing_job = enqueued_jobs.find do |job|
+      job.fetch(:job) == ProcessDocumentJob
+    end
+    assert_equal [ document.id ], processing_job.fetch(:args)
 
     assert_redirected_to workspace_document_url(
       @workspace,

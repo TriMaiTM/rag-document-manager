@@ -41,7 +41,7 @@ class DocumentsController < ApplicationController
     ).call
 
     if @document.persisted?
-      ProcessDocumentJob.perform_later(@document)
+      ProcessDocumentJob.perform_later(@document.id)
 
       redirect_to workspace_document_path(
         @workspace,
@@ -81,7 +81,7 @@ class DocumentsController < ApplicationController
     authorize @document
 
     Documents::RetryProcessing.new(document: @document).call
-    ProcessDocumentJob.perform_later(@document)
+    ProcessDocumentJob.perform_later(@document.id)
 
     redirect_to workspace_document_path(@workspace, @document),
       notice: "Tài liệu đã được đưa vào hàng đợi xử lý lại.",

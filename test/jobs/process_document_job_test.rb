@@ -4,6 +4,7 @@ require "tempfile"
 
 class ProcessDocumentJobTest < ActiveJob::TestCase
   setup do
+    clear_enqueued_jobs
     @pdf_file = build_pdf
 
     @document = Document.new(
@@ -36,10 +37,80 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     end
 
     Documents::ProcessDocument.stub(:new, processor_factory) do
-      ProcessDocumentJob.perform_now(@document)
+      ProcessDocumentJob.perform_now(@document.id)
     end
 
     processor.verify
+  end
+
+  test "discards a missing document" do
+    missing_id = Document.maximum(:id).to_i + 1
+    processor_factory = lambda do |document:|
+      flunk "Processor must not start for #{document.id}"
+    end
+
+    Documents::ProcessDocument.stub(:new, processor_factory) do
+      assert_nothing_raised do
+        ProcessDocumentJob.perform_now(missing_id)
+      end
+    end
+  end
+
+  test "retries a transient Gemini network error" do
+    processor = Object.new
+    processor.define_singleton_method(:call) do
+      raise Ai::GeminiClient::NetworkError.new(
+        Net::ReadTimeout.new("execution expired")
+      )
+    end
+
+    Documents::ProcessDocument.stub(:new, ->(document:) { processor }) do
+      assert_enqueued_jobs 1, only: ProcessDocumentJob do
+        ProcessDocumentJob.perform_now(@document.id)
+      end
+    end
+
+    retry_job = enqueued_jobs.last
+    assert_equal "documents", retry_job.fetch(:queue)
+    assert_operator retry_job.fetch(:at), :>, Time.current.to_f
+  end
+
+  test "retries a transient Gemini HTTP error" do
+    processor = Object.new
+    processor.define_singleton_method(:call) do
+      raise Ai::GeminiClient::RetryableRequestError.new(
+        status: 503,
+        api_code: "UNAVAILABLE",
+        message: "Service unavailable"
+      )
+    end
+
+    Documents::ProcessDocument.stub(:new, ->(document:) { processor }) do
+      assert_enqueued_jobs 1, only: ProcessDocumentJob do
+        ProcessDocumentJob.perform_now(@document.id)
+      end
+    end
+
+    assert_equal "documents", enqueued_jobs.last.fetch(:queue)
+  end
+
+  test "does not retry a permanent Gemini request error" do
+    processor = Object.new
+    processor.define_singleton_method(:call) do
+      raise Ai::GeminiClient::RequestError.new(
+        status: 400,
+        api_code: "INVALID_ARGUMENT",
+        message: "Invalid request"
+      )
+    end
+
+    Documents::ProcessDocument.stub(:new, ->(document:) { processor }) do
+      assert_no_enqueued_jobs only: ProcessDocumentJob do
+        assert_raises(Ai::GeminiClient::RequestError) do
+          ProcessDocumentJob.perform_now(@document.id)
+        end
+      end
+    end
   end
 
   test "processes a PDF through chunks and embeddings" do
@@ -61,7 +132,7 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     generator_factory = -> { generator }
 
     Ai::GenerateEmbeddings.stub(:new, generator_factory) do
-      ProcessDocumentJob.perform_now(@document)
+      ProcessDocumentJob.perform_now(@document.id)
     end
 
     @document.reload
@@ -89,7 +160,7 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
         assert_raises(
           Documents::PrepareChunks::EmptyChunksError
         ) do
-          ProcessDocumentJob.perform_now(@document)
+          ProcessDocumentJob.perform_now(@document.id)
         end
       end
     end
@@ -118,7 +189,7 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
       assert_raises(
         Documents::ExtractText::PageLimitExceededError
       ) do
-        ProcessDocumentJob.perform_now(@document)
+        ProcessDocumentJob.perform_now(@document.id)
       end
     end
 
@@ -157,7 +228,7 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     end
 
     Ai::GenerateEmbeddings.stub(:new, -> { generator }) do
-      ProcessDocumentJob.perform_now(@document)
+      ProcessDocumentJob.perform_now(@document.id)
     end
 
     @document.reload

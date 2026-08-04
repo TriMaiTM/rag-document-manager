@@ -167,6 +167,26 @@ class Ai::GeminiClientTest < ActiveSupport::TestCase
     assert_equal 429, error.status
     assert_equal "RESOURCE_EXHAUSTED", error.api_code
     assert_equal "Free tier quota exceeded", error.message
+    assert_instance_of Ai::GeminiClient::RetryableRequestError, error
+  end
+
+  test "keeps permanent API errors non-retryable" do
+    response = HttpResponse.new(
+      code: "400",
+      body: {
+        error: {
+          status: "INVALID_ARGUMENT",
+          message: "Invalid request"
+        }
+      }.to_json
+    )
+
+    error = assert_raises(Ai::GeminiClient::RequestError) do
+      client_returning(response).embed_documents(inputs: [ "First" ])
+    end
+
+    assert_instance_of Ai::GeminiClient::RequestError, error
+    assert_equal 400, error.status
   end
 
   test "retries transient server errors" do
