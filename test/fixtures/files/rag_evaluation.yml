@@ -1,0 +1,17 @@
+cases:
+  - id: rails-security
+    question: "Rails bảo vệ request như thế nào?"
+    expected_sources:
+      - document_title: "Rails Security Guide"
+        page_number: 3
+
+  - id: active-record
+    question: "Active Record dùng để làm gì?"
+    expected_sources:
+      - document_title: "Active Record Guide"
+        page_number: null
+
+  - id: no-answer
+    question: "Tài liệu có nói về cách nấu phở không?"
+    answerable: false
+    expected_sources: []

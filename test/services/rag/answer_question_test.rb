@@ -39,8 +39,32 @@ class Rag::AnswerQuestionTest < ActiveSupport::TestCase
     assert_equal "Rails security", generator.arguments[:question]
     assert_same chunks, generator.arguments[:chunks]
     assert_equal "Grounded answer [1]", result.answer
-    assert_same chunks, result.chunks
+    assert_equal [ chunks.first ], result.chunks
     assert_equal 120, result.total_tokens
+  end
+
+  test "does not expose retrieved chunks when the answer cites none" do
+    chunks = [ Object.new ]
+    searcher = FakeService.new(
+      SemanticSearch::Search::Result.new(
+        query: "Unknown topic",
+        chunks: chunks
+      )
+    )
+    generation = generation_result.with(
+      answer: "Tài liệu hiện có không cung cấp đủ thông tin."
+    )
+
+    result = Rag::AnswerQuestion.new(
+      workspace: workspaces(:one),
+      question: "Unknown topic",
+      searcher: searcher,
+      answer_generator: FakeService.new(generation)
+    ).call
+
+    assert_equal "Tài liệu hiện có không cung cấp đủ thông tin.",
+      result.answer
+    assert_empty result.chunks
   end
 
   test "does not call the answer model without search results" do

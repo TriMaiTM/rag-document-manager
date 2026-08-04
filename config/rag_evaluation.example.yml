@@ -1,0 +1,15 @@
+# Copy file này thành config/rag_evaluation.yml và thay dữ liệu mẫu bằng
+# tài liệu thật trong Workspace. Dataset chính thức cần ít nhất 15 cases
+# dựa trên tối thiểu 3 PDF.
+cases:
+  - id: answerable-example
+    question: "Devise lưu mật khẩu người dùng như thế nào?"
+    answerable: true
+    expected_sources:
+      - document_title: "Rails Authentication Guide"
+        page_number: 3
+
+  - id: unanswerable-example
+    question: "Tài liệu có hướng dẫn cách sửa xe máy không?"
+    answerable: false
+    expected_sources: []

@@ -57,10 +57,12 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
     )
 
     generator = FakeGenerator.new(@query_vector)
+    clock_values = [ 0.0, 0.4, 1.0, 1.01 ]
     result = SemanticSearch::Search.new(
       workspace: workspaces(:one),
       query: "  Rails   authentication  ",
-      generator: generator
+      generator: generator,
+      clock: -> { clock_values.shift }
     ).call
 
     assert_equal "Rails authentication", generator.query
@@ -68,6 +70,8 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
     assert_equal [ relevant.id, related.id ], result.chunks.map(&:id)
     assert_in_delta 0.0, result.chunks.first.neighbor_distance
     assert_in_delta 0.2, result.chunks.second.neighbor_distance
+    assert_in_delta 400.0, result.embedding_milliseconds
+    assert_in_delta 10.0, result.vector_search_milliseconds
   end
 
   test "limits the number of results" do
@@ -93,7 +97,16 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
 
   test "rejects chunks outside the relevance threshold" do
     document = create_document(workspaces(:one), status: :completed)
-    create_chunk(document, vector(0.0, 1.0), position: 1)
+    accepted = create_chunk(
+      document,
+      vector(0.61, 0.7924),
+      position: 1
+    )
+    create_chunk(
+      document,
+      vector(0.59, 0.8074),
+      position: 2
+    )
 
     result = SemanticSearch::Search.new(
       workspace: workspaces(:one),
@@ -101,7 +114,10 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
       generator: FakeGenerator.new(@query_vector)
     ).call
 
-    assert_empty result.chunks
+    assert_equal [ accepted.id ], result.chunks.map(&:id)
+    assert_operator result.chunks.sole.neighbor_distance,
+      :<=,
+      0.40
   end
 
   test "rejects a query that is too short" do

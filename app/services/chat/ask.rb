@@ -131,7 +131,6 @@ module Chat
           error_code: error_code(error),
           content: FAILURE_ANSWER
         )
-        create_sources(assistant_message, error_chunks(error))
 
         Result.new(
           chat_session: session,
@@ -151,12 +150,6 @@ module Chat
           separator: " "
         )
       )
-    end
-
-    def error_chunks(error)
-      return [] unless error.respond_to?(:chunks)
-
-      Array(error.chunks)
     end
 
     def error_code(error)

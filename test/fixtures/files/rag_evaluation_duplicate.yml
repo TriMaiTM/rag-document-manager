@@ -1,0 +1,12 @@
+cases:
+  - id: duplicate-case
+    question: "First valid question"
+    expected_sources:
+      - document_title: "First Guide"
+        page_number: 1
+
+  - id: duplicate-case
+    question: "Second valid question"
+    expected_sources:
+      - document_title: "Second Guide"
+        page_number: 2

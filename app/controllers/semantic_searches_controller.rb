@@ -34,10 +34,9 @@ class SemanticSearchesController < ApplicationController
     @chunks = result.chunks
   rescue Rag::AnswerQuestion::GenerationError => error
     @query = error.query
-    @chunks = error.chunks
+    @chunks = []
     @answer_error =
-      "Đã tìm thấy nguồn phù hợp nhưng Gemini chưa thể tạo câu trả lời. " \
-        "Vui lòng thử lại."
+      "Gemini chưa thể tạo câu trả lời. Vui lòng thử lại."
 
     Rails.logger.warn(
       "RAG generation failed: " \

@@ -35,12 +35,14 @@
         <%= simple_format @answer %>
       <% end %>
 
-      <p>
-        <small>
-          Câu trả lời được tạo từ các nguồn bên dưới và có thể chưa hoàn toàn
-          chính xác.
-        </small>
-      </p>
+      <% if @chunks.any? %>
+        <p>
+          <small>
+            Câu trả lời được tạo từ các nguồn được trích dẫn bên dưới và có thể
+            chưa hoàn toàn chính xác.
+          </small>
+        </p>
+      <% end %>
     </section>
 
     <% if @chunks.any? %>

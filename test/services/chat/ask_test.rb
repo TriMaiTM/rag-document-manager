@@ -153,7 +153,7 @@ class Chat::AskTest < ActiveSupport::TestCase
 
     assert_difference("ChatSession.count", 1) do
       assert_difference("ChatMessage.count", 2) do
-        assert_difference("ChatMessageSource.count", 1) do
+        assert_no_difference("ChatMessageSource.count") do
           @result = Chat::Ask.new(
             workspace: @workspace,
             user: @user,
@@ -175,8 +175,7 @@ class Chat::AskTest < ActiveSupport::TestCase
     assert_equal "network_error", failure.error_code
     assert_equal Chat::Ask::FAILURE_ANSWER, failure.content
     assert_not_includes failure.content, "secret upstream details"
-    assert_equal @chunk.content,
-      failure.chat_message_sources.sole.content
+    assert_empty failure.chat_message_sources
   end
 
   test "does not create history for an invalid question" do

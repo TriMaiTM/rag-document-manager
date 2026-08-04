@@ -56,11 +56,15 @@ module Rag
         normalized_question,
         context.transcript
       )
+      citations = Rag::SelectCitations.new(
+        answer: generation.answer,
+        chunks: search_result.chunks
+      ).call
 
       Result.new(
         query: normalized_question,
-        answer: generation.answer,
-        chunks: search_result.chunks,
+        answer: citations.answer,
+        chunks: citations.chunks,
         model: generation.model,
         prompt_tokens: generation.prompt_tokens,
         candidate_tokens: generation.candidate_tokens,

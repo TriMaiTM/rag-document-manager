@@ -1,0 +1,92 @@
+# Copy file này thành config/rag_evaluation.yml và thay dữ liệu mẫu bằng
+# tài liệu thật trong Workspace. Nên có ít nhất 15 cases.
+cases:
+  - id: right-1
+    question: "Câu hỏi về quản lý học viên ở 1 trung tâm tin học"
+    expected_sources:
+      - document_title: "CSDL"
+        page_number: 2
+
+  - id: right-2
+    question: "Mỗi MAGV xác định thông tin nào ?"
+    expected_sources:
+      - document_title: "CSDL"
+        page_number: 2
+  
+  - id: right-3
+    question: "Hàng tuần, mỗi giáo viên phải làm gì ?"
+    expected_sources:
+      - document_title: "CSDL"
+        page_number: 1
+  
+  - id: right-4
+    question: "Trong câu 8, yêu cầu nào hỏi về lương trung bình của tất cả female employee ?"
+    expected_sources:
+      - document_title: "CSDL"
+        page_number: 4
+
+  - id: right-5
+    question: "Nếu n không hợp lệ thì sao ?"
+    expected_sources:
+      - document_title: "GK"
+        page_number: 1
+  
+  - id: right-6
+    question: "Địa điểm thực tập là ở đâu ?"
+    expected_sources:
+      - document_title: "TTTN"
+        page_number: 3
+  
+  - id: right-7
+    question: "Ngày 17 tháng 9 làm gì ?"
+    expected_sources:
+      - document_title: "TTTN"
+        page_number: 4
+
+  - id: right-8
+    question: "Báo cáo thực tập phải kèm theo gì ?"
+    expected_sources:
+      - document_title: "TTTN"
+        page_number: 2
+  
+  - id: right-9
+    question: "Sinh viên tải các biểu mẫu ở đâu ?"
+    expected_sources:
+      - document_title: "TTTN"
+        page_number: 2
+  
+  - id: right-10
+    question: "Does the city column is a text box or drop down list ?"
+    expected_sources:
+      - document_title: "SRS"
+        page_number: 1
+
+  - id: right-11
+    question: "Manager có thể làm gì customer ?"
+    expected_sources:
+      - document_title: "SRS"
+        page_number: 2
+  
+  - id: right-12
+    question: "Chuyện gì sẽ xảy ra khi tạo 1 customer mới bằng manager id ?"
+    expected_sources:
+      - document_title: "SRS"
+        page_number: 2
+  
+  - id: unrelated-01
+    question: "Các tài liệu có hướng dẫn sửa xe máy không?"
+    answerable: false
+    expected_sources: []
+
+  - id: unrelated-02
+    question: "Lollipop là gì ?"
+    answerable: false
+    expected_sources: []
+
+  - id: unrelated-03
+    question: "Nói về Sony"
+    answerable: false
+    expected_sources: []
+  
+
+  

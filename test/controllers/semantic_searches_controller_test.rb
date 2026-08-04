@@ -74,7 +74,7 @@ class SemanticSearchesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[role='alert']", /ít nhất 2 ký tự/
   end
 
-  test "keeps sources visible when answer generation times out" do
+  test "does not present retrieved candidates as citations when generation times out" do
     chunk = create_embedded_chunk
     chunk.define_singleton_method(:neighbor_distance) { 0.2 }
     network_error = Ai::GeminiClient::NetworkError.new(
@@ -96,8 +96,8 @@ class SemanticSearchesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[role='alert']", /Gemini chưa thể tạo câu trả lời/
-    assert_select "h2", "Nguồn tham khảo"
-    assert_select "a", @document.title
+    assert_select "h2", text: "Nguồn tham khảo", count: 0
+    assert_select "a", text: @document.title, count: 0
   end
 
   test "member can search" do
