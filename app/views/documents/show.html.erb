@@ -30,6 +30,17 @@
           "%d/%m/%Y %H:%M"
         ) %>
       </dd>
+
+      <dt>Bắt đầu xử lý</dt>
+      <dd><%= document_lifecycle_time(@document.processing_started_at) %></dd>
+
+      <% if @document.completed? %>
+        <dt>Hoàn thành lúc</dt>
+        <dd><%= document_lifecycle_time(@document.completed_at) %></dd>
+      <% elsif @document.failed? %>
+        <dt>Thất bại lúc</dt>
+        <dd><%= document_lifecycle_time(@document.failed_at) %></dd>
+      <% end %>
     </dl>
 
     <nav>

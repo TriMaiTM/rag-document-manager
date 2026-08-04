@@ -69,7 +69,11 @@ class DocumentsController < ApplicationController
       status: @document.status,
       label: helpers.document_status_label(@document),
       terminal: @document.completed? || @document.failed?,
-      updated_at: @document.updated_at.iso8601
+      updated_at: @document.updated_at.iso8601,
+      processing_started_at:
+        @document.processing_started_at&.iso8601,
+      completed_at: @document.completed_at&.iso8601,
+      failed_at: @document.failed_at&.iso8601
     }
   end
 

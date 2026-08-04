@@ -28,6 +28,9 @@ class Documents::RetryProcessingTest < ActiveSupport::TestCase
     assert_equal 2, @document.processing_version
     assert_nil @document.error_code
     assert_nil @document.error_message
+    assert_nil @document.processing_started_at
+    assert_nil @document.completed_at
+    assert_nil @document.failed_at
     assert_predicate @old_chunk.reload, :persisted?
   end
 

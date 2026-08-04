@@ -7,8 +7,6 @@ module Documents
     class IncompleteEmbeddingsError < Error; end
 
     DEFAULT_BATCH_SIZE = 64
-    EMBEDDABLE_STATUSES = %w[processing failed].freeze
-
     Result = Data.define(
       :document,
       :chunks,
@@ -80,20 +78,9 @@ module Documents
     end
 
     def start_embedding!
-      document.with_lock do
-        unless EMBEDDABLE_STATUSES.include?(document.status)
-          raise InvalidStatusError,
-            "Cannot embed document with status #{document.status}"
-        end
-
-        document.update!(
-          status: :processing,
-          error_code: nil,
-          error_message: nil
-        )
-
-        document.processing_version
-      end
+      lifecycle.start_processing!
+    rescue Documents::Lifecycle::InvalidTransitionError => error
+      raise InvalidStatusError, error.message
     end
 
     def current_chunks(processing_version)
@@ -135,22 +122,18 @@ module Documents
     end
 
     def complete!(processing_version)
-      document.with_lock do
-        validate_processing_version!(processing_version)
-
+      lifecycle.complete!(
+        expected_processing_version: processing_version
+      ) do
         if current_chunks(processing_version)
             .where(embedding: nil)
             .exists?
           raise IncompleteEmbeddingsError,
             "Not all chunks have an embedding"
         end
-
-        document.update!(
-          status: :completed,
-          error_code: nil,
-          error_message: nil
-        )
       end
+    rescue Documents::Lifecycle::StaleProcessingVersionError => error
+      raise StaleProcessingVersionError, error.message
     end
 
     def validate_processing_version!(expected_version)
@@ -163,24 +146,14 @@ module Documents
     def mark_failed!(error, processing_version)
       return unless processing_version
 
-      document.with_lock do
-        return unless document.processing_version == processing_version
-
-        document.update_columns(
-          status: "failed",
-          error_code: error_code(error),
-          error_message: error.message.to_s.truncate(1_000),
-          updated_at: Time.current
-        )
-      end
+      lifecycle.fail!(
+        error: error,
+        expected_processing_version: processing_version
+      )
     end
 
-    def error_code(error)
-      if error.respond_to?(:api_code) && error.api_code.present?
-        return error.api_code.to_s.underscore
-      end
-
-      error.class.name.demodulize.underscore
+    def lifecycle
+      @lifecycle ||= Documents::Lifecycle.new(document: document)
     end
   end
 end

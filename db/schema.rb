@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -130,11 +130,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_020000) do
   end
 
   create_table "documents", force: :cascade do |t|
+    t.datetime "completed_at"
     t.string "content_sha256", limit: 64
     t.datetime "created_at", null: false
     t.string "error_code"
     t.text "error_message"
+    t.datetime "failed_at"
     t.integer "page_count"
+    t.datetime "processing_started_at"
     t.integer "processing_version", default: 1, null: false
     t.enum "status", default: "pending", null: false, enum_type: "document_status"
     t.string "title", null: false
@@ -146,6 +149,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_020000) do
     t.index ["workspace_id", "created_at"], name: "index_documents_on_workspace_id_and_created_at"
     t.index ["workspace_id"], name: "index_documents_on_workspace_id"
     t.check_constraint "page_count IS NULL OR page_count > 0", name: "documents_page_count_positive"
+    t.check_constraint "status = 'pending'::document_status AND processing_started_at IS NULL AND completed_at IS NULL AND failed_at IS NULL OR status = 'processing'::document_status AND processing_started_at IS NOT NULL AND completed_at IS NULL AND failed_at IS NULL OR status = 'completed'::document_status AND processing_started_at IS NOT NULL AND completed_at IS NOT NULL AND failed_at IS NULL AND completed_at >= processing_started_at OR status = 'failed'::document_status AND processing_started_at IS NOT NULL AND completed_at IS NULL AND failed_at IS NOT NULL AND failed_at >= processing_started_at", name: "documents_lifecycle_timestamps_match_status"
   end
 
   create_table "memberships", force: :cascade do |t|

@@ -78,6 +78,29 @@ class DocumentTest < ActiveSupport::TestCase
       "is not included in the list"
   end
 
+  test "keeps lifecycle timestamps consistent with status" do
+    @document.save!
+
+    @document.update!(status: :processing)
+    assert_predicate @document.processing_started_at, :present?
+    assert_nil @document.completed_at
+    assert_nil @document.failed_at
+
+    @document.update!(status: :completed)
+    assert_predicate @document.completed_at, :present?
+    assert_nil @document.failed_at
+  end
+
+  test "rejects lifecycle timestamps that do not match status" do
+    @document.save!
+    @document.update!(status: :processing)
+    @document.completed_at = Time.current
+
+    assert_not @document.valid?
+    assert_includes @document.errors[:status],
+      "không khớp với các mốc thời gian xử lý"
+  end
+
   test "allows a positive page count or an unknown page count" do
     @document.page_count = nil
     assert_predicate @document, :valid?

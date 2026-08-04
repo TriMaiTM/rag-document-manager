@@ -51,6 +51,9 @@ class Documents::EmbedChunksTest < ActiveSupport::TestCase
     assert @document.reload.completed?
     assert_nil @document.error_code
     assert_nil @document.error_message
+    assert_predicate @document.processing_started_at, :present?
+    assert_predicate @document.completed_at, :present?
+    assert_nil @document.failed_at
 
     assert_equal 2, generator.batches.size
     assert_equal 30, result.prompt_tokens
@@ -104,6 +107,8 @@ class Documents::EmbedChunksTest < ActiveSupport::TestCase
     assert @document.failed?
     assert_equal "fake_embedding_error", @document.error_code
     assert_equal "Gemini unavailable", @document.error_message
+    assert_predicate @document.failed_at, :present?
+    assert_nil @document.completed_at
   end
 
   test "stores the Gemini API error code" do

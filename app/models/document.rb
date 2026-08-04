@@ -19,6 +19,9 @@ class Document < ApplicationRecord
     failed: "failed"
   }, validate: true
 
+  before_validation :synchronize_lifecycle_timestamps,
+    if: :will_save_change_to_status?
+
   validates :title,
     presence: true,
     length: { maximum: 200 }
@@ -45,8 +48,60 @@ class Document < ApplicationRecord
   validate :file_must_be_attached
   validate :file_must_be_pdf
   validate :file_size_must_be_allowed
+  validate :lifecycle_timestamps_must_match_status
 
   private
+
+  def synchronize_lifecycle_timestamps
+    now = Time.current
+
+    case status
+    when "pending"
+      self.processing_started_at = nil
+      self.completed_at = nil
+      self.failed_at = nil
+    when "processing"
+      self.processing_started_at ||= now
+      self.completed_at = nil
+      self.failed_at = nil
+    when "completed"
+      self.processing_started_at ||= now
+      self.completed_at ||= now
+      self.failed_at = nil
+    when "failed"
+      self.processing_started_at ||= now
+      self.completed_at = nil
+      self.failed_at ||= now
+    end
+  end
+
+  def lifecycle_timestamps_must_match_status
+    valid = case status
+    when "pending"
+      processing_started_at.nil? && completed_at.nil? && failed_at.nil?
+    when "processing"
+      processing_started_at.present? && completed_at.nil? && failed_at.nil?
+    when "completed"
+      processing_started_at.present? &&
+        completed_at.present? &&
+        failed_at.nil? &&
+        completed_at >= processing_started_at
+    when "failed"
+      processing_started_at.present? &&
+        completed_at.nil? &&
+        failed_at.present? &&
+        failed_at >= processing_started_at
+    else
+      true
+    end
+
+    return if valid
+
+    errors.add(
+      :status,
+      "không khớp với các mốc thời gian xử lý"
+    )
+  end
 
   def file_must_be_attached
     return if file.attached?

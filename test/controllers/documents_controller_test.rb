@@ -49,6 +49,8 @@ class DocumentsControllerTest <
     assert_select "[data-controller='document-status']",
       text: "Chờ xử lý"
     assert_select "dd", "Chưa xác định"
+    assert_select "dt", "Bắt đầu xử lý"
+    assert_select "dd", "Chưa có"
   end
 
   test "shows the page count and a safe processing error" do
@@ -82,6 +84,9 @@ class DocumentsControllerTest <
     assert_equal "Chờ xử lý", response_body.fetch("label")
     assert_equal false, response_body.fetch("terminal")
     assert_predicate response_body.fetch("updated_at"), :present?
+    assert_nil response_body.fetch("processing_started_at")
+    assert_nil response_body.fetch("completed_at")
+    assert_nil response_body.fetch("failed_at")
     assert_match(/no-cache/, response.headers.fetch("Cache-Control"))
   end
 
@@ -97,10 +102,14 @@ class DocumentsControllerTest <
     assert_response :success
     assert_equal true, response.parsed_body.fetch("terminal")
     assert_equal "Hoàn thành", response.parsed_body.fetch("label")
+    assert_equal @document.completed_at.iso8601,
+      response.parsed_body.fetch("completed_at")
 
     get workspace_document_url(@workspace, @document)
     assert_select "[data-controller='document-status']", count: 0
     assert_select "span", text: "Hoàn thành"
+    assert_select "dt", "Hoàn thành lúc"
+    assert_select "dd", @document.completed_at.strftime("%d/%m/%Y %H:%M:%S")
   end
 
   test "owner sees retry action only for a failed document" do

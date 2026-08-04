@@ -27,4 +27,8 @@ module DocumentsHelper
       "Hệ thống chưa thể xử lý tài liệu này."
     )
   end
+
+  def document_lifecycle_time(timestamp)
+    timestamp&.strftime("%d/%m/%Y %H:%M:%S") || "Chưa có"
+  end
 end

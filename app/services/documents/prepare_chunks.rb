@@ -19,12 +19,6 @@ module Documents
 
     MAX_CHUNK_COUNT = 500
 
-    PROCESSABLE_STATUSES = %w[
-      pending
-      processing
-      failed
-    ].freeze
-
     Result = Data.define(
       :document,
       :chunks,
@@ -73,27 +67,9 @@ module Documents
     attr_reader :document, :extractor, :chunker
 
     def start_processing!
-      document.with_lock do
-        validate_status!
-
-        document.update!(
-          status: :processing,
-          error_code: nil,
-          error_message: nil
-        )
-
-        document.processing_version
-      end
-    end
-
-    def validate_status!
-      return if PROCESSABLE_STATUSES.include?(
-        document.status
-      )
-
-      raise InvalidStatusError,
-        "Không thể xử lý document ở trạng thái " \
-        "#{document.status}"
+      lifecycle.start_processing!
+    rescue Documents::Lifecycle::InvalidTransitionError => error
+      raise InvalidStatusError, error.message
     end
 
     def extract_pages
@@ -163,34 +139,20 @@ module Documents
     def mark_failed!(error, processing_version)
       return unless processing_version
 
-      document.with_lock do
-        return unless document.processing_version ==
-          processing_version
-
-        attributes = {
-          status: "failed",
-          error_code: error_code(error),
-          error_message: safe_error_message(error),
-          updated_at: Time.current
-        }
-        if error.respond_to?(:page_count)
-          attributes[:page_count] = error.page_count
-        end
-
-        document.update_columns(attributes)
+      attributes = {}
+      if error.respond_to?(:page_count)
+        attributes[:page_count] = error.page_count
       end
+
+      lifecycle.fail!(
+        error: error,
+        expected_processing_version: processing_version,
+        attributes: attributes
+      )
     end
 
-    def error_code(error)
-      error.class.name
-        .demodulize
-        .underscore
-    end
-
-    def safe_error_message(error)
-      error.message
-        .to_s
-        .truncate(1_000)
+    def lifecycle
+      @lifecycle ||= Documents::Lifecycle.new(document: document)
     end
   end
 end
