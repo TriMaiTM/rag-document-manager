@@ -48,6 +48,24 @@ class DocumentsControllerTest <
     assert_select "button", "Xóa tài liệu"
     assert_select "[data-controller='document-status']",
       text: "Chờ xử lý"
+    assert_select "dd", "Chưa xác định"
+  end
+
+  test "shows the page count and a safe processing error" do
+    @document.update!(
+      status: :failed,
+      page_count: Documents::ExtractText::MAX_PAGE_COUNT + 1,
+      error_code: "page_limit_exceeded_error",
+      error_message: "Technical parser details"
+    )
+
+    get workspace_document_url(@workspace, @document)
+
+    assert_response :success
+    assert_select "dd",
+      (Documents::ExtractText::MAX_PAGE_COUNT + 1).to_s
+    assert_select "[role='alert']", /vượt quá giới hạn 100 trang/
+    assert_select "body", text: /Technical parser details/, count: 0
   end
 
   test "returns processing status for a workspace member" do

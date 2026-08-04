@@ -105,6 +105,40 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     embed_service.verify
   end
 
+  test "does not call the embedding API for a PDF over the page limit" do
+    @document.file.purge
+    @pdf_file.close!
+    @pdf_file = build_pdf(
+      page_count: Documents::ExtractText::MAX_PAGE_COUNT + 1
+    )
+    @document.file.attach(
+      io: @pdf_file,
+      filename: "too-many-pages.pdf",
+      content_type: Document::PDF_CONTENT_TYPE
+    )
+    @document.save!
+
+    generator_factory = lambda do
+      flunk "Embedding generator must not be created"
+    end
+
+    Ai::GenerateEmbeddings.stub(:new, generator_factory) do
+      assert_raises(
+        Documents::ExtractText::PageLimitExceededError
+      ) do
+        ProcessDocumentJob.perform_now(@document)
+      end
+    end
+
+    @document.reload
+
+    assert @document.failed?
+    assert_equal Documents::ExtractText::MAX_PAGE_COUNT + 1,
+      @document.page_count
+    assert_equal "page_limit_exceeded_error", @document.error_code
+    assert_empty @document.document_chunks
+  end
+
   test "processes a retry without duplicating chunks in the new version" do
     @document.document_chunks.create!(
       content: "Content from the failed version",
@@ -151,12 +185,15 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
 
   private
 
-  def build_pdf
+  def build_pdf(page_count: 1)
     tempfile = Tempfile.new([ "process-document", ".pdf" ])
     tempfile.binmode
 
     pdf = Prawn::Document.new
-    pdf.text("Rails uses Active Record for database access.")
+    page_count.times do |index|
+      pdf.text("Rails page #{index + 1} uses Active Record.")
+      pdf.start_new_page unless index == page_count - 1
+    end
 
     tempfile.write(pdf.render)
     tempfile.rewind

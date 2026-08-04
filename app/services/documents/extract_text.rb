@@ -5,6 +5,20 @@ module Documents
     class Error < StandardError; end
     class UnsupportedPdfError < Error; end
     class EmptyTextError < Error; end
+    class PageLimitExceededError < Error
+      attr_reader :page_count
+
+      def initialize(page_count:)
+        @page_count = page_count
+
+        super(
+          "PDF có #{page_count} trang, vượt giới hạn " \
+            "#{MAX_PAGE_COUNT} trang"
+        )
+      end
+    end
+
+    MAX_PAGE_COUNT = 100
 
     Page = Data.define(:number, :text)
 
@@ -39,6 +53,7 @@ module Documents
 
     def extract_pages(file)
       reader = PDF::Reader.new(file)
+      validate_page_count!(reader.page_count)
 
       reader.pages.each_with_index.map do |page, index|
         Page.new(
@@ -46,6 +61,12 @@ module Documents
           text: normalize(page.text)
         )
       end
+    end
+
+    def validate_page_count!(page_count)
+      return if page_count <= MAX_PAGE_COUNT
+
+      raise PageLimitExceededError.new(page_count: page_count)
     end
 
     def validate_content!(pages)

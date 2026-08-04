@@ -41,6 +41,8 @@ class Documents::PrepareChunksTest <
 
     assert_equal 2, result.chunks.size
     assert_equal 1, result.processing_version
+    assert_equal 2, result.page_count
+    assert_equal 2, @document.page_count
 
     assert_equal(
       [ 1, 2 ],
@@ -165,6 +167,32 @@ class Documents::PrepareChunksTest <
 
     assert_equal 0,
       @document.document_chunks.count
+  end
+
+  test "rejects too many chunks before storing them" do
+    chunks = Array.new(
+      Documents::PrepareChunks::MAX_CHUNK_COUNT + 1
+    ) do |index|
+      chunk(
+        position: index + 1,
+        page_number: 1,
+        content: "Chunk #{index + 1}"
+      )
+    end
+
+    assert_raises(
+      Documents::PrepareChunks::ChunkLimitExceededError
+    ) do
+      process(chunks: chunks)
+    end
+
+    @document.reload
+
+    assert @document.failed?
+    assert_equal "chunk_limit_exceeded_error",
+      @document.error_code
+    assert_equal 2, @document.page_count
+    assert_empty @document.document_chunks
   end
 
   test "does not process a completed document" do

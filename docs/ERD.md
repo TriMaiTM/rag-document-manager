@@ -42,6 +42,7 @@ erDiagram
         enum status "document_status; null: false; default: pending"
         string content_sha256 "nullable; limit: 64"
         integer processing_version "null: false; default: 1"
+        integer page_count "nullable; positive when present"
         string error_code "nullable"
         text error_message "nullable"
         datetime created_at "null: false"
@@ -155,3 +156,7 @@ erDiagram
 `memberships.role` vẫn là quyền theo từng workspace và độc lập với Devise.
 Devise chỉ chịu trách nhiệm authentication. Bảng `sessions` tự viết đã được
 loại bỏ; phiên đăng nhập mặc định được Devise/Warden quản lý bằng cookie.
+
+`documents.page_count` nullable trong lúc file mới chờ xử lý. Sau khi đọc được
+cấu trúc PDF, hệ thống lưu số trang dương; check constraint PostgreSQL không
+cho phép lưu `0` hoặc số âm.

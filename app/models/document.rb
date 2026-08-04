@@ -29,6 +29,13 @@ class Document < ApplicationRecord
       greater_than: 0
     }
 
+  validates :page_count,
+    numericality: {
+      only_integer: true,
+      greater_than: 0
+    },
+    allow_nil: true
+
   validate :file_must_be_attached
   validate :file_must_be_pdf
   validate :file_size_must_be_allowed

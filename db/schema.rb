@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -134,6 +134,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_010000) do
     t.datetime "created_at", null: false
     t.string "error_code"
     t.text "error_message"
+    t.integer "page_count"
     t.integer "processing_version", default: 1, null: false
     t.enum "status", default: "pending", null: false, enum_type: "document_status"
     t.string "title", null: false
@@ -144,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_010000) do
     t.index ["workspace_id", "content_sha256"], name: "index_documents_on_workspace_and_content_sha256", unique: true, where: "(content_sha256 IS NOT NULL)"
     t.index ["workspace_id", "created_at"], name: "index_documents_on_workspace_id_and_created_at"
     t.index ["workspace_id"], name: "index_documents_on_workspace_id"
+    t.check_constraint "page_count IS NULL OR page_count > 0", name: "documents_page_count_positive"
   end
 
   create_table "memberships", force: :cascade do |t|

@@ -18,6 +18,9 @@
       <dt>Dung lượng</dt>
       <dd><%= document_file_size(@document) %></dd>
 
+      <dt>Số trang</dt>
+      <dd><%= @document.page_count || "Chưa xác định" %></dd>
+
       <dt>Người tải lên</dt>
       <dd><%= @document.uploaded_by.email %></dd>
 
@@ -39,6 +42,12 @@
       <%= link_to "Danh sách tài liệu",
         workspace_documents_path(@workspace) %>
     </nav>
+
+    <% if @document.failed? %>
+      <p role="alert">
+        <%= document_processing_error_message(@document) %>
+      </p>
+    <% end %>
 
     <% if @document.failed? && policy(@document).retry_processing? %>
       <section>

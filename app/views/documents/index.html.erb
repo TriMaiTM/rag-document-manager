@@ -20,6 +20,7 @@
           <th>Tiêu đề</th>
           <th>Tệp</th>
           <th>Dung lượng</th>
+          <th>Số trang</th>
           <th>Trạng thái</th>
           <th>Ngày tải lên</th>
         </tr>
@@ -38,6 +39,7 @@
 
             <td><%= document.file.filename %></td>
             <td><%= document_file_size(document) %></td>
+            <td><%= document.page_count || "—" %></td>
             <td>
               <%= render "processing_status", document: document %>
             </td>

@@ -26,7 +26,10 @@
       required: true,
       accept: "application/pdf,.pdf" %>
 
-    <p>Chỉ nhận PDF, dung lượng tối đa 20 MB.</p>
+    <p>
+      Chỉ nhận PDF, dung lượng tối đa 20 MB và không quá
+      <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang.
+    </p>
   </div>
 
   <%= form.submit "Tải tài liệu lên" %>

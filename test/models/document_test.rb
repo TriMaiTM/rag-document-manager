@@ -77,4 +77,15 @@ class DocumentTest < ActiveSupport::TestCase
     assert_includes @document.errors[:status],
       "is not included in the list"
   end
+
+  test "allows a positive page count or an unknown page count" do
+    @document.page_count = nil
+    assert_predicate @document, :valid?
+
+    @document.page_count = 10
+    assert_predicate @document, :valid?
+
+    @document.page_count = 0
+    assert_not @document.valid?
+  end
 end

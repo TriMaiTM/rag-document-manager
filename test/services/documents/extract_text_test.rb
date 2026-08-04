@@ -72,6 +72,25 @@ class Documents::ExtractTextTest < ActiveSupport::TestCase
     end
   end
 
+  test "rejects a PDF that exceeds the page limit" do
+    pdf = create_pdf(
+      *Array.new(
+        Documents::ExtractText::MAX_PAGE_COUNT + 1,
+        "Page content"
+      )
+    )
+    document = create_document_with(pdf)
+
+    error = assert_raises(
+      Documents::ExtractText::PageLimitExceededError
+    ) do
+      extract(document)
+    end
+
+    assert_equal Documents::ExtractText::MAX_PAGE_COUNT + 1,
+      error.page_count
+  end
+
   test "requires an attached file" do
     document = Document.new(
       workspace: workspaces(:one),

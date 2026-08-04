@@ -4,6 +4,20 @@ module Documents
     class InvalidStatusError < Error; end
     class EmptyChunksError < Error; end
     class StaleProcessingVersionError < Error; end
+    class ChunkLimitExceededError < Error
+      attr_reader :chunk_count
+
+      def initialize(chunk_count:)
+        @chunk_count = chunk_count
+
+        super(
+          "Tài liệu tạo ra #{chunk_count} chunks, vượt giới hạn " \
+            "#{MAX_CHUNK_COUNT} chunks"
+        )
+      end
+    end
+
+    MAX_CHUNK_COUNT = 500
 
     PROCESSABLE_STATUSES = %w[
       pending
@@ -14,7 +28,8 @@ module Documents
     Result = Data.define(
       :document,
       :chunks,
-      :processing_version
+      :processing_version,
+      :page_count
     )
 
     def initialize(
@@ -32,6 +47,7 @@ module Documents
 
       processing_version = start_processing!
       pages = extract_pages
+      record_page_count!(pages.size, processing_version)
       chunks = build_chunks(pages)
 
       validate_chunks!(chunks)
@@ -44,7 +60,8 @@ module Documents
       Result.new(
         document: document,
         chunks: saved_chunks,
-        processing_version: processing_version
+        processing_version: processing_version,
+        page_count: pages.size
       )
     rescue StandardError => error
       mark_failed!(error, processing_version)
@@ -92,10 +109,24 @@ module Documents
     end
 
     def validate_chunks!(chunks)
-      return if chunks.any?
+      if chunks.empty?
+        raise EmptyChunksError,
+          "Không tạo được chunk nào từ document"
+      end
 
-      raise EmptyChunksError,
-        "Không tạo được chunk nào từ document"
+      return if chunks.size <= MAX_CHUNK_COUNT
+
+      raise ChunkLimitExceededError.new(
+        chunk_count: chunks.size
+      )
+    end
+
+    def record_page_count!(page_count, processing_version)
+      document.with_lock do
+        validate_processing_version!(processing_version)
+
+        document.update!(page_count: page_count)
+      end
     end
 
     def replace_chunks!(chunks, processing_version)
@@ -136,12 +167,17 @@ module Documents
         return unless document.processing_version ==
           processing_version
 
-        document.update_columns(
+        attributes = {
           status: "failed",
           error_code: error_code(error),
           error_message: safe_error_message(error),
           updated_at: Time.current
-        )
+        }
+        if error.respond_to?(:page_count)
+          attributes[:page_count] = error.page_count
+        end
+
+        document.update_columns(attributes)
       end
     end
 
