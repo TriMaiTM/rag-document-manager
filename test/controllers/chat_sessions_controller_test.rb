@@ -74,6 +74,26 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
       )
   end
 
+  test "shows a persisted failed answer without technical details" do
+    @chat_session.chat_messages.create!(
+      role: :user,
+      content: "Question that timed out"
+    )
+    @chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :failed,
+      content: Chat::Ask::FAILURE_ANSWER,
+      error_code: "network_error"
+    )
+
+    get workspace_chat_session_url(@workspace, @chat_session)
+
+    assert_response :success
+    assert_select "[data-message-status='failed'] [role='alert']",
+      text: /Gemini chưa thể trả lời/
+    assert_select "body", text: /network_error/, count: 0
+  end
+
   test "creates a new session through the chat service" do
     created_session = ChatSession.create!(
       workspace: @workspace,
@@ -86,7 +106,8 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
         chat_session: created_session,
         user_message: nil,
         assistant_message: nil,
-        rag_result: nil
+        rag_result: nil,
+        error: nil
       )
     end
     factory = ->(**_arguments) { service }
@@ -100,6 +121,38 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
       @workspace,
       created_session
     )
+  end
+
+  test "redirects to the persisted session when Gemini fails" do
+    failed_session = ChatSession.create!(
+      workspace: @workspace,
+      user: @user,
+      title: "Persisted failed question"
+    )
+    error = Ai::GenerateQueryEmbedding::InvalidResponseError.new(
+      "Invalid embedding response"
+    )
+    service = Object.new
+    service.define_singleton_method(:call) do
+      Chat::Ask::Result.new(
+        chat_session: failed_session,
+        user_message: nil,
+        assistant_message: nil,
+        rag_result: nil,
+        error: error
+      )
+    end
+
+    Chat::Ask.stub(:new, ->(**_arguments) { service }) do
+      post workspace_chat_sessions_url(@workspace),
+        params: { question: "What is Rails?" }
+    end
+
+    assert_redirected_to workspace_chat_session_url(
+      @workspace,
+      failed_session
+    )
+    assert_equal Chat::Ask::FAILURE_ANSWER, flash[:alert]
   end
 
   test "rejects a blank question without calling Gemini" do

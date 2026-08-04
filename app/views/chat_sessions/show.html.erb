@@ -8,7 +8,8 @@
 
   <section aria-label="Nội dung hỏi đáp">
     <% @chat_messages.each do |chat_message| %>
-      <article id="<%= dom_id(chat_message) %>">
+      <article id="<%= dom_id(chat_message) %>"
+        data-message-status="<%= chat_message.status %>">
         <header>
           <h2><%= chat_message_role_label(chat_message) %></h2>
 
@@ -17,7 +18,13 @@
           </small>
         </header>
 
-        <%= simple_format chat_message.content %>
+        <% if chat_message.failed? %>
+          <div role="alert">
+            <%= simple_format chat_message.content %>
+          </div>
+        <% else %>
+          <%= simple_format chat_message.content %>
+        <% end %>
 
         <% if chat_message.assistant? && chat_message.model.present? %>
           <details>

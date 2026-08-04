@@ -24,10 +24,18 @@ class ChatSessionsController < ApplicationController
       question: question
     ).call
 
-    redirect_to workspace_chat_session_path(
-      @workspace,
-      result.chat_session
-    ), notice: "Câu hỏi đã được trả lời và lưu vào lịch sử."
+    if result.failed?
+      log_chat_error(result.error)
+      redirect_to workspace_chat_session_path(
+        @workspace,
+        result.chat_session
+      ), alert: Chat::Ask::FAILURE_ANSWER
+    else
+      redirect_to workspace_chat_session_path(
+        @workspace,
+        result.chat_session
+      ), notice: "Câu hỏi đã được trả lời và lưu vào lịch sử."
+    end
   rescue SemanticSearch::Search::InvalidQueryError => error
     render_index_error(error.message, :unprocessable_entity)
   rescue Rag::AnswerQuestion::GenerationError,

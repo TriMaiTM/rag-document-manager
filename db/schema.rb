@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -18,6 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_140000) do
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
   create_enum "chat_message_role", ["user", "assistant"]
+  create_enum "chat_message_status", ["completed", "failed"]
   create_enum "document_status", ["pending", "processing", "completed", "failed"]
   create_enum "membership_role", ["owner", "admin", "member"]
   create_enum "user_system_role", ["user", "system_admin"]
@@ -77,9 +78,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_140000) do
     t.bigint "chat_session_id", null: false
     t.text "content", null: false
     t.datetime "created_at", null: false
+    t.string "error_code", limit: 100
     t.string "model"
     t.integer "prompt_tokens", default: 0, null: false
     t.enum "role", null: false, enum_type: "chat_message_role"
+    t.enum "status", default: "completed", null: false, enum_type: "chat_message_status"
     t.integer "total_tokens", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["chat_session_id", "created_at"], name: "index_chat_messages_on_session_and_created_at"
@@ -87,6 +90,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_140000) do
     t.check_constraint "char_length(btrim(content)) > 0", name: "chat_messages_content_not_blank"
     t.check_constraint "prompt_tokens >= 0 AND candidate_tokens >= 0 AND total_tokens >= 0", name: "chat_messages_token_counts_non_negative"
     t.check_constraint "role = 'assistant'::chat_message_role OR model IS NULL AND prompt_tokens = 0 AND candidate_tokens = 0 AND total_tokens = 0", name: "chat_messages_user_metadata_absent"
+    t.check_constraint "role = 'assistant'::chat_message_role OR status = 'completed'::chat_message_status", name: "chat_messages_user_status_completed"
+    t.check_constraint "status = 'failed'::chat_message_status AND error_code IS NOT NULL AND char_length(btrim(error_code::text)) > 0 OR status = 'completed'::chat_message_status AND error_code IS NULL", name: "chat_messages_failure_metadata_consistent"
   end
 
   create_table "chat_sessions", force: :cascade do |t|

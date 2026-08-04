@@ -25,6 +25,8 @@ class ChatMessageTest < ActiveSupport::TestCase
 
     assert user_message.user?
     assert assistant_message.assistant?
+    assert user_message.completed?
+    assert assistant_message.completed?
   end
 
   test "rejects generation metadata on a user message" do
@@ -54,5 +56,49 @@ class ChatMessageTest < ActiveSupport::TestCase
       value: -1,
       count: 0
     )
+  end
+
+  test "allows a failed assistant message with a safe error code" do
+    message = @chat_session.chat_messages.new(
+      role: :assistant,
+      status: :failed,
+      content: Chat::Ask::FAILURE_ANSWER,
+      error_code: "network_error"
+    )
+
+    assert_predicate message, :valid?
+  end
+
+  test "requires failure metadata to match the status" do
+    failed_message = @chat_session.chat_messages.new(
+      role: :assistant,
+      status: :failed,
+      content: Chat::Ask::FAILURE_ANSWER
+    )
+    completed_message = @chat_session.chat_messages.new(
+      role: :assistant,
+      content: "Completed answer",
+      error_code: "network_error"
+    )
+
+    assert_not failed_message.valid?
+    assert_includes failed_message.errors[:error_code],
+      "phải có khi tin nhắn thất bại"
+    assert_not completed_message.valid?
+    assert_includes completed_message.errors[:error_code],
+      "phải để trống khi tin nhắn hoàn thành"
+  end
+
+  test "does not allow a failed user message" do
+    message = @chat_session.chat_messages.new(
+      role: :user,
+      status: :failed,
+      content: "Question",
+      error_code: "network_error"
+    )
+
+    assert_not message.valid?
+    assert_includes message.errors[:status],
+      "của câu hỏi người dùng phải là completed"
   end
 end

@@ -7,17 +7,22 @@ class ChatMessagesController < ApplicationController
   def create
     authorize @chat_session, :ask?
 
-    Chat::Ask.new(
+    result = Chat::Ask.new(
       workspace: @workspace,
       user: Current.user,
       question: params[:question].to_s,
       chat_session: @chat_session
     ).call
 
-    redirect_to workspace_chat_session_path(
-      @workspace,
-      @chat_session
-    ), notice: "Câu trả lời mới đã được lưu."
+    if result.failed?
+      log_chat_error(result.error)
+      redirect_with_error(Chat::Ask::FAILURE_ANSWER)
+    else
+      redirect_to workspace_chat_session_path(
+        @workspace,
+        @chat_session
+      ), notice: "Câu trả lời mới đã được lưu."
+    end
   rescue SemanticSearch::Search::InvalidQueryError => error
     redirect_with_error(error.message)
   rescue Rag::AnswerQuestion::GenerationError,
@@ -48,5 +53,18 @@ class ChatMessagesController < ApplicationController
       @workspace,
       @chat_session
     ), alert: message
+  end
+
+  def log_chat_error(error)
+    original_error = if error.respond_to?(:original_error)
+      error.original_error
+    else
+      error
+    end
+
+    Rails.logger.warn(
+      "Chat follow-up failed: " \
+        "#{original_error.class}: #{original_error.message}"
+    )
   end
 end

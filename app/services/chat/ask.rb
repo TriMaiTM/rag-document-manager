@@ -3,12 +3,20 @@ module Chat
     class Error < StandardError; end
     class InvalidSessionError < Error; end
 
+    FAILURE_ANSWER =
+      "Gemini chưa thể trả lời câu hỏi này. Bạn có thể thử lại sau."
+
     Result = Data.define(
       :chat_session,
       :user_message,
       :assistant_message,
-      :rag_result
-    )
+      :rag_result,
+      :error
+    ) do
+      def failed?
+        error.present?
+      end
+    end
 
     def initialize(
       workspace:,
@@ -26,9 +34,17 @@ module Chat
 
     def call
       validate_chat_session!
-      rag_result = answerer.call
+      normalized_question =
+        SemanticSearch::Search.normalize_query!(question)
+      history = recent_history
+      session, user_message = persist_question(normalized_question)
 
-      persist(rag_result)
+      answer_question(
+        session,
+        user_message,
+        normalized_question,
+        history
+      )
     end
 
     private
@@ -38,11 +54,11 @@ module Chat
       :question,
       :chat_session
 
-    def answerer
+    def answerer(normalized_question, history)
       @answerer ||= Rag::AnswerQuestion.new(
         workspace: workspace,
-        question: question,
-        history: recent_history
+        question: normalized_question,
+        history: history
       )
     end
 
@@ -51,6 +67,7 @@ module Chat
 
       chat_session
         .chat_messages
+        .where(status: :completed)
         .reorder(created_at: :desc, id: :desc)
         .limit(Rag::ConversationContext::MAX_MESSAGES)
         .to_a
@@ -66,10 +83,33 @@ module Chat
         "Chat session does not belong to this user and workspace"
     end
 
-    def persist(rag_result)
+    def persist_question(normalized_question)
       ActiveRecord::Base.transaction do
-        session = chat_session || create_session(rag_result.query)
-        user_message = create_user_message(session, rag_result.query)
+        session = chat_session || create_session(normalized_question)
+        user_message = create_user_message(session, normalized_question)
+
+        [ session, user_message ]
+      end
+    end
+
+    def answer_question(
+      session,
+      user_message,
+      normalized_question,
+      history
+    )
+      rag_result = answerer(normalized_question, history).call
+
+      persist_answer(session, user_message, rag_result)
+    rescue Rag::AnswerQuestion::GenerationError,
+      Ai::GeminiClient::Error,
+      Ai::GenerateQueryEmbedding::Error,
+      Codexys::GeminiConfiguration::MissingApiKeyError => error
+      persist_failure(session, user_message, error)
+    end
+
+    def persist_answer(session, user_message, rag_result)
+      ActiveRecord::Base.transaction do
         assistant_message = create_assistant_message(session, rag_result)
         create_sources(assistant_message, rag_result.chunks)
 
@@ -77,7 +117,28 @@ module Chat
           chat_session: session,
           user_message: user_message,
           assistant_message: assistant_message,
-          rag_result: rag_result
+          rag_result: rag_result,
+          error: nil
+        )
+      end
+    end
+
+    def persist_failure(session, user_message, error)
+      ActiveRecord::Base.transaction do
+        assistant_message = session.chat_messages.create!(
+          role: :assistant,
+          status: :failed,
+          error_code: error_code(error),
+          content: FAILURE_ANSWER
+        )
+        create_sources(assistant_message, error_chunks(error))
+
+        Result.new(
+          chat_session: session,
+          user_message: user_message,
+          assistant_message: assistant_message,
+          rag_result: nil,
+          error: error
         )
       end
     end
@@ -89,6 +150,32 @@ module Chat
           ChatSession::MAX_TITLE_LENGTH,
           separator: " "
         )
+      )
+    end
+
+    def error_chunks(error)
+      return [] unless error.respond_to?(:chunks)
+
+      Array(error.chunks)
+    end
+
+    def error_code(error)
+      original_error = if error.respond_to?(:original_error)
+        error.original_error
+      else
+        error
+      end
+
+      code = if original_error.respond_to?(:api_code) &&
+        original_error.api_code.present?
+        original_error.api_code
+      else
+        original_error.class.name.demodulize.underscore
+      end
+
+      code.to_s.truncate(
+        ChatMessage::ERROR_CODE_MAX_LENGTH,
+        omission: ""
       )
     end
 

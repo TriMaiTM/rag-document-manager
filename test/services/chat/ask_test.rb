@@ -106,6 +106,12 @@ class Chat::AskTest < ActiveSupport::TestCase
       role: :user,
       content: "Must not leak"
     )
+    chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :failed,
+      content: Chat::Ask::FAILURE_ANSWER,
+      error_code: "network_error"
+    )
 
     answerer = FakeAnswerer.new(rag_result(chunks: []))
     answerer_arguments = nil
@@ -129,6 +135,67 @@ class Chat::AskTest < ActiveSupport::TestCase
       answerer_arguments[:history].map(&:content)
     assert_not_includes answerer_arguments[:history].map(&:content),
       "Must not leak"
+    assert_not_includes answerer_arguments[:history].map(&:content),
+      Chat::Ask::FAILURE_ANSWER
+  end
+
+  test "persists the question and a safe failure when generation times out" do
+    network_error = Ai::GeminiClient::NetworkError.new(
+      Net::ReadTimeout.new("secret upstream details")
+    )
+    generation_error = Rag::AnswerQuestion::GenerationError.new(
+      query: "Rails security",
+      chunks: [ @chunk ],
+      original_error: network_error
+    )
+    answerer = Object.new
+    answerer.define_singleton_method(:call) { raise generation_error }
+
+    assert_difference("ChatSession.count", 1) do
+      assert_difference("ChatMessage.count", 2) do
+        assert_difference("ChatMessageSource.count", 1) do
+          @result = Chat::Ask.new(
+            workspace: @workspace,
+            user: @user,
+            question: "  Rails   security  ",
+            answerer: answerer
+          ).call
+        end
+      end
+    end
+
+    assert @result.failed?
+    assert_equal generation_error, @result.error
+    assert_nil @result.rag_result
+    assert_equal "Rails security", @result.user_message.content
+    assert @result.user_message.completed?
+
+    failure = @result.assistant_message
+    assert failure.failed?
+    assert_equal "network_error", failure.error_code
+    assert_equal Chat::Ask::FAILURE_ANSWER, failure.content
+    assert_not_includes failure.content, "secret upstream details"
+    assert_equal @chunk.content,
+      failure.chat_message_sources.sole.content
+  end
+
+  test "does not create history for an invalid question" do
+    answerer = FakeAnswerer.new(rag_result(chunks: []))
+
+    assert_no_difference("ChatSession.count") do
+      assert_no_difference("ChatMessage.count") do
+        assert_raises(SemanticSearch::Search::InvalidQueryError) do
+          Chat::Ask.new(
+            workspace: @workspace,
+            user: @user,
+            question: " ",
+            answerer: answerer
+          ).call
+        end
+      end
+    end
+
+    assert_not answerer.called
   end
 
   test "rejects a session owned by another user" do

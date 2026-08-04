@@ -12,6 +12,7 @@ erDiagram
         string reset_password_token UK "nullable"
         datetime reset_password_sent_at "nullable"
         datetime remember_created_at "nullable"
+        enum system_role "user_system_role; null: false; default: user"
         datetime created_at "null: false"
         datetime updated_at "null: false"
     }
@@ -62,6 +63,44 @@ erDiagram
         datetime updated_at "null: false"
     }
 
+    chat_sessions {
+        bigint id PK
+        bigint workspace_id FK "null: false"
+        bigint user_id FK "null: false"
+        string title "null: false"
+        datetime created_at "null: false"
+        datetime updated_at "null: false"
+    }
+
+    chat_messages {
+        bigint id PK
+        bigint chat_session_id FK "null: false"
+        enum role "chat_message_role; null: false"
+        enum status "chat_message_status; null: false; default: completed"
+        text content "null: false"
+        string error_code "nullable; limit: 100"
+        string model "nullable"
+        integer prompt_tokens "null: false; default: 0"
+        integer candidate_tokens "null: false; default: 0"
+        integer total_tokens "null: false; default: 0"
+        datetime created_at "null: false"
+        datetime updated_at "null: false"
+    }
+
+    chat_message_sources {
+        bigint id PK
+        bigint chat_message_id FK "null: false"
+        bigint document_id FK "nullable"
+        bigint document_chunk_id FK "nullable"
+        integer rank "null: false"
+        string document_title "null: false"
+        integer page_number "null: false"
+        text content "null: false"
+        float cosine_distance "null: false"
+        datetime created_at "null: false"
+        datetime updated_at "null: false"
+    }
+
     active_storage_blobs {
         bigint id PK
         string key UK "null: false"
@@ -94,6 +133,12 @@ erDiagram
     users ||--o{ documents : uploads
     workspaces ||--o{ documents : contains
     documents ||--o{ document_chunks : splits
+    users ||--o{ chat_sessions : owns
+    workspaces ||--o{ chat_sessions : contains
+    chat_sessions ||--o{ chat_messages : has
+    chat_messages ||--o{ chat_message_sources : cites
+    documents o|--o{ chat_message_sources : snapshots
+    document_chunks o|--o{ chat_message_sources : snapshots
     documents ||--o| active_storage_attachments : "file (polymorphic)"
     active_storage_blobs ||--o{ active_storage_attachments : attaches
     active_storage_blobs ||--o{ active_storage_variant_records : variants
@@ -102,7 +147,10 @@ erDiagram
 ## Enum types
 
 - `membership_role`: `owner`, `admin`, `member`.
+- `user_system_role`: `user`, `system_admin`.
 - `document_status`: `pending`, `processing`, `completed`, `failed`.
+- `chat_message_role`: `user`, `assistant`.
+- `chat_message_status`: `completed`, `failed`.
 
 `memberships.role` vẫn là quyền theo từng workspace và độc lập với Devise.
 Devise chỉ chịu trách nhiệm authentication. Bảng `sessions` tự viết đã được
