@@ -26,28 +26,20 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     @pdf_file.close!
   end
 
-  test "prepares chunks before generating embeddings" do
-    calls = []
-    prepare_service = service_recording(calls, :prepare)
-    embed_service = service_recording(calls, :embed)
+  test "delegates processing to the document orchestrator" do
+    processor = Minitest::Mock.new
+    processor.expect(:call, :processed)
 
-    prepare_factory = lambda do |document:|
+    processor_factory = lambda do |document:|
       assert_equal @document, document
-      prepare_service
+      processor
     end
 
-    embed_factory = lambda do |document:|
-      assert_equal @document, document
-      embed_service
+    Documents::ProcessDocument.stub(:new, processor_factory) do
+      ProcessDocumentJob.perform_now(@document)
     end
 
-    Documents::PrepareChunks.stub(:new, prepare_factory) do
-      Documents::EmbedChunks.stub(:new, embed_factory) do
-        ProcessDocumentJob.perform_now(@document)
-      end
-    end
-
-    assert_equal [ :prepare, :embed ], calls
+    processor.verify
   end
 
   test "processes a PDF through chunks and embeddings" do
@@ -198,13 +190,5 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     tempfile.write(pdf.render)
     tempfile.rewind
     tempfile
-  end
-
-  def service_recording(calls, name)
-    Object.new.tap do |service|
-      service.define_singleton_method(:call) do
-        calls << name
-      end
-    end
   end
 end

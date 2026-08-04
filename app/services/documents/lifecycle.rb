@@ -40,10 +40,11 @@ module Documents
         validate_status!("processing", action: "complete")
 
         yield document if block_given?
+        completed_at = transition_time
 
         document.update!(
           status: :completed,
-          completed_at: now,
+          completed_at: completed_at,
           failed_at: nil,
           error_code: nil,
           error_message: nil
@@ -59,15 +60,16 @@ module Documents
           expected_processing_version
 
         return false unless document.processing?
+        failed_at = transition_time
 
         document.update_columns(
           {
             status: "failed",
             completed_at: nil,
-            failed_at: now,
+            failed_at: failed_at,
             error_code: error_code(error),
             error_message: safe_error_message(error),
-            updated_at: now
+            updated_at: failed_at
           }.merge(attributes)
         )
       end
@@ -99,6 +101,10 @@ module Documents
 
     def now
       clock.call
+    end
+
+    def transition_time
+      [ now, document.processing_started_at ].compact.max
     end
 
     def validate_processing_version!(expected_version)

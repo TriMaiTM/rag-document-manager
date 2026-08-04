@@ -63,6 +63,19 @@ class Documents::LifecycleTest < ActiveSupport::TestCase
     assert_nil @document.failed_at
   end
 
+  test "keeps terminal timestamps monotonic if the clock moves backwards" do
+    version = @lifecycle.start_processing!
+    started_at = @document.processing_started_at
+    @now = started_at - 1.minute
+
+    @lifecycle.fail!(
+      error: RuntimeError.new("Clock changed"),
+      expected_processing_version: version
+    )
+
+    assert_equal started_at, @document.reload.failed_at
+  end
+
   test "rejects starting a completed document" do
     @document.update!(status: :completed)
 
