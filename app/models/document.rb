@@ -29,6 +29,12 @@ class Document < ApplicationRecord
       greater_than: 0
     }
 
+  validates :content_sha256,
+    length: { is: 64 },
+    format: { with: /\A\h{64}\z/ },
+    uniqueness: { scope: :workspace_id },
+    allow_nil: true
+
   validates :page_count,
     numericality: {
       only_integer: true,

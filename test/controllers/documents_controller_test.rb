@@ -151,6 +151,44 @@ class DocumentsControllerTest <
     )
   end
 
+  test "rejects a duplicate PDF without enqueuing processing" do
+    post workspace_documents_url(@workspace),
+      params: {
+        document: {
+          title: "First checksum copy",
+          file: file_fixture_upload(
+            "sample.pdf",
+            "application/pdf"
+          )
+        }
+      }
+    assert_response :redirect
+    clear_enqueued_jobs
+
+    assert_no_enqueued_jobs only: ProcessDocumentJob do
+      assert_no_difference(
+        [
+          "Document.count",
+          "ActiveStorage::Blob.count"
+        ]
+      ) do
+        post workspace_documents_url(@workspace),
+          params: {
+            document: {
+              title: "Renamed checksum copy",
+              file: file_fixture_upload(
+                "sample.pdf",
+                "application/pdf"
+              )
+            }
+          }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "li", /đã tồn tại trong Workspace này/
+  end
+
   test "rejects a fake PDF" do
     fake_pdf = file_fixture_upload(
       "fake.pdf",

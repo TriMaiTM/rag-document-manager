@@ -1,5 +1,11 @@
+require "digest"
+
 module Documents
   class Upload
+    DUPLICATE_FILE_ERROR =
+      "đã tồn tại trong Workspace này"
+    HASH_BUFFER_SIZE = 1.megabyte
+
     def initialize(workspace:, uploaded_by:, attributes:)
       @workspace = workspace
       @uploaded_by = uploaded_by
@@ -24,8 +30,22 @@ module Documents
         return document
       end
 
+      checksum = content_sha256
+      if duplicate_content?(checksum)
+        add_duplicate_error(document)
+        return document
+      end
+
+      document.content_sha256 = checksum
       attach_file(document)
       document.save
+      normalize_duplicate_validation_error(document)
+      document
+    rescue ActiveRecord::RecordNotUnique
+      raise unless duplicate_content?(document.content_sha256)
+
+      purge_unpersisted_file(document)
+      add_duplicate_error(document)
       document
     end
 
@@ -83,6 +103,44 @@ module Documents
         filename: file.original_filename,
         content_type: Document::PDF_CONTENT_TYPE
       )
+    end
+
+    def content_sha256
+      digest = Digest::SHA256.new
+      rewind_file
+
+      while (buffer = file.tempfile.read(HASH_BUFFER_SIZE))
+        digest.update(buffer)
+      end
+
+      digest.hexdigest
+    ensure
+      rewind_file
+    end
+
+    def duplicate_content?(checksum)
+      return false if checksum.blank?
+
+      workspace.documents.exists?(content_sha256: checksum)
+    end
+
+    def normalize_duplicate_validation_error(document)
+      return unless document.errors.added?(:content_sha256, :taken)
+
+      document.errors.delete(:content_sha256)
+      purge_unpersisted_file(document)
+      add_duplicate_error(document)
+    end
+
+    def purge_unpersisted_file(document)
+      return if document.persisted?
+      return unless document.file.attached?
+
+      document.file.purge
+    end
+
+    def add_duplicate_error(document)
+      document.errors.add(:file, DUPLICATE_FILE_ERROR)
     end
 
     def rewind_file

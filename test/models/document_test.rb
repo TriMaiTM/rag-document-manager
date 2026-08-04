@@ -88,4 +88,34 @@ class DocumentTest < ActiveSupport::TestCase
     @document.page_count = 0
     assert_not @document.valid?
   end
+
+  test "validates SHA-256 format" do
+    @document.content_sha256 = "not-a-sha256"
+
+    assert_not @document.valid?
+    assert_includes @document.errors[:content_sha256],
+      "is the wrong length (should be 64 characters)"
+  end
+
+  test "requires a workspace-scoped unique checksum" do
+    checksum = "a" * 64
+    @document.content_sha256 = checksum
+    @document.save!
+
+    duplicate = Document.new(
+      workspace: @document.workspace,
+      uploaded_by: @document.uploaded_by,
+      title: "Duplicate",
+      content_sha256: checksum
+    )
+    duplicate.file.attach(
+      io: file_fixture("sample.pdf").open,
+      filename: "duplicate.pdf",
+      content_type: "application/pdf"
+    )
+
+    assert_not duplicate.valid?
+    assert_includes duplicate.errors[:content_sha256],
+      "has already been taken"
+  end
 end
