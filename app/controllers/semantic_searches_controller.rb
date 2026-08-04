@@ -1,5 +1,7 @@
 class SemanticSearchesController < ApplicationController
   before_action :set_workspace
+  rate_limit_ai_requests only: :show,
+    if: -> { params.key?(:query) }
   after_action :verify_authorized
 
   def show

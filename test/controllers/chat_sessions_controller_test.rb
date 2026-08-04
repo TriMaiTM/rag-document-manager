@@ -2,6 +2,8 @@ require "test_helper"
 
 class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    Ai::RequestRateLimit.store.clear
+
     @workspace = workspaces(:one)
     @user = users(:one)
     @chat_session = ChatSession.create!(
@@ -163,6 +165,45 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select "[role='alert']", /ít nhất 2 ký tự/
+  end
+
+  test "rate limits sustained AI requests for the current user" do
+    calls = 0
+    service = Object.new
+    result = Chat::Ask::Result.new(
+      chat_session: @chat_session,
+      user_message: nil,
+      assistant_message: nil,
+      rag_result: nil,
+      error: nil
+    )
+    service.define_singleton_method(:call) do
+      calls += 1
+      result
+    end
+
+    travel_to Time.current do
+      Chat::Ask.stub(:new, ->(**_arguments) { service }) do
+        4.times do
+          Ai::RequestRateLimit::BURST_LIMIT.times do
+            post workspace_chat_sessions_url(@workspace),
+              params: { question: "Rate limited question" }
+
+            assert_response :redirect
+          end
+
+          travel 61.seconds
+        end
+
+        post workspace_chat_sessions_url(@workspace),
+          params: { question: "One request too many" }
+      end
+    end
+
+    assert_response :too_many_requests
+    assert_equal Ai::RequestRateLimit::HOURLY_LIMIT, calls
+    assert_equal "3600", response.headers["Retry-After"]
+    assert_select "h1", "Bạn đang gửi câu hỏi quá nhanh"
   end
 
   test "cannot view another member's session" do

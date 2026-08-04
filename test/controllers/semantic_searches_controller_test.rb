@@ -2,6 +2,8 @@ require "test_helper"
 
 class SemanticSearchesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    Ai::RequestRateLimit.store.clear
+
     @workspace = workspaces(:one)
     sign_in_as users(:one)
   end

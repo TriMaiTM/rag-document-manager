@@ -1,6 +1,7 @@
 class ChatSessionsController < ApplicationController
   before_action :set_workspace
   before_action :set_chat_session, only: [ :show, :destroy ]
+  rate_limit_ai_requests only: :create
 
   after_action :verify_authorized
 
