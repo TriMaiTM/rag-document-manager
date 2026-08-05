@@ -2,7 +2,9 @@
 
 ## Dataset và cấu hình
 
-- Workspace thử nghiệm: `aa`.
+- Ngày chạy baseline: `2026-08-05`.
+- Workspace thử nghiệm: `aa` (ID `7`).
+- 3 PDF: `CSDL`, `SRS`, `TTTN`.
 - 15 câu hỏi: 12 answerable và 3 unanswerable.
 - Embedding: `gemini-embedding-001`, 1.536 dimensions.
 - Chunk size: 1.200 ký tự.
@@ -18,8 +20,10 @@
 | MRR@5 | 0,958 | 0,875 |
 | No-answer accuracy | 0,0% (0/3) | 100,0% (3/3) |
 | Overall accuracy | 80,0% (12/15) | 93,3% (14/15) |
-| Total average latency | 523,1 ms | 531,7 ms |
-| Total P95 latency | 935,6 ms | 1.007,9 ms |
+| Total average latency | 671,1 ms | 714,7 ms |
+| Total P95 latency | 973,9 ms | 1.017,3 ms |
+| Query embedding P95 | 715,3 ms | 1.002,4 ms |
+| PostgreSQL vector search P95 | 209,9 ms | 196,4 ms |
 
 ## Quyết định
 
@@ -28,10 +32,13 @@ positive và tăng overall accuracy thêm 13,3 điểm phần trăm. Đánh đ�
 answerable (`right-10`, distance khoảng 0,427) trở thành miss, nhưng Hit Rate@5
 vẫn cao hơn mục tiêu 80%.
 
-Total P95 ở lần chạy 0.40 vượt mục tiêu cũ 7,9 ms. Giá trị này bao gồm độ trễ gọi
-Gemini query embedding nên không đại diện riêng cho PostgreSQL/pgvector. Hệ thống
-đã được bổ sung stage timing và baseline cuối xác nhận mục tiêu dưới 1.000 ms áp
-dụng cho pgvector P95 đã đạt.
+Total retrieval P95 của threshold `0.40` là 1.017,3 ms. Tuy nhiên, phần lớn
+thời gian đến từ Gemini query embedding với P95 1.002,4 ms. PostgreSQL vector
+search có P95 196,4 ms, thấp hơn nhiều so với mục tiêu 1.000 ms.
+
+Vì vậy, lần chạy này đạt cả mục tiêu Hit Rate tối thiểu 80% và mục tiêu pgvector
+P95 dưới 1.000 ms. Total retrieval latency không được dùng để kết luận pgvector
+chậm vì nó còn bao gồm thời gian mạng và Gemini API.
 
 ## Baseline cuối với stage timing
 
@@ -42,29 +49,29 @@ dụng cho pgvector P95 đã đạt.
 | No-answer accuracy | 100,0% (3/3) |
 | Overall accuracy | 93,3% (14/15) |
 | API error rate | 0,0% (0/15) |
-| Total retrieval average / P95 | 491,4 / 748,2 ms |
-| Query embedding average / P95 | 459,9 / 506,1 ms |
-| PostgreSQL vector search average / P95 | 26,6 / 200,5 ms |
+| Total retrieval average / P95 | 714,7 / 1.017,3 ms |
+| Query embedding average / P95 | 681,0 / 1.002,4 ms |
+| PostgreSQL vector search average / P95 | 26,3 / 196,4 ms |
 
 Kết quả từng case:
 
 | Case | Kết quả | Rank | Total latency |
 | --- | --- | ---: | ---: |
-| right-1 | HIT | 1 | 748,2 ms |
-| right-2 | HIT | 1 | 520,5 ms |
-| right-3 | HIT | 1 | 449,5 ms |
-| right-4 | HIT | 1 | 491,9 ms |
-| right-5 | HIT | 1 | 445,4 ms |
-| right-6 | HIT | 1 | 475,8 ms |
-| right-7 | HIT | 1 | 470,9 ms |
-| right-8 | HIT | 1 | 471,9 ms |
-| right-9 | HIT | 2 | 482,0 ms |
-| right-10 | MISS | - | 468,4 ms |
-| right-11 | HIT | 1 | 479,2 ms |
-| right-12 | HIT | 1 | 450,9 ms |
-| unrelated-01 | NO_ANSWER CORRECT | - | 465,9 ms |
-| unrelated-02 | NO_ANSWER CORRECT | - | 502,7 ms |
-| unrelated-03 | NO_ANSWER CORRECT | - | 447,2 ms |
+| right-1 | HIT | 1 | 943,8 ms |
+| right-2 | HIT | 1 | 696,6 ms |
+| right-3 | HIT | 1 | 640,7 ms |
+| right-4 | HIT | 1 | 1.017,3 ms |
+| right-5 | HIT | 1 | 764,0 ms |
+| right-6 | HIT | 1 | 667,8 ms |
+| right-7 | HIT | 1 | 686,3 ms |
+| right-8 | HIT | 1 | 568,9 ms |
+| right-9 | HIT | 2 | 655,5 ms |
+| right-10 | MISS | - | 619,4 ms |
+| right-11 | HIT | 1 | 602,1 ms |
+| right-12 | HIT | 1 | 675,8 ms |
+| unrelated-01 | NO_ANSWER CORRECT | - | 875,0 ms |
+| unrelated-02 | NO_ANSWER CORRECT | - | 688,1 ms |
+| unrelated-03 | NO_ANSWER CORRECT | - | 619,4 ms |
 
 Tổng latency chủ yếu đến từ Gemini query embedding: trung bình 459,9 ms trên
 tổng 491,4 ms. PostgreSQL vector search trung bình 26,6 ms, vì vậy pgvector không
@@ -72,7 +79,7 @@ phải nút thắt chính trên dataset demo này.
 
 ## Giới hạn của baseline
 
-- Dataset chỉ có 15 câu hỏi và bốn PDF trong một workspace demo.
+- Dataset chỉ có 15 câu hỏi và ba PDF trong một workspace demo.
 - Ground truth được gắn nhãn thủ công theo tiêu đề và số trang nên vẫn có khả
   năng sai sót chủ quan.
 - Latency Gemini phụ thuộc mạng, quota và tải của provider tại thời điểm chạy.
