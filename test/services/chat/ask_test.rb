@@ -237,6 +237,27 @@ class Chat::AskTest < ActiveSupport::TestCase
     assert_equal "Rails Guide", source.document_title
   end
 
+  test "rejects a user outside the workspace before persistence" do
+    answerer = FakeAnswerer.new(
+      rag_result(chunks: [])
+    )
+
+    assert_no_difference("ChatSession.count") do
+      assert_no_difference("ChatMessage.count") do
+        assert_raises(Chat::Ask::WorkspaceAccessError) do
+          Chat::Ask.new(
+            workspace: @workspace,
+            user: users(:four),
+            question: "Private workspace question",
+            answerer: answerer
+          ).call
+        end
+      end
+    end
+
+    assert_not answerer.called
+  end
+
   private
 
   def create_document

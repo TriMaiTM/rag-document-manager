@@ -2,6 +2,7 @@ module Chat
   class Ask
     class Error < StandardError; end
     class InvalidSessionError < Error; end
+    class WorkspaceAccessError < Error; end
 
     FAILURE_ANSWER =
       "Gemini chưa thể trả lời câu hỏi này. Bạn có thể thử lại sau."
@@ -33,7 +34,9 @@ module Chat
     end
 
     def call
+      validate_workspace_access!
       validate_chat_session!
+
       normalized_question =
         SemanticSearch::Search.normalize_query!(question)
       history = recent_history
@@ -72,6 +75,13 @@ module Chat
         .limit(Rag::ConversationContext::MAX_MESSAGES)
         .to_a
         .reverse
+    end
+
+    def validate_workspace_access!
+      return if workspace.membership_for(user).present?
+
+      raise WorkspaceAccessError,
+        "User does not belong to this workspace"
     end
 
     def validate_chat_session!
