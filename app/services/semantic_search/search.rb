@@ -21,8 +21,8 @@ module SemanticSearch
 
     MIN_QUERY_LENGTH = 2
     MAX_QUERY_LENGTH = 500
-    DEFAULT_LIMIT = 5
-    MAX_LIMIT = 10
+    DEFAULT_LIMIT = SemanticSearch::RetrieveChunks::DEFAULT_LIMIT
+    MAX_LIMIT = SemanticSearch::RetrieveChunks::MAX_LIMIT
     DEFAULT_CLOCK = lambda do
       Process.clock_gettime(Process::CLOCK_MONOTONIC)
     end
@@ -46,6 +46,7 @@ module SemanticSearch
       workspace:,
       query:,
       generator: Ai::GenerateQueryEmbedding.new,
+      retriever: SemanticSearch::RetrieveChunks,
       limit: DEFAULT_LIMIT,
       max_cosine_distance:
         Rails.application.config.x.semantic_search.max_cosine_distance,
@@ -54,6 +55,7 @@ module SemanticSearch
       @workspace = workspace
       @query = query
       @generator = generator
+      @retriever = retriever
       @limit = normalize_limit(limit)
       @max_cosine_distance = Float(max_cosine_distance)
       @clock = clock
@@ -68,7 +70,12 @@ module SemanticSearch
         generator.call(query: normalized_query).vector
       end
       chunks, vector_search_milliseconds = measure do
-        nearest_chunks(embedding)
+        retriever.new(
+          workspace: workspace,
+          embedding: embedding,
+          limit: limit,
+          max_cosine_distance: max_cosine_distance
+        ).call
       end
 
       Result.new(
@@ -84,6 +91,7 @@ module SemanticSearch
     attr_reader :workspace,
       :query,
       :generator,
+      :retriever,
       :limit,
       :max_cosine_distance,
       :clock
@@ -106,42 +114,6 @@ module SemanticSearch
       value = yield
 
       [ value, ((clock.call - started_at) * 1_000).round(3) ]
-    end
-
-    def nearest_chunks(embedding)
-      candidates
-        .nearest_neighbors(
-          :embedding,
-          embedding,
-          distance: "cosine"
-        )
-        .limit(limit)
-        .preload(:document)
-        .to_a
-        .select do |chunk|
-          chunk.neighbor_distance <= max_cosine_distance
-        end
-    end
-
-    def candidates
-      DocumentChunk
-        .joins(:document)
-        .where(
-          documents: {
-            workspace_id: workspace.id,
-            status: Document.statuses.fetch(:completed)
-          }
-        )
-        .where(
-          "document_chunks.processing_version = " \
-            "documents.processing_version"
-        )
-        .where.not(embedding: nil)
-        .where(
-          embedding_provider: Ai::EmbeddingConfig::PROVIDER,
-          embedding_model: Ai::EmbeddingConfig::MODEL,
-          embedding_dimensions: Ai::EmbeddingConfig::DIMENSIONS
-        )
     end
   end
 end
