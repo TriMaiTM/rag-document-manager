@@ -14,7 +14,7 @@ class Ai::GenerateEmbeddingsTest < ActiveSupport::TestCase
     end
 
     def embed_query(input: nil, inputs: nil)
-      @inputs = inputs || (input ? [input] : nil)
+      @inputs = inputs || (input ? [ input ] : nil)
       @response
     end
   end
