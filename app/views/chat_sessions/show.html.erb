@@ -18,10 +18,25 @@
           </small>
         </header>
 
-        <% if chat_message.failed? %>
+        <% if chat_message.pending? %>
+          <p role="status">Đang thử tạo lại câu trả lời...</p>
+        <% elsif chat_message.failed? %>
           <div role="alert">
             <%= simple_format chat_message.content %>
           </div>
+
+          <% if chat_message.retryable? %>
+            <%= button_to "Thử lại",
+              retry_workspace_chat_session_chat_message_path(
+                @workspace,
+                @chat_session,
+                chat_message
+              ),
+              method: :post,
+              data: {
+                turbo_submits_with: "Đang thử lại..."
+              } %>
+          <% end %>
         <% else %>
           <%= simple_format chat_message.content %>
         <% end %>
@@ -85,7 +100,10 @@
           rows: 4 %>
       </div>
 
-      <%= form.submit "Gửi câu hỏi" %>
+      <%= form.submit "Gửi câu hỏi",
+        data: {
+          turbo_submits_with: "Đang gửi..."
+        } %>
     <% end %>
   </section>
 

@@ -27,7 +27,10 @@
           placeholder: "Ví dụ: Tài liệu giải thích semantic search như thế nào?" %>
       </div>
 
-      <%= form.submit "Hỏi Codexys" %>
+      <%= form.submit "Hỏi Codexys",
+        data: {
+          turbo_submits_with: "Đang gửi..."
+        } %>
     <% end %>
   </section>
 

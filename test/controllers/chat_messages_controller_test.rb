@@ -142,4 +142,69 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "60", response.headers["Retry-After"]
     assert_select "h1", "Bạn đang gửi câu hỏi quá nhanh"
   end
+
+  test "retries an owned failed assistant message" do
+    question = @chat_session.chat_messages.create!(
+      role: :user,
+      content: "What is semantic search?"
+    )
+    failed_message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :failed,
+      question_message: question,
+      content: Chat::Ask::FAILURE_ANSWER,
+      error_code: "network_error"
+    )
+
+    result = Chat::RetryAnswer::Result.new(
+      assistant_message: failed_message,
+      rag_result: nil,
+      error: nil
+    )
+    service = Object.new
+    service.define_singleton_method(:call) { result }
+
+    captured_arguments = nil
+    factory = lambda do |**arguments|
+      captured_arguments = arguments
+      service
+    end
+
+    Chat::RetryAnswer.stub(:new, factory) do
+      post retry_workspace_chat_session_chat_message_url(
+        @workspace,
+        @chat_session,
+        failed_message
+      )
+    end
+
+    assert_equal @workspace,
+      captured_arguments[:workspace]
+    assert_equal @user,
+      captured_arguments[:user]
+    assert_equal failed_message,
+      captured_arguments[:assistant_message]
+
+    assert_redirected_to workspace_chat_session_url(
+      @workspace,
+      @chat_session
+    )
+    assert_equal "Câu trả lời đã được tạo lại.",
+      flash[:notice]
+  end
+
+  test "does not retry a completed assistant message" do
+    message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      content: "Completed answer"
+    )
+
+    post retry_workspace_chat_session_chat_message_url(
+      @workspace,
+      @chat_session,
+      message
+    )
+
+    assert_response :forbidden
+  end
 end

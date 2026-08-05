@@ -83,7 +83,10 @@ class ChatSessionsController < ApplicationController
   def prepare_show
     @chat_messages = @chat_session
       .chat_messages
-      .preload(chat_message_sources: :document)
+      .preload(
+        :question_message,
+        chat_message_sources: :document
+      )
     @question = ""
   end
 

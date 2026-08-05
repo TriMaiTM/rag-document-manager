@@ -77,13 +77,14 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "shows a persisted failed answer without technical details" do
-    @chat_session.chat_messages.create!(
+    question = @chat_session.chat_messages.create!(
       role: :user,
       content: "Question that timed out"
     )
-    @chat_session.chat_messages.create!(
+    failed_message = @chat_session.chat_messages.create!(
       role: :assistant,
       status: :failed,
+      question_message: question,
       content: Chat::Ask::FAILURE_ANSWER,
       error_code: "network_error"
     )
@@ -94,6 +95,17 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-message-status='failed'] [role='alert']",
       text: /Gemini chưa thể trả lời/
     assert_select "body", text: /network_error/, count: 0
+    assert_select "form[action=?]",
+      retry_workspace_chat_session_chat_message_path(
+        @workspace,
+        @chat_session,
+        failed_message
+      )
+
+    assert_select(
+      "button[data-turbo-submits-with='Đang thử lại...']",
+      "Thử lại"
+    )
   end
 
   test "creates a new session through the chat service" do
@@ -218,5 +230,31 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to workspace_chat_sessions_url(@workspace)
+  end
+
+  test "shows pending retry status" do
+    question = @chat_session.chat_messages.create!(
+      role: :user,
+      content: "Question"
+    )
+    message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :failed,
+      question_message: question,
+      content: Chat::Ask::FAILURE_ANSWER,
+      error_code: "network_error"
+    )
+    message.claim_retry!
+
+    get workspace_chat_session_url(
+      @workspace,
+      @chat_session
+    )
+
+    assert_response :success
+    assert_select(
+      "[data-message-status='pending'] [role='status']",
+      "Đang thử tạo lại câu trả lời..."
+    )
   end
 end
