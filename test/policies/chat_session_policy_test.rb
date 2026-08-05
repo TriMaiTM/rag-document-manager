@@ -18,6 +18,7 @@ class ChatSessionPolicyTest < ActiveSupport::TestCase
     assert policy.create?
     assert policy.ask?
     assert policy.destroy?
+    assert policy.update_title?
   end
 
   test "workspace member cannot access another user's chat" do
@@ -28,6 +29,7 @@ class ChatSessionPolicyTest < ActiveSupport::TestCase
     assert_not policy.create?
     assert_not policy.ask?
     assert_not policy.destroy?
+    assert_not policy.update_title?
   end
 
   test "outsider cannot access chat sessions" do
@@ -36,6 +38,7 @@ class ChatSessionPolicyTest < ActiveSupport::TestCase
     assert_not policy.index?
     assert_not policy.show?
     assert_not policy.create?
+    assert_not policy.update_title?
   end
 
   test "scope only returns the user's sessions in joined workspaces" do
