@@ -25,6 +25,14 @@ module SemanticSearch
           vector_search_milliseconds: vector_search_milliseconds
         )
       end
+
+      def sufficient_context?
+        chunks.any?
+      end
+
+      def insufficient_context?
+        !sufficient_context?
+      end
     end
 
     MIN_QUERY_LENGTH = 2

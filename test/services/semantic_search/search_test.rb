@@ -87,6 +87,30 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
     assert_in_delta 10.0, result.vector_search_milliseconds
   end
 
+  test "reports insufficient context when every chunk exceeds threshold" do
+    document = create_document(
+      workspaces(:one),
+      status: :completed
+    )
+
+    create_chunk(
+      document,
+      vector(0.0, 1.0),
+      position: 1
+    )
+
+    result = SemanticSearch::Search.new(
+      workspace: workspaces(:one),
+      query: "Rails",
+      generator: FakeGenerator.new(@query_vector)
+    ).call
+
+    assert result.insufficient_context?
+    assert_not result.sufficient_context?
+    assert_empty result.chunks
+    assert_empty result.sources
+  end
+
   test "limits the number of results" do
     document = create_document(workspaces(:one), status: :completed)
 
