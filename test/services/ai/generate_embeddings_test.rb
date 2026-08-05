@@ -12,6 +12,11 @@ class Ai::GenerateEmbeddingsTest < ActiveSupport::TestCase
       @inputs = inputs
       @response
     end
+
+    def embed_query(input: nil, inputs: nil)
+      @inputs = inputs || (input ? [input] : nil)
+      @response
+    end
   end
 
   test "generates normalized embeddings in input order" do
