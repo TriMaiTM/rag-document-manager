@@ -171,6 +171,29 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
     assert_nil generator.query
   end
 
+  test "does not use matching chunks from another workspace" do
+    other_document = create_document(
+      workspaces(:two),
+      status: :completed
+    )
+
+    create_chunk(
+      other_document,
+      @query_vector,
+      position: 1
+    )
+
+    result = SemanticSearch::Search.new(
+      workspace: workspaces(:one),
+      query: "Rails authentication",
+      generator: FakeGenerator.new(@query_vector)
+    ).call
+
+    assert result.insufficient_context?
+    assert_empty result.chunks
+    assert_empty result.sources
+  end
+
   private
 
   def create_document(workspace, status:)
