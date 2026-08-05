@@ -17,7 +17,7 @@ class ChatMessagePolicy < ApplicationPolicy
             .joins(chat_session: { workspace: :memberships })
             .where(
                 chat_sessions: { user_id: user.id },
-                memberships: { user_id: user.id}
+                memberships: { user_id: user.id }
             )
             .distinct
         end
