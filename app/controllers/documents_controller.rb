@@ -41,7 +41,7 @@ class DocumentsController < ApplicationController
     ).call
 
     if @document.persisted?
-      ProcessDocumentJob.perform_later(@document.id)
+      enqueue_processing(@document)
 
       redirect_to workspace_document_path(
         @workspace,
@@ -81,7 +81,7 @@ class DocumentsController < ApplicationController
     authorize @document
 
     Documents::RetryProcessing.new(document: @document).call
-    ProcessDocumentJob.perform_later(@document.id)
+    enqueue_processing(@document)
 
     redirect_to workspace_document_path(@workspace, @document),
       notice: "Tài liệu đã được đưa vào hàng đợi xử lý lại.",
@@ -120,6 +120,13 @@ class DocumentsController < ApplicationController
 
   def document_context
     @workspace.documents.new(uploaded_by: Current.user)
+  end
+
+  def enqueue_processing(document)
+    ProcessDocumentJob.perform_later(
+      document.id,
+      document.processing_version
+    )
   end
 
   def document_params

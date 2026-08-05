@@ -37,10 +37,66 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     end
 
     Documents::ProcessDocument.stub(:new, processor_factory) do
-      ProcessDocumentJob.perform_now(@document.id)
+      ProcessDocumentJob.perform_now(
+        @document.id,
+        @document.processing_version
+      )
     end
 
     processor.verify
+  end
+
+  test "limits concurrent executions by document ID" do
+    job = ProcessDocumentJob.new(
+      @document.id,
+      @document.processing_version
+    )
+
+    assert_equal "DocumentProcessing/#{@document.id}",
+      job.concurrency_key
+    assert_equal 1, ProcessDocumentJob.concurrency_limit
+    assert_equal 30.minutes,
+      ProcessDocumentJob.concurrency_duration
+    assert_equal :block,
+      ProcessDocumentJob.concurrency_on_conflict
+  end
+
+  test "skips a stale processing version" do
+    stale_version = @document.processing_version
+    @document.update!(processing_version: stale_version + 1)
+    processor_factory = lambda do |document:|
+      flunk "Stale job must not process #{document.id}"
+    end
+
+    Documents::ProcessDocument.stub(:new, processor_factory) do
+      assert_nothing_raised do
+        ProcessDocumentJob.perform_now(
+          @document.id,
+          stale_version
+        )
+      end
+    end
+
+    assert @document.reload.pending?
+    assert_equal stale_version + 1, @document.processing_version
+  end
+
+  test "skips a duplicate job after completion" do
+    @document.update!(status: :completed)
+    processor_factory = lambda do |document:|
+      flunk "Completed document must not process #{document.id}"
+    end
+
+    Documents::ProcessDocument.stub(:new, processor_factory) do
+      assert_nothing_raised do
+        ProcessDocumentJob.perform_now(
+          @document.id,
+          @document.processing_version
+        )
+      end
+    end
+
+    assert @document.reload.completed?
   end
 
   test "discards a missing document" do
@@ -51,7 +107,7 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
 
     Documents::ProcessDocument.stub(:new, processor_factory) do
       assert_nothing_raised do
-        ProcessDocumentJob.perform_now(missing_id)
+        ProcessDocumentJob.perform_now(missing_id, 1)
       end
     end
   end
@@ -66,12 +122,17 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
 
     Documents::ProcessDocument.stub(:new, ->(document:) { processor }) do
       assert_enqueued_jobs 1, only: ProcessDocumentJob do
-        ProcessDocumentJob.perform_now(@document.id)
+        ProcessDocumentJob.perform_now(
+          @document.id,
+          @document.processing_version
+        )
       end
     end
 
     retry_job = enqueued_jobs.last
     assert_equal "documents", retry_job.fetch(:queue)
+    assert_equal [ @document.id, @document.processing_version ],
+      retry_job.fetch(:args)
     assert_operator retry_job.fetch(:at), :>, Time.current.to_f
   end
 
@@ -87,7 +148,10 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
 
     Documents::ProcessDocument.stub(:new, ->(document:) { processor }) do
       assert_enqueued_jobs 1, only: ProcessDocumentJob do
-        ProcessDocumentJob.perform_now(@document.id)
+        ProcessDocumentJob.perform_now(
+          @document.id,
+          @document.processing_version
+        )
       end
     end
 
@@ -107,7 +171,10 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     Documents::ProcessDocument.stub(:new, ->(document:) { processor }) do
       assert_no_enqueued_jobs only: ProcessDocumentJob do
         assert_raises(Ai::GeminiClient::RequestError) do
-          ProcessDocumentJob.perform_now(@document.id)
+          ProcessDocumentJob.perform_now(
+            @document.id,
+            @document.processing_version
+          )
         end
       end
     end
@@ -132,7 +199,10 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     generator_factory = -> { generator }
 
     Ai::GenerateEmbeddings.stub(:new, generator_factory) do
-      ProcessDocumentJob.perform_now(@document.id)
+      ProcessDocumentJob.perform_now(
+        @document.id,
+        @document.processing_version
+      )
     end
 
     @document.reload
@@ -160,7 +230,10 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
         assert_raises(
           Documents::PrepareChunks::EmptyChunksError
         ) do
-          ProcessDocumentJob.perform_now(@document.id)
+          ProcessDocumentJob.perform_now(
+            @document.id,
+            @document.processing_version
+          )
         end
       end
     end
@@ -189,7 +262,10 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
       assert_raises(
         Documents::ExtractText::PageLimitExceededError
       ) do
-        ProcessDocumentJob.perform_now(@document.id)
+        ProcessDocumentJob.perform_now(
+          @document.id,
+          @document.processing_version
+        )
       end
     end
 
@@ -228,7 +304,10 @@ class ProcessDocumentJobTest < ActiveJob::TestCase
     end
 
     Ai::GenerateEmbeddings.stub(:new, -> { generator }) do
-      ProcessDocumentJob.perform_now(@document.id)
+      ProcessDocumentJob.perform_now(
+        @document.id,
+        @document.processing_version
+      )
     end
 
     @document.reload

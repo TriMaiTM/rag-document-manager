@@ -1,8 +1,9 @@
 # Background document processing
 
 Codexys uses Active Job with Solid Queue for PDF extraction, chunking, and
-embedding. The web request only saves the upload and enqueues a document ID.
-The worker loads that document and calls `Documents::ProcessDocument`.
+embedding. The web request saves the upload before enqueueing its document ID
+and processing version. The worker loads that document and calls
+`Documents::ProcessDocument` only if the version is still current.
 
 ## Development
 
@@ -35,6 +36,9 @@ single-host deployment.
 ## Failure behavior
 
 - A missing or deleted document is discarded safely.
+- Only one processing job per document can run at a time.
+- A duplicate job exits after the document completes, and a stale-version job
+  exits without changing newer data.
 - Gemini network errors, HTTP 429 responses, and HTTP 5xx responses retry up
   to three executions with polynomial backoff.
 - Invalid PDFs and permanent API errors are not retried automatically. Their

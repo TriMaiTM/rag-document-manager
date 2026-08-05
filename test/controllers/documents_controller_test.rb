@@ -156,7 +156,7 @@ class DocumentsControllerTest <
     processing_job = enqueued_jobs.find do |job|
       job.fetch(:job) == ProcessDocumentJob
     end
-    assert_equal [ document.id ], processing_job.fetch(:args)
+    assert_equal [ document.id, 1 ], processing_job.fetch(:args)
 
     assert_redirected_to workspace_document_url(
       @workspace,
@@ -257,11 +257,22 @@ class DocumentsControllerTest <
   end
 
   test "owner destroys document" do
+    @document.document_chunks.create!(
+      content: "Chunk deleted with its document",
+      page_number: 1,
+      position: 1,
+      processing_version: @document.processing_version
+    )
+
     assert_difference("Document.count", -1) do
-      delete workspace_document_url(
-        @workspace,
-        @document
-      )
+      assert_difference("DocumentChunk.count", -1) do
+        assert_difference("ActiveStorage::Attachment.count", -1) do
+          delete workspace_document_url(
+            @workspace,
+            @document
+          )
+        end
+      end
     end
 
     assert_redirected_to workspace_documents_url(
@@ -291,6 +302,10 @@ class DocumentsControllerTest <
     assert_equal 2, @document.processing_version
     assert_nil @document.error_code
     assert_nil @document.error_message
+    processing_job = enqueued_jobs.find do |job|
+      job.fetch(:job) == ProcessDocumentJob
+    end
+    assert_equal [ @document.id, 2 ], processing_job.fetch(:args)
   end
 
   test "owner cannot retry a document that has not failed" do
