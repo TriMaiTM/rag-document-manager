@@ -120,7 +120,11 @@ module Chat
 
     def persist_answer(session, user_message, rag_result)
       ActiveRecord::Base.transaction do
-        assistant_message = create_assistant_message(session, rag_result)
+        assistant_message = create_assistant_message(
+          session,
+          user_message,
+          rag_result
+        )
         create_sources(assistant_message, rag_result.chunks)
 
         Result.new(
@@ -138,6 +142,7 @@ module Chat
         assistant_message = session.chat_messages.create!(
           role: :assistant,
           status: :failed,
+          question_message: user_message,
           error_code: error_code(error),
           content: FAILURE_ANSWER
         )
@@ -189,9 +194,10 @@ module Chat
       )
     end
 
-    def create_assistant_message(session, rag_result)
+    def create_assistant_message(session, user_message, rag_result)
       session.chat_messages.create!(
         role: :assistant,
+        question_message: user_message,
         content: rag_result.answer,
         model: rag_result.model,
         prompt_tokens: rag_result.prompt_tokens,

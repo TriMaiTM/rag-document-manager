@@ -51,6 +51,12 @@ class Chat::AskTest < ActiveSupport::TestCase
     assert @result.user_message.user?
 
     assistant = @result.assistant_message
+    assert_equal @result.user_message,
+      assistant.question_message
+
+    assert_equal assistant,
+      @result.user_message.answer_message
+
     assert assistant.assistant?
     assert_equal "Grounded answer [1]", assistant.content
     assert_equal "gemini-test", assistant.model
@@ -171,6 +177,10 @@ class Chat::AskTest < ActiveSupport::TestCase
     assert @result.user_message.completed?
 
     failure = @result.assistant_message
+
+    assert_equal @result.user_message,
+      failure.question_message
+
     assert failure.failed?
     assert_equal "network_error", failure.error_code
     assert_equal Chat::Ask::FAILURE_ANSWER, failure.content

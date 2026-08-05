@@ -13,6 +13,17 @@ class ChatMessage < ApplicationRecord
     touch: true,
     inverse_of: :chat_messages
 
+  belongs_to :question_message,
+    class_name: "ChatMessage",
+    optional: true,
+    inverse_of: :answer_message
+
+  has_one :answer_message,
+    class_name: "ChatMessage",
+    foreign_key: :question_message_id,
+    dependent: :destroy,
+    inverse_of: :question_message
+
   has_many :chat_message_sources,
     -> { order(:rank) },
     dependent: :destroy,
@@ -46,9 +57,10 @@ class ChatMessage < ApplicationRecord
   validate :failure_metadata_is_consistent
   validate :user_message_is_completed
   validate :status_transition_is_allowed, on: :update
+  validate :question_message_is_compatible
 
   def retryable?
-    assistant? && failed?
+    assistant? && failed? && question_message&.user?
   end
 
   def claim_retry!
@@ -113,5 +125,26 @@ class ChatMessage < ApplicationRecord
       :status,
       "cannot transition from #{previous_status} to #{next_status}"
     )
+  end
+
+  def question_message_is_compatible
+    return if question_message.nil?
+
+    if user?
+      errors.add(
+        :question_message,
+        "không được gắn vào tin nhắn người dùng"
+      )
+    elsif !question_message.user?
+      errors.add(
+        :question_message,
+        "phải là tin nhắn của người dùng"
+      )
+    elsif question_message.chat_session_id != chat_session_id
+      errors.add(
+        :question_message,
+        "phải thuộc cùng một phiên chat"
+      )
+    end
   end
 end

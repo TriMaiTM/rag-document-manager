@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_080100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_05_163336) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -81,12 +81,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_080100) do
     t.string "error_code", limit: 100
     t.string "model"
     t.integer "prompt_tokens", default: 0, null: false
+    t.bigint "question_message_id"
     t.enum "role", null: false, enum_type: "chat_message_role"
     t.enum "status", default: "completed", null: false, enum_type: "chat_message_status"
     t.integer "total_tokens", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["chat_session_id", "created_at"], name: "index_chat_messages_on_session_and_created_at"
     t.index ["chat_session_id"], name: "index_chat_messages_on_chat_session_id"
+    t.index ["question_message_id"], name: "index_chat_messages_unique_answer", unique: true, where: "(question_message_id IS NOT NULL)"
     t.check_constraint "char_length(btrim(content)) > 0", name: "chat_messages_content_not_blank"
     t.check_constraint "prompt_tokens >= 0 AND candidate_tokens >= 0 AND total_tokens >= 0", name: "chat_messages_token_counts_non_negative"
     t.check_constraint "role = 'assistant'::chat_message_role OR model IS NULL AND prompt_tokens = 0 AND candidate_tokens = 0 AND total_tokens = 0", name: "chat_messages_user_metadata_absent"
@@ -189,6 +191,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_080100) do
   add_foreign_key "chat_message_sources", "chat_messages", on_delete: :cascade
   add_foreign_key "chat_message_sources", "document_chunks", on_delete: :nullify
   add_foreign_key "chat_message_sources", "documents", on_delete: :nullify
+  add_foreign_key "chat_messages", "chat_messages", column: "question_message_id", on_delete: :cascade
   add_foreign_key "chat_messages", "chat_sessions", on_delete: :cascade
   add_foreign_key "chat_sessions", "users"
   add_foreign_key "chat_sessions", "workspaces", on_delete: :cascade

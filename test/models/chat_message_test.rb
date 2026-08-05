@@ -103,9 +103,15 @@ class ChatMessageTest < ActiveSupport::TestCase
   end
 
   test "claims a failed assistant message for one retry" do
+    question = @chat_session.chat_messages.create!(
+      role: :user,
+      content: "What is semantic search?"
+    )
+
     message = @chat_session.chat_messages.create!(
       role: :assistant,
       status: :failed,
+      question_message: question,
       content: Chat::Ask::FAILURE_ANSWER,
       error_code: "network_error"
     )
@@ -157,5 +163,27 @@ class ChatMessageTest < ActiveSupport::TestCase
     )
     assert_includes message.errors[:status],
       "cannot transition from completed to failed"
+  end
+
+  test "rejects a question message from another session" do
+    other_session = ChatSession.create!(
+      workspace: workspaces(:one),
+      user: users(:one),
+      title: "Other chat"
+    )
+    question = other_session.chat_messages.create!(
+      role: :user,
+      content: "Private question"
+    )
+
+    answer = @chat_session.chat_messages.new(
+      role: :assistant,
+      question_message: question,
+      content: "Answer"
+    )
+
+    assert_not answer.valid?
+    assert_includes answer.errors[:question_message],
+      "phải thuộc cùng một phiên chat"
   end
 end

@@ -11,9 +11,15 @@ class ChatMessagePolicyTest < ActiveSupport::TestCase
       title: "Private chat"
     )
 
+    @question_message = @chat_session.chat_messages.create!(
+      role: :user,
+      content: "What is semantic search?"
+    )
+
     @failed_message = @chat_session.chat_messages.create!(
       role: :assistant,
       status: :failed,
+      question_message: @question_message,
       content: Chat::Ask::FAILURE_ANSWER,
       error_code: "network_error"
     )
