@@ -86,7 +86,7 @@ class ChatMessageTest < ActiveSupport::TestCase
       "phải có khi tin nhắn thất bại"
     assert_not completed_message.valid?
     assert_includes completed_message.errors[:error_code],
-      "phải để trống khi tin nhắn hoàn thành"
+      "phải để trống trừ khi tin nhắn thất bại"
   end
 
   test "does not allow a failed user message" do
@@ -100,5 +100,62 @@ class ChatMessageTest < ActiveSupport::TestCase
     assert_not message.valid?
     assert_includes message.errors[:status],
       "của câu hỏi người dùng phải là completed"
+  end
+
+  test "claims a failed assistant message for one retry" do
+    message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :failed,
+      content: Chat::Ask::FAILURE_ANSWER,
+      error_code: "network_error"
+    )
+
+    assert_predicate message, :retryable?
+
+    message.claim_retry!
+
+    assert_predicate message, :pending?
+    assert_nil message.error_code
+    assert_not_predicate message, :retryable?
+
+    assert_raises(ChatMessage::InvalidStatusTransitionError) do
+      message.claim_retry!
+    end
+  end
+
+  test "allows pending assistant messages to complete or fail" do
+    completed_message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :pending,
+      content: Chat::Ask::FAILURE_ANSWER
+    )
+    failed_message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      status: :pending,
+      content: Chat::Ask::FAILURE_ANSWER
+    )
+
+    assert completed_message.update(
+      status: :completed,
+      content: "Grounded answer"
+    )
+    assert failed_message.update(
+      status: :failed,
+      error_code: "network_error"
+    )
+  end
+
+  test "rejects transitions from a completed assistant message" do
+    message = @chat_session.chat_messages.create!(
+      role: :assistant,
+      content: "Grounded answer"
+    )
+
+    assert_not message.update(
+      status: :failed,
+      error_code: "network_error"
+    )
+    assert_includes message.errors[:status],
+      "cannot transition from completed to failed"
   end
 end

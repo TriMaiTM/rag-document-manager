@@ -1,5 +1,13 @@
 class ChatMessage < ApplicationRecord
+  class InvalidStatusTransitionError < StandardError; end
+
   ERROR_CODE_MAX_LENGTH = 100
+
+  ALLOWED_STATUS_TRANSITIONS = {
+    "pending" => %w[completed failed],
+    "completed" => [],
+    "failed" => %w[pending]
+  }.freeze
 
   belongs_to :chat_session,
     touch: true,
@@ -16,6 +24,7 @@ class ChatMessage < ApplicationRecord
   }, validate: true
 
   enum :status, {
+    pending: "pending",
     completed: "completed",
     failed: "failed"
   }, validate: true
@@ -36,6 +45,22 @@ class ChatMessage < ApplicationRecord
   validate :user_message_has_no_generation_metadata
   validate :failure_metadata_is_consistent
   validate :user_message_is_completed
+  validate :status_transition_is_allowed, on: :update
+
+  def retryable?
+    assistant? && failed?
+  end
+
+  def claim_retry!
+    with_lock do
+      unless retryable?
+        raise InvalidStatusTransitionError,
+          "Only failed assistant messages can be retried"
+      end
+
+      update!(status: :pending, error_code: nil)
+    end
+  end
 
   private
 
@@ -59,8 +84,11 @@ class ChatMessage < ApplicationRecord
   def failure_metadata_is_consistent
     if failed? && error_code.blank?
       errors.add(:error_code, "phải có khi tin nhắn thất bại")
-    elsif completed? && error_code.present?
-      errors.add(:error_code, "phải để trống khi tin nhắn hoàn thành")
+    elsif !failed? && error_code.present?
+      errors.add(
+        :error_code,
+        "phải để trống trừ khi tin nhắn thất bại"
+      )
     end
   end
 
@@ -68,5 +96,22 @@ class ChatMessage < ApplicationRecord
     return unless user? && !completed?
 
     errors.add(:status, "của câu hỏi người dùng phải là completed")
+  end
+
+  def status_transition_is_allowed
+    return unless will_save_change_to_status?
+
+    previous_status, next_status = status_change_to_be_saved
+    allowed_statuses = ALLOWED_STATUS_TRANSITIONS.fetch(
+      previous_status,
+      []
+    )
+
+    return if allowed_statuses.include?(next_status)
+
+    errors.add(
+      :status,
+      "cannot transition from #{previous_status} to #{next_status}"
+    )
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_05_080100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -18,7 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_100000) do
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
   create_enum "chat_message_role", ["user", "assistant"]
-  create_enum "chat_message_status", ["completed", "failed"]
+  create_enum "chat_message_status", ["pending", "completed", "failed"]
   create_enum "document_status", ["pending", "processing", "completed", "failed"]
   create_enum "membership_role", ["owner", "admin", "member"]
   create_enum "user_system_role", ["user", "system_admin"]
@@ -91,7 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_100000) do
     t.check_constraint "prompt_tokens >= 0 AND candidate_tokens >= 0 AND total_tokens >= 0", name: "chat_messages_token_counts_non_negative"
     t.check_constraint "role = 'assistant'::chat_message_role OR model IS NULL AND prompt_tokens = 0 AND candidate_tokens = 0 AND total_tokens = 0", name: "chat_messages_user_metadata_absent"
     t.check_constraint "role = 'assistant'::chat_message_role OR status = 'completed'::chat_message_status", name: "chat_messages_user_status_completed"
-    t.check_constraint "status = 'failed'::chat_message_status AND error_code IS NOT NULL AND char_length(btrim(error_code::text)) > 0 OR status = 'completed'::chat_message_status AND error_code IS NULL", name: "chat_messages_failure_metadata_consistent"
+    t.check_constraint "status = 'failed'::chat_message_status AND error_code IS NOT NULL AND char_length(btrim(error_code::text)) > 0 OR (status = ANY (ARRAY['pending'::chat_message_status, 'completed'::chat_message_status])) AND error_code IS NULL", name: "chat_messages_failure_metadata_consistent"
   end
 
   create_table "chat_sessions", force: :cascade do |t|
