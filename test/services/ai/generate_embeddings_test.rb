@@ -75,7 +75,7 @@ class Ai::GenerateEmbeddingsTest < ActiveSupport::TestCase
     end
   end
 
-  test "rejects a zero vector" do
+  test "rejects a zero vector when generating document embeddings" do
     generator = Ai::GenerateEmbeddings.new(
       client: FakeClient.new(
         response(
@@ -91,7 +91,7 @@ class Ai::GenerateEmbeddingsTest < ActiveSupport::TestCase
     end
   end
 
-  test "rejects a zero vector" do
+  test "rejects a zero vector when generating a query embedding" do
     vector = Array.new(
       Ai::EmbeddingConfig::DIMENSIONS,
       0.0
