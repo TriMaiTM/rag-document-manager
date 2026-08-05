@@ -91,6 +91,49 @@ class Ai::GenerateEmbeddingsTest < ActiveSupport::TestCase
     end
   end
 
+  test "rejects a zero vector" do
+    vector = Array.new(
+      Ai::EmbeddingConfig::DIMENSIONS,
+      0.0
+    )
+
+    generator = Ai::GenerateQueryEmbedding.new(
+      client: FakeClient.new(
+        response(vectors: [ vector ])
+      )
+    )
+
+    error = assert_raises(
+      Ai::GenerateQueryEmbedding::InvalidResponseError
+    ) do
+      generator.call(query: "Rails authentication")
+    end
+
+    assert_match(/zero vector/, error.message)
+  end
+
+  test "rejects a vector containing non-numeric values" do
+    vector = Array.new(
+      Ai::EmbeddingConfig::DIMENSIONS,
+      0.1
+    )
+    vector[0] = "invalid"
+
+    generator = Ai::GenerateQueryEmbedding.new(
+      client: FakeClient.new(
+        response(vectors: [ vector ])
+      )
+    )
+
+    error = assert_raises(
+      Ai::GenerateQueryEmbedding::InvalidResponseError
+    ) do
+      generator.call(query: "Rails authentication")
+    end
+
+    assert_match(/non-numeric/, error.message)
+  end
+
   private
 
   def response(vectors:)
