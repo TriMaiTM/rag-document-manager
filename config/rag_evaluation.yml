@@ -26,10 +26,10 @@ cases:
         page_number: 4
 
   - id: right-5
-    question: "Nếu n không hợp lệ thì sao ?"
+    question: "Khi nào manager có thể delete account ?"
     expected_sources:
-      - document_title: "GK"
-        page_number: 1
+      - document_title: "SRS"
+        page_number: 2
   
   - id: right-6
     question: "Địa điểm thực tập là ở đâu ?"
