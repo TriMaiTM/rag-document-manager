@@ -76,7 +76,7 @@ class ChatSessionsController < ApplicationController
     @chat_session_context = chat_session_context
     @chat_sessions = policy_scope(ChatSession)
       .where(workspace: @workspace)
-      .order(updated_at: :desc)
+      .recent_first
     @question ||= ""
   end
 

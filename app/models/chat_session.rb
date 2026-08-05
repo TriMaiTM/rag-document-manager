@@ -12,4 +12,6 @@ class ChatSession < ApplicationRecord
   validates :title,
     presence: true,
     length: { maximum: MAX_TITLE_LENGTH }
+  
+  scope :recent_first, -> { order(updated_at: :desc, id: :desc) }
 end
