@@ -70,6 +70,19 @@ class SemanticSearch::SearchTest < ActiveSupport::TestCase
     assert_equal [ relevant.id, related.id ], result.chunks.map(&:id)
     assert_in_delta 0.0, result.chunks.first.neighbor_distance
     assert_in_delta 0.2, result.chunks.second.neighbor_distance
+    assert_equal [ 1, 2 ],
+      result.sources.map(&:rank)
+
+    source = result.sources.first
+
+    assert_equal relevant.id, source.chunk_id
+    assert_equal document.id, source.document_id
+    assert_equal document.title, source.document_title
+    assert_equal relevant.page_number, source.page_number
+    assert_equal relevant.content, source.content
+    assert_in_delta 0.0, source.cosine_distance
+    assert_in_delta 1.0, source.similarity
+    assert_not_respond_to source, :embedding
     assert_in_delta 400.0, result.embedding_milliseconds
     assert_in_delta 10.0, result.vector_search_milliseconds
   end

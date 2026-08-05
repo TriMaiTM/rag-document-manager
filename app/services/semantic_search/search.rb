@@ -6,16 +6,24 @@ module SemanticSearch
     Result = Data.define(
       :query,
       :chunks,
+      :sources,
       :embedding_milliseconds,
       :vector_search_milliseconds
     ) do
       def initialize(
         query:,
         chunks:,
+        sources: [],
         embedding_milliseconds: 0.0,
         vector_search_milliseconds: 0.0
       )
-        super
+        super(
+          query: query,
+          chunks: chunks,
+          sources: sources,
+          embedding_milliseconds: embedding_milliseconds,
+          vector_search_milliseconds: vector_search_milliseconds
+        )
       end
     end
 
@@ -81,6 +89,7 @@ module SemanticSearch
       Result.new(
         query: normalized_query,
         chunks: chunks,
+        sources: build_sources(chunks),
         embedding_milliseconds: embedding_milliseconds,
         vector_search_milliseconds: vector_search_milliseconds
       )
@@ -114,6 +123,15 @@ module SemanticSearch
       value = yield
 
       [ value, ((clock.call - started_at) * 1_000).round(3) ]
+    end
+
+    def build_sources(chunks)
+      chunks.map.with_index(1) do |chunk, rank|
+        SemanticSearch::SourceExcerpt.from_chunk(
+          chunk,
+          rank: rank
+        )
+      end
     end
   end
 end
