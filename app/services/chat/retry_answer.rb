@@ -152,6 +152,7 @@ module Chat
           rank: index + 1,
           document_title: chunk.document.title,
           page_number: chunk.page_number,
+          chunk_position: chunk.position,
           content: chunk.content,
           cosine_distance: chunk.neighbor_distance
         )

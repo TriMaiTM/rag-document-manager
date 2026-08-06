@@ -66,6 +66,8 @@ class Chat::AskTest < ActiveSupport::TestCase
     assert_equal @document, source.document
     assert_equal @chunk, source.document_chunk
     assert_equal @document.title, source.document_title
+    assert_equal @chunk.page_number, source.page_number
+    assert_equal @chunk.position, source.chunk_position
     assert_equal @chunk.content, source.content
     assert_equal 1, source.rank
     assert_in_delta 0.2, source.cosine_distance

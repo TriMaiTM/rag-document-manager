@@ -19,6 +19,7 @@ class ChatMessageSourceTest < ActiveSupport::TestCase
       rank: 0,
       document_title: "",
       page_number: 0,
+      chunk_position: 0,
       content: "",
       cosine_distance: 3
     )
@@ -34,10 +35,36 @@ class ChatMessageSourceTest < ActiveSupport::TestCase
       count: 0
     )
     assert source.errors.added?(
+      :chunk_position,
+      :greater_than,
+      value: 0,
+      count: 0
+    )
+    assert source.errors.added?(
       :cosine_distance,
       :less_than_or_equal_to,
       value: 3,
       count: 2
     )
+  end
+
+  test "only allows sources on assistant messages" do
+    user_message = @message.chat_session.chat_messages.create!(
+      role: :user,
+      content: "What is semantic search?"
+    )
+
+    source = user_message.chat_message_sources.new(
+      rank: 1,
+      document_title: "Rails Guide",
+      page_number: 1,
+      chunk_position: 2,
+      content: "Semantic search compares vector meaning.",
+      cosine_distance: 0.2
+    )
+
+    assert_not source.valid?
+    assert_includes source.errors[:chat_message],
+      "phải là tin nhắn của trợ lý"
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_05_163336) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_06_073309) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -53,6 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_163336) do
 
   create_table "chat_message_sources", force: :cascade do |t|
     t.bigint "chat_message_id", null: false
+    t.integer "chunk_position"
     t.text "content", null: false
     t.float "cosine_distance", null: false
     t.datetime "created_at", null: false
@@ -68,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_05_163336) do
     t.index ["document_chunk_id"], name: "index_chat_message_sources_on_document_chunk_id"
     t.index ["document_id"], name: "index_chat_message_sources_on_document_id"
     t.check_constraint "char_length(btrim(document_title::text)) > 0 AND char_length(btrim(content)) > 0", name: "chat_message_sources_snapshots_not_blank"
+    t.check_constraint "chunk_position IS NULL OR chunk_position > 0", name: "chat_message_sources_chunk_position_positive"
     t.check_constraint "cosine_distance >= 0::double precision AND cosine_distance <= 2::double precision", name: "chat_message_sources_distance_in_range"
     t.check_constraint "page_number > 0", name: "chat_message_sources_page_number_positive"
     t.check_constraint "rank > 0", name: "chat_message_sources_rank_positive"

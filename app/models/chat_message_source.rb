@@ -14,6 +14,15 @@ class ChatMessageSource < ApplicationRecord
 
   validates :document_title, :content, presence: true
 
+  validates :chunk_position,
+    numericality: {
+      only_integer: true,
+      greater_than: 0
+    },
+    allow_nil: true
+
+  validate :chat_message_is_assistant
+
   validates :page_number,
     numericality: {
       only_integer: true,
@@ -25,4 +34,16 @@ class ChatMessageSource < ApplicationRecord
       greater_than_or_equal_to: 0,
       less_than_or_equal_to: 2
     }
+
+  private
+
+  def chat_message_is_assistant
+    return if chat_message.nil? ||
+      chat_message.assistant?
+
+    errors.add(
+      :chat_message,
+      "phải là tin nhắn của trợ lý"
+    )
+  end
 end
