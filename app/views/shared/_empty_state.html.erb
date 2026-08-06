@@ -1,0 +1,9 @@
+<section class="empty-state">
+  <div class="empty-state__icon" aria-hidden="true"><%= icon %></div>
+  <h2><%= title %></h2>
+  <p><%= description %></p>
+
+  <% if local_assigns[:action_label].present? && local_assigns[:action_path].present? %>
+    <%= link_to action_label, action_path, class: "button button--primary" %>
+  <% end %>
+</section>
