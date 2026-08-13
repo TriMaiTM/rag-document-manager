@@ -1,18 +1,16 @@
 <% content_for :title, "Tải tài liệu lên · #{@workspace.name} · Codexys" %>
 
-<section class="codex-modal-layer" aria-labelledby="upload-document-title">
-  <div class="codex-modal-card">
-    <header class="modal-heading">
-      <div class="modal-heading__title">
-        <%= link_to workspace_documents_path(@workspace),
-          class: "modal-back",
-          aria: { label: "Quay lại danh sách tài liệu" } do %>
-          <%= ui_icon "arrow-back-outline" %>
-        <% end %>
-        <h1 id="upload-document-title">Tải tài liệu lên <%= @workspace.name %></h1>
-      </div>
-    </header>
+<section class="settings-page">
+  <%= render "workspaces/settings_tabs" %>
 
-    <%= render "form", workspace: @workspace, document: @document %>
+  <div class="settings-content">
+    <section class="settings-section">
+      <header class="settings-section__header" style="margin-bottom: 1.5rem;">
+        <h1 id="upload-document-title" style="font-size: 1.5rem; font-weight: 700; color: var(--ui-text); margin-bottom: 0.25rem;">Tải tài liệu lên</h1>
+        <p style="font-size: 0.875rem; color: var(--ui-muted); margin: 0;">Thêm tệp PDF vào <%= @workspace.name %> để xử lý embedding</p>
+      </header>
+
+      <%= render "form", workspace: @workspace, document: @document %>
+    </section>
   </div>
 </section>

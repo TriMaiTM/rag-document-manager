@@ -33,7 +33,7 @@ module Ai
       Nếu ngữ cảnh không đủ để trả lời, hãy nói rõ rằng tài liệu hiện có
       không cung cấp đủ thông tin; không được tự suy đoán.
       Trích dẫn nguồn ngay sau thông tin liên quan bằng ký hiệu [1], [2]...
-      Trả lời cùng ngôn ngữ với câu hỏi, rõ ràng và súc tích.
+      Trả lời cùng ngôn ngữ với câu hỏi, rõ ràng, tự nhiên và súc tích. Không bao quanh văn bản bằng dấu ngoặc kép hoặc ngoặc đơn không cần thiết.
     TEXT
 
     def initialize(client: Ai::GeminiClient.new)

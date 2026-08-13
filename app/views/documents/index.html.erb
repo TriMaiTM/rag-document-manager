@@ -1,72 +1,69 @@
 <% content_for :title, "Tài liệu · #{@workspace.name} · Codexys" %>
 
-<section class="codex-modal-layer" aria-labelledby="documents-title">
-  <div class="codex-modal-card">
-    <header class="modal-heading">
-      <div class="modal-heading__title">
-        <%= link_to workspace_chat_sessions_path(@workspace),
-          class: "modal-back",
-          aria: { label: "Quay lại cuộc trò chuyện" } do %>
-          <%= ui_icon "arrow-back-outline" %>
-        <% end %>
+<section class="settings-page">
+  <%= render "workspaces/settings_tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
         <div>
-          <h1 id="documents-title">Tài liệu</h1>
-          <small>Trong <%= @workspace.name %></small>
+          <h1 id="documents-title" style="font-size: 1.5rem; font-weight: 700; color: var(--ui-text); margin-bottom: 0.25rem;">Tài liệu</h1>
+          <p style="font-size: 0.875rem; color: var(--ui-muted); margin: 0;">Trong <%= @workspace.name %></p>
         </div>
+
+        <% if policy(@document_context).create? %>
+          <%= link_to "Tải tài liệu lên",
+            new_workspace_document_path(@workspace),
+            class: "button button--secondary button--compact" %>
+        <% end %>
+      </header>
+
+      <div class="resource-list" id="documents">
+        <% if @documents.any? %>
+          <% @documents.each do |document| %>
+            <article class="resource-row" id="<%= dom_id(document) %>">
+              <span class="resource-checkbox" aria-hidden="true"></span>
+              <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
+              <div class="resource-primary">
+                <%= link_to document.title, workspace_document_path(@workspace, document) %>
+                <small>
+                  <%= document.file.filename %> · <%= document_file_size(document) %>
+                  · <%= document.page_count || "—" %> trang
+                </small>
+              </div>
+              <%= render "processing_status", document: document %>
+            </article>
+          <% end %>
+        <% else %>
+          <div class="empty-state">
+            <div>
+              <h2>Workspace chưa có tài liệu</h2>
+              <p>Tải PDF lên để Codexys trích xuất nội dung, tạo embedding và bắt đầu hỏi đáp.</p>
+            </div>
+          </div>
+        <% end %>
       </div>
 
       <% if policy(@document_context).create? %>
-        <%= link_to "Tải tài liệu lên",
-          new_workspace_document_path(@workspace),
-          class: "button button--secondary button--compact" %>
-      <% end %>
-    </header>
-
-    <div class="resource-list" id="documents">
-      <% if @documents.any? %>
-        <% @documents.each do |document| %>
-          <article class="resource-row" id="<%= dom_id(document) %>">
-            <span class="resource-checkbox" aria-hidden="true"></span>
-            <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
-            <div class="resource-primary">
-              <%= link_to document.title, workspace_document_path(@workspace, document) %>
-              <small>
-                <%= document.file.filename %> · <%= document_file_size(document) %>
-                · <%= document.page_count || "—" %> trang
-              </small>
-            </div>
-            <%= render "processing_status", document: document %>
-          </article>
-        <% end %>
-      <% else %>
-        <div class="empty-state">
-          <div>
-            <h2>Workspace chưa có tài liệu</h2>
-            <p>Tải PDF lên để Codexys trích xuất nội dung, tạo embedding và bắt đầu hỏi đáp.</p>
+        <%= form_with model: [ @workspace, @document_context ], class: "upload-zone", style: "margin-top: 1.5rem;" do |form| %>
+          <div class="upload-zone__inner">
+            <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
+            <strong>Nhấn để tải lên hoặc kéo và thả</strong>
+            <p>Hỗ trợ tệp PDF tối đa 20 MB và <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang</p>
+            <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
+            <%= form.text_field :title,
+              required: true,
+              maxlength: 200,
+              class: "upload-title-field",
+              placeholder: "Tên tài liệu" %>
+            <%= form.label :file, "Tệp PDF", class: "visually-hidden" %>
+            <%= form.file_field :file,
+              required: true,
+              accept: "application/pdf,.pdf" %>
+            <%= form.submit "Tải lên và xử lý", class: "button button--primary" %>
           </div>
-        </div>
+        <% end %>
       <% end %>
-    </div>
-
-    <% if policy(@document_context).create? %>
-      <%= form_with model: [ @workspace, @document_context ], class: "upload-zone" do |form| %>
-        <div class="upload-zone__inner">
-          <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
-          <strong>Nhấn để tải lên hoặc kéo và thả</strong>
-          <p>Hỗ trợ tệp PDF tối đa 20 MB và <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang</p>
-          <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
-          <%= form.text_field :title,
-            required: true,
-            maxlength: 200,
-            class: "upload-title-field",
-            placeholder: "Tên tài liệu" %>
-          <%= form.label :file, "Tệp PDF", class: "visually-hidden" %>
-          <%= form.file_field :file,
-            required: true,
-            accept: "application/pdf,.pdf" %>
-          <%= form.submit "Tải lên và xử lý", class: "button button--primary" %>
-        </div>
-      <% end %>
-    <% end %>
+    </section>
   </div>
 </section>

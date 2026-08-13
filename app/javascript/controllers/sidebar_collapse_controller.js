@@ -19,15 +19,19 @@ export default class extends Controller {
 
   collapse() {
     this.shellTarget.classList.add("app-shell--collapsed")
-    this.toggleTarget.setAttribute("aria-expanded", "false")
-    this.toggleTarget.setAttribute("aria-label", "Mở thanh điều hướng")
+    this.toggleTargets.forEach(t => {
+      t.setAttribute("aria-expanded", "false")
+      t.setAttribute("aria-label", "Mở thanh điều hướng")
+    })
     window.localStorage.setItem("codexys-sidebar-collapsed", "true")
   }
 
   expand() {
     this.shellTarget.classList.remove("app-shell--collapsed")
-    this.toggleTarget.setAttribute("aria-expanded", "true")
-    this.toggleTarget.setAttribute("aria-label", "Thu gọn thanh điều hướng")
+    this.toggleTargets.forEach(t => {
+      t.setAttribute("aria-expanded", "true")
+      t.setAttribute("aria-label", "Thu gọn thanh điều hướng")
+    })
     window.localStorage.setItem("codexys-sidebar-collapsed", "false")
   }
 }

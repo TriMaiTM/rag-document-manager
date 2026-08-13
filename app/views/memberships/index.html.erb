@@ -1,97 +1,94 @@
 <% content_for :title, "Thành viên · #{@workspace.name} · Codexys" %>
 
-<section class="codex-modal-layer" aria-labelledby="members-title">
-  <div class="codex-modal-card">
-    <header class="modal-heading">
-      <div class="modal-heading__title">
-        <%= link_to workspace_chat_sessions_path(@workspace),
-          class: "modal-back",
-          aria: { label: "Quay lại cuộc trò chuyện" } do %>
-          <%= ui_icon "arrow-back-outline" %>
-        <% end %>
-        <div>
-          <h1 id="members-title">Thành viên Workspace</h1>
-          <small><%= @workspace.name %> · <%= @memberships.size %> thành viên</small>
-        </div>
-      </div>
-    </header>
+<section class="settings-page">
+  <%= render "workspaces/settings_tabs" %>
 
-    <% if @membership.errors.any? %>
-      <%= render "shared/form_errors",
-        object: @membership,
-        title: "Không thể thêm hoặc cập nhật thành viên" %>
-    <% end %>
-
-    <section class="surface-card">
-      <header class="surface-card__header">
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header" style="margin-bottom: 1.5rem;">
         <div>
-          <h2>Thêm thành viên</h2>
-          <p>Người dùng cần có tài khoản Codexys trước khi được thêm.</p>
+          <h1 id="members-title" style="font-size: 1.5rem; font-weight: 700; color: var(--ui-text); margin-bottom: 0.25rem;">Thành viên Workspace</h1>
+          <p style="font-size: 0.875rem; color: var(--ui-muted); margin: 0;"><%= @workspace.name %> · <%= @memberships.size %> thành viên</p>
         </div>
       </header>
 
-      <%= form_with scope: :membership,
-        url: workspace_memberships_path(@workspace),
-        class: "member-add-form" do |form| %>
-        <div class="form-field">
-          <%= form.label :email, "Email người dùng" %>
-          <%= form.email_field :email,
-            required: true,
-            value: @email,
-            autocomplete: "email",
-            placeholder: "member@example.com" %>
-        </div>
-
-        <div class="form-field">
-          <%= form.label :role, "Vai trò" %>
-          <%= form.select :role,
-            options_for_select(manageable_role_options, @membership.role || "member") %>
-        </div>
-
-        <%= form.submit "Thêm thành viên", class: "button button--primary" %>
+      <% if @membership.errors.any? %>
+        <%= render "shared/form_errors",
+          object: @membership,
+          title: "Không thể thêm hoặc cập nhật thành viên" %>
       <% end %>
-    </section>
 
-    <div class="resource-list">
-      <table class="member-resource-table">
-        <tbody>
-          <% @memberships.each do |membership| %>
-            <tr class="resource-row resource-row--member" id="<%= dom_id(membership) %>">
-              <td><span class="resource-checkbox" aria-hidden="true"></span></td>
-              <td class="resource-primary">
-                <strong><%= membership.user.email %></strong>
-              </td>
-              <td>
-                <span class="role-badge role-badge--<%= membership.role %>">
-                  <%= membership_role_label(membership) %>
-                </span>
-              </td>
-              <td class="resource-actions">
-                <% if policy(membership).update? %>
-                  <%= form_with model: [ @workspace, membership ], class: "inline-role-form" do |form| %>
-                    <%= form.label :role, "Đổi vai trò", class: "visually-hidden" %>
-                    <%= form.select :role,
-                      options_for_select(manageable_role_options, membership.role) %>
-                    <%= form.submit "Cập nhật", class: "button button--secondary button--compact" %>
+      <div class="surface-card" style="margin-bottom: 1.5rem;">
+        <header class="surface-card__header">
+          <div>
+            <h2>Thêm thành viên</h2>
+            <p>Người dùng cần có tài khoản Codexys trước khi được thêm.</p>
+          </div>
+        </header>
+
+        <%= form_with scope: :membership,
+          url: workspace_memberships_path(@workspace),
+          class: "member-add-form" do |form| %>
+          <div class="form-field">
+            <%= form.label :email, "Email người dùng" %>
+            <%= form.email_field :email,
+              required: true,
+              value: @email,
+              autocomplete: "email",
+              placeholder: "member@example.com" %>
+          </div>
+
+          <div class="form-field">
+            <%= form.label :role, "Vai trò" %>
+            <%= form.select :role,
+              options_for_select(manageable_role_options, @membership.role || "member") %>
+          </div>
+
+          <%= form.submit "Thêm thành viên", class: "button button--primary" %>
+        <% end %>
+      </div>
+
+      <div class="resource-list">
+        <table class="member-resource-table">
+          <tbody>
+            <% @memberships.each do |membership| %>
+              <tr class="resource-row resource-row--member" id="<%= dom_id(membership) %>">
+                <td><span class="resource-checkbox" aria-hidden="true"></span></td>
+                <td class="resource-primary">
+                  <strong><%= membership.user.email %></strong>
+                </td>
+                <td>
+                  <span class="role-badge role-badge--<%= membership.role %>">
+                    <%= membership_role_label(membership) %>
+                  </span>
+                </td>
+                <td class="resource-actions">
+                  <% if policy(membership).update? %>
+                    <%= form_with model: [ @workspace, membership ], class: "inline-role-form" do |form| %>
+                      <%= form.label :role, "Đổi vai trò", class: "visually-hidden" %>
+                      <%= form.select :role,
+                        options_for_select(manageable_role_options, membership.role) %>
+                      <%= form.submit "Cập nhật", class: "button button--secondary button--compact" %>
+                    <% end %>
                   <% end %>
-                <% end %>
 
-                <% if policy(membership).destroy? %>
-                  <%= button_to "Xóa",
-                    workspace_membership_path(@workspace, membership),
-                    method: :delete,
-                    class: "button button--ghost button--compact",
-                    form: { data: { turbo_confirm: "Xóa thành viên này khỏi Workspace?" } } %>
-                <% end %>
+                  <% if policy(membership).destroy? %>
+                    <%= button_to "Xóa",
+                      workspace_membership_path(@workspace, membership),
+                      method: :delete,
+                      class: "button button--ghost button--compact",
+                      form: { data: { turbo_confirm: "Xóa thành viên này khỏi Workspace?" } } %>
+                  <% end %>
 
-                <% if membership.owner? %>
-                  <span class="owner-lock">Owner được bảo vệ</span>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+                  <% if membership.owner? %>
+                    <span class="owner-lock">Owner được bảo vệ</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </section>

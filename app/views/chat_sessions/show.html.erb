@@ -1,5 +1,10 @@
 <% content_for :title, "#{@chat_session.title} · #{@workspace.name} · Codexys" %>
 
+<script>
+  window.currentUserInitial = "<%= current_user_initial %>";
+  window.codexysLogoUrl = "<%= asset_path('codexys/logo.png') %>";
+</script>
+
 <section class="chat-page"
   data-controller="sources-drawer"
   data-action="keydown.esc@window->sources-drawer#close">
@@ -40,8 +45,16 @@
               class="chat-message chat-message--<%= chat_message.role %>"
               data-message-status="<%= chat_message.status %>">
               <header class="chat-message__header">
-                <span class="chat-message__avatar" aria-hidden="true">
-                  <%= chat_message.user? ? current_user_initial : "C" %>
+                <span class="chat-message__avatar chat-message__avatar--<%= chat_message.role %>" aria-hidden="true">
+                  <% if chat_message.user? %>
+                    <% if current_user.respond_to?(:avatar_url) && current_user.avatar_url.present? %>
+                      <%= image_tag current_user.avatar_url, alt: "", class: "user-avatar-image" %>
+                    <% else %>
+                      <%= current_user_initial %>
+                    <% end %>
+                  <% else %>
+                    <%= image_tag "codexys/logo.png", alt: "Codexys", class: "chat-avatar-logo" %>
+                  <% end %>
                 </span>
                 <div>
                   <h2><%= chat_message_role_label(chat_message) %></h2>
@@ -53,9 +66,9 @@
 
               <div class="chat-message__content">
                 <% if chat_message.pending? %>
-                  <div class="answer-loading" role="status">
-                    <span></span><span></span><span></span>
-                    <span>Đang thử tạo lại câu trả lời...</span>
+                  <div class="answer-loading" role="status" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="spinner-ring spinner-ring--dark spinner-ring--sm"></span>
+                    <span>Codexys đang đọc các tài liệu...</span>
                   </div>
                 <% elsif chat_message.failed? %>
                   <div class="message-error" role="alert">
@@ -74,7 +87,7 @@
                       data: { turbo_submits_with: "Đang thử lại..." } %>
                   <% end %>
                 <% else %>
-                  <div class="answer-copy"><%= simple_format chat_message.content %></div>
+                  <div class="answer-copy"><%= render_chat_markdown(chat_message.content) %></div>
                 <% end %>
 
                 <% if chat_message.assistant? && chat_message.completed? %>
@@ -143,10 +156,9 @@
         <%= form_with url: workspace_chat_session_chat_messages_path(
           @workspace,
           @chat_session
-        ), class: "composer", data: { controller: "composer" } do |form| %>
+        ), class: "composer", html: { novalidate: true }, data: { controller: "composer", action: "submit->composer#onSubmit" } do |form| %>
           <%= form.label :question, "Câu hỏi tiếp theo", class: "visually-hidden" %>
           <%= form.text_area :question,
-            required: true,
             minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
             maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
             rows: 1,
@@ -157,17 +169,16 @@
             } %>
 
           <div class="composer__footer">
-          <span class="composer__add" aria-hidden="true">
+            <span class="composer__add" aria-hidden="true">
               <%= ui_icon "add-outline" %>
-          </span>
-          <span class="composer__model">
-            Gemini 3.5 Flash-Lite
+            </span>
+            <span class="composer__model">
+              Gemini 3.5 Flash-Lite
               <%= ui_icon "chevron-down-outline" %>
             </span>
             <%= form.button type: :submit,
               class: "composer__submit",
-              aria: { label: "Gửi câu hỏi" },
-              data: { turbo_submits_with: "…" } do %>
+              aria: { label: "Gửi câu hỏi" } do %>
               <%= ui_icon "arrow-up-outline" %>
             <% end %>
           </div>

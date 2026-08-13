@@ -11,13 +11,10 @@ class WorkspacesController < ApplicationController
       .recent_first
       .first
 
-    if recent_session
-      redirect_to workspace_chat_session_path(
-        recent_session.workspace,
-        recent_session
-      )
-    elsif @navigation_workspaces.any?
-      redirect_to workspace_chat_sessions_path(@navigation_workspaces.first)
+    target_workspace = recent_session&.workspace || @navigation_workspaces.first
+
+    if target_workspace
+      redirect_to workspace_chat_sessions_path(target_workspace)
     else
       redirect_to new_workspace_path
     end

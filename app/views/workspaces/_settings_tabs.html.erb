@@ -1,0 +1,23 @@
+<nav class="settings-tabs" aria-label="Điều hướng Workspace">
+  <%= link_to workspace_chat_sessions_path(@workspace),
+    class: "settings-tabs__back",
+    aria: { label: "Quay lại cuộc trò chuyện" } do %>
+    <%= ui_icon "arrow-back-outline" %>
+  <% end %>
+
+  <% if policy(@workspace).update? %>
+    <%= link_to "Cài đặt Workspace", edit_workspace_path(@workspace),
+      class: "settings-tab #{current_page?(edit_workspace_path(@workspace)) ? 'settings-tab--active' : ''}" %>
+  <% end %>
+
+  <% if policy(@workspace).manage_members? %>
+    <%= link_to "Thành viên", workspace_memberships_path(@workspace),
+      class: "settings-tab #{current_page?(workspace_memberships_path(@workspace)) ? 'settings-tab--active' : ''}" %>
+  <% end %>
+
+  <%= link_to "Tài liệu", workspace_documents_path(@workspace),
+    class: "settings-tab #{current_page?(workspace_documents_path(@workspace)) || controller_name == 'documents' ? 'settings-tab--active' : ''}" %>
+
+  <%= link_to "Tổng quan", workspace_path(@workspace),
+    class: "settings-tab #{current_page?(workspace_path(@workspace)) ? 'settings-tab--active' : ''}" %>
+</nav>

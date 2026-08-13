@@ -13,9 +13,9 @@ class Rag::ConversationContextTest < ActiveSupport::TestCase
       ]
     )
 
-    query = context.retrieval_query("Còn việc đăng nhập thì sao?")
+    query = context.retrieval_query("nó đăng nhập thế nào?")
 
-    assert_includes query, "Còn việc đăng nhập thì sao?"
+    assert_includes query, "nó đăng nhập thế nào?"
     assert_includes query, "Devise lưu mật khẩu bằng cách nào?"
     assert_not_includes query, "Devise hoạt động như thế nào?"
   end

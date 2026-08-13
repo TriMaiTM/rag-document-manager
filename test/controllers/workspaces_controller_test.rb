@@ -22,7 +22,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to workspace_chat_sessions_url(@workspace)
   end
 
-  test "opens the most recently used conversation" do
+  test "opens new conversation of the most recently used workspace" do
     older_session = ChatSession.create!(
       user: @user,
       workspace: @workspace,
@@ -40,10 +40,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
     get workspaces_url
 
-    assert_redirected_to workspace_chat_session_url(
-      newer_workspace,
-      newer_session
-    )
+    assert_redirected_to workspace_chat_sessions_url(newer_workspace)
     assert_not_equal older_session, newer_session
   end
 

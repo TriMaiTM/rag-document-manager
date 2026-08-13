@@ -1,17 +1,7 @@
 <% content_for :title, "Chỉnh sửa #{@workspace.name} · Codexys" %>
 
 <section class="settings-page">
-  <nav class="settings-tabs" aria-label="Cài đặt Workspace">
-    <%= link_to workspace_chat_sessions_path(@workspace),
-      class: "settings-tabs__back",
-      aria: { label: "Quay lại cuộc trò chuyện" } do %>
-      <%= ui_icon "arrow-back-outline" %>
-    <% end %>
-    <span class="settings-tab settings-tab--active">Cài đặt Workspace</span>
-    <%= link_to "Thành viên", workspace_memberships_path(@workspace), class: "settings-tab" if policy(@workspace).manage_members? %>
-    <%= link_to "Tài liệu", workspace_documents_path(@workspace), class: "settings-tab" %>
-    <%= link_to "Tổng quan", workspace_path(@workspace), class: "settings-tab" %>
-  </nav>
+  <%= render "workspaces/settings_tabs" %>
 
   <div class="settings-content">
     <section class="settings-section">

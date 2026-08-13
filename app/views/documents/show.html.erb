@@ -1,92 +1,89 @@
 <% content_for :title, "#{@document.title} · #{@workspace.name} · Codexys" %>
 
-<section class="codex-modal-layer" aria-labelledby="document-title">
-  <div class="codex-modal-card">
-    <header class="modal-heading">
-      <div class="modal-heading__title">
-        <%= link_to workspace_documents_path(@workspace),
-          class: "modal-back",
-          aria: { label: "Quay lại danh sách tài liệu" } do %>
-          <%= ui_icon "arrow-back-outline" %>
-        <% end %>
-        <div>
-          <h1 id="document-title"><%= @document.title %></h1>
-          <small><%= @document.file.filename %></small>
-        </div>
-      </div>
+<section class="settings-page">
+  <%= render "workspaces/settings_tabs" %>
 
-      <%= link_to "Tải PDF xuống",
-        download_workspace_document_path(@workspace, @document),
-        class: "button button--secondary button--compact" %>
-    </header>
-
-    <section class="surface-card surface-card--spaced">
-      <header class="surface-card__header">
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
         <div>
-          <h2>Thông tin tài liệu</h2>
-          <p>Thông tin tệp và vòng đời xử lý.</p>
+          <h1 id="document-title" style="font-size: 1.5rem; font-weight: 700; color: var(--ui-text); margin-bottom: 0.25rem;"><%= @document.title %></h1>
+          <p style="font-size: 0.875rem; color: var(--ui-muted); margin: 0;"><%= @document.file.filename %></p>
         </div>
-        <%= render "processing_status", document: @document %>
+
+        <%= link_to "Tải PDF xuống",
+          download_workspace_document_path(@workspace, @document),
+          class: "button button--secondary button--compact" %>
       </header>
 
-      <dl class="detail-list">
-        <dt>Tên tệp</dt>
-        <dd><%= @document.file.filename %></dd>
-        <dt>Dung lượng</dt>
-        <dd><%= document_file_size(@document) %></dd>
-        <dt>Số trang</dt>
-        <dd><%= @document.page_count || "Chưa xác định" %></dd>
-        <dt>Người tải lên</dt>
-        <dd><%= @document.uploaded_by.email %></dd>
-        <dt>Thời gian tải lên</dt>
-        <dd><%= @document.created_at.strftime("%d/%m/%Y %H:%M") %></dd>
-        <dt>Bắt đầu xử lý</dt>
-        <dd><%= document_lifecycle_time(@document.processing_started_at) %></dd>
-        <% if @document.completed? %>
-          <dt>Hoàn thành lúc</dt>
-          <dd><%= document_lifecycle_time(@document.completed_at) %></dd>
-        <% elsif @document.failed? %>
-          <dt>Thất bại lúc</dt>
-          <dd><%= document_lifecycle_time(@document.failed_at) %></dd>
-        <% end %>
-      </dl>
-    </section>
-
-    <% if @document.failed? %>
-      <div class="alert-panel alert-panel--spaced" role="alert">
-        <div class="alert-panel__icon" aria-hidden="true">!</div>
-        <div>
-          <h2>Không thể xử lý tài liệu</h2>
-          <p><%= document_processing_error_message(@document) %></p>
-        </div>
-      </div>
-    <% end %>
-
-    <% if @document.failed? && policy(@document).retry_processing? %>
-      <section class="surface-card">
+      <section class="surface-card surface-card--spaced" style="margin-bottom: 1.5rem;">
         <header class="surface-card__header">
           <div>
-            <h2>Xử lý lại tài liệu</h2>
-            <p>Đưa tài liệu vào hàng đợi để hệ thống xử lý lại từ đầu.</p>
+            <h2>Thông tin tài liệu</h2>
+            <p>Thông tin tệp và vòng đời xử lý.</p>
           </div>
+          <%= render "processing_status", document: @document %>
         </header>
-        <%= button_to "Thử xử lý lại",
-          retry_processing_workspace_document_path(@workspace, @document),
-          method: :post,
-          class: "button button--secondary" %>
-      </section>
-    <% end %>
 
-    <% if policy(@document).destroy? %>
-      <section class="danger-zone">
-        <h2>Vùng nguy hiểm</h2>
-        <p>Xóa tài liệu cũng xóa toàn bộ chunks và embeddings liên quan.</p>
-        <%= button_to "Xóa tài liệu",
-          workspace_document_path(@workspace, @document),
-          method: :delete,
-          class: "button button--danger button--compact",
-          form: { data: { turbo_confirm: "Xóa tài liệu này?" } } %>
+        <dl class="detail-list">
+          <dt>Tên tệp</dt>
+          <dd><%= @document.file.filename %></dd>
+          <dt>Dung lượng</dt>
+          <dd><%= document_file_size(@document) %></dd>
+          <dt>Số trang</dt>
+          <dd><%= @document.page_count || "Chưa xác định" %></dd>
+          <dt>Người tải lên</dt>
+          <dd><%= @document.uploaded_by.email %></dd>
+          <dt>Thời gian tải lên</dt>
+          <dd><%= @document.created_at.strftime("%d/%m/%Y %H:%M") %></dd>
+          <dt>Bắt đầu xử lý</dt>
+          <dd><%= document_lifecycle_time(@document.processing_started_at) %></dd>
+          <% if @document.completed? %>
+            <dt>Hoàn thành lúc</dt>
+            <dd><%= document_lifecycle_time(@document.completed_at) %></dd>
+          <% elsif @document.failed? %>
+            <dt>Thất bại lúc</dt>
+            <dd><%= document_lifecycle_time(@document.failed_at) %></dd>
+          <% end %>
+        </dl>
       </section>
-    <% end %>
+
+      <% if @document.failed? %>
+        <div class="alert-panel alert-panel--spaced" role="alert" style="margin-bottom: 1.5rem;">
+          <div class="alert-panel__icon" aria-hidden="true">!</div>
+          <div>
+            <h2>Không thể xử lý tài liệu</h2>
+            <p><%= document_processing_error_message(@document) %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @document.failed? && policy(@document).retry_processing? %>
+        <section class="surface-card" style="margin-bottom: 1.5rem;">
+          <header class="surface-card__header">
+            <div>
+              <h2>Xử lý lại tài liệu</h2>
+              <p>Đưa tài liệu vào hàng đợi để hệ thống xử lý lại từ đầu.</p>
+            </div>
+          </header>
+          <%= button_to "Thử xử lý lại",
+            retry_processing_workspace_document_path(@workspace, @document),
+            method: :post,
+            class: "button button--secondary" %>
+        </section>
+      <% end %>
+
+      <% if policy(@document).destroy? %>
+        <section class="danger-zone">
+          <h2>Vùng nguy hiểm</h2>
+          <p>Xóa tài liệu cũng xóa toàn bộ chunks và embeddings liên quan.</p>
+          <%= button_to "Xóa tài liệu",
+            workspace_document_path(@workspace, @document),
+            method: :delete,
+            class: "button button--danger button--compact",
+            form: { data: { turbo_confirm: "Xóa tài liệu này?" } } %>
+        </section>
+      <% end %>
+    </section>
   </div>
 </section>
