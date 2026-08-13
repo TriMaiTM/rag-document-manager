@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!, unless: :devise_controller?
   before_action :set_current_user
+  before_action :set_navigation_workspaces, if: :user_signed_in?
 
   rescue_from Pundit::NotAuthorizedError,
     with: :render_forbidden
@@ -12,6 +13,14 @@ class ApplicationController < ActionController::Base
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+
+  def after_sign_in_path_for(_resource)
+    workspaces_path
+  end
+
+  def after_sign_up_path_for(_resource)
+    workspaces_path
+  end
 
   def self.rate_limit_ai_requests(**options)
     rate_limit to: Ai::RequestRateLimit::BURST_LIMIT,
@@ -52,6 +61,24 @@ class ApplicationController < ActionController::Base
 
   def set_current_user
     Current.user = current_user
+  end
+
+  def set_navigation_workspaces
+    @navigation_workspaces = current_user
+      .memberships
+      .includes(:workspace)
+      .order(:position, :created_at)
+      .map(&:workspace)
+
+    recent_session = current_user
+      .chat_sessions
+      .where(workspace_id: @navigation_workspaces.map(&:id))
+      .includes(:workspace)
+      .recent_first
+      .first
+
+    @navigation_active_workspace = recent_session&.workspace ||
+      @navigation_workspaces.first
   end
 
   def render_forbidden

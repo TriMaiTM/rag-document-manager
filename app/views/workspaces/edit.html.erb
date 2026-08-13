@@ -1,15 +1,35 @@
-<main>
-  <header>
-    <h1>Chỉnh sửa Workspace</h1>
+<% content_for :title, "Chỉnh sửa #{@workspace.name} · Codexys" %>
 
-    <p>
-      Cập nhật tên và mô tả của <strong><%= @workspace.name %></strong>.
-    </p>
-  </header>
-
-  <%= render "form", workspace: @workspace %>
-
-  <nav>
-    <%= link_to "Hủy", workspace_path(@workspace) %>
+<section class="settings-page">
+  <nav class="settings-tabs" aria-label="Cài đặt Workspace">
+    <%= link_to workspace_chat_sessions_path(@workspace),
+      class: "settings-tabs__back",
+      aria: { label: "Quay lại cuộc trò chuyện" } do %>
+      <%= ui_icon "arrow-back-outline" %>
+    <% end %>
+    <span class="settings-tab settings-tab--active">Cài đặt Workspace</span>
+    <%= link_to "Thành viên", workspace_memberships_path(@workspace), class: "settings-tab" if policy(@workspace).manage_members? %>
+    <%= link_to "Tài liệu", workspace_documents_path(@workspace), class: "settings-tab" %>
+    <%= link_to "Tổng quan", workspace_path(@workspace), class: "settings-tab" %>
   </nav>
-</main>
+
+  <div class="settings-content">
+    <section class="settings-section">
+      <h1>Chỉnh sửa Workspace</h1>
+      <p>Thay đổi tên hiển thị và mô tả của Workspace.</p>
+      <%= render "form", workspace: @workspace %>
+    </section>
+
+    <% if policy(@workspace).destroy? %>
+      <section class="settings-section">
+        <h2>Xóa Workspace</h2>
+        <p>Xóa Workspace và toàn bộ dữ liệu. Hành động này ảnh hưởng đến tất cả thành viên.</p>
+        <%= button_to "Xóa Workspace",
+          workspace_path(@workspace),
+          method: :delete,
+          class: "button button--danger",
+          form: { data: { turbo_confirm: "Bạn có chắc muốn xóa Workspace này?" } } %>
+      </section>
+    <% end %>
+  </div>
+</section>

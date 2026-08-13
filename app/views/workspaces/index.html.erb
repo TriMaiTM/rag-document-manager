@@ -1,32 +1,38 @@
-<main>
-  <header>
-    <h1>Danh sách Workspace</h1>
+<% content_for :title, "Workspaces · Codexys" %>
 
-    <p>
-      Các không gian làm việc hiện có trong Codexys.
-    </p>
-    <nav>
-            <%= link_to "Tạo Workspace", new_workspace_path %>
-    </nav>
+<section class="page-shell">
+  <header class="page-heading">
+    <div>
+      <p class="page-heading__eyebrow">Codexys</p>
+      <h1>Danh sách Workspace</h1>
+      <p>Chọn không gian làm việc để trò chuyện với bộ tài liệu tương ứng.</p>
+    </div>
+    <div class="page-heading__actions">
+      <%= link_to "Tạo Workspace", new_workspace_path, class: "button button--primary" %>
+    </div>
   </header>
 
   <% if @workspaces.any? %>
-    <ul id="workspaces">
+    <div id="workspaces" class="workspace-grid">
       <% @workspaces.each do |workspace| %>
-        <li>
-          <h2>
-            <%= link_to workspace.name, workspace_path(workspace) %>
-          </h2>
-
-          <% if workspace.description.present? %>
-            <p><%= truncate(workspace.description, length: 120) %></p>
-          <% end %>
-        </li>
+        <article class="workspace-card">
+          <header class="workspace-card__header">
+            <h2><%= link_to workspace.name, workspace_chat_sessions_path(workspace) %></h2>
+          </header>
+          <p><%= workspace.description.presence || "Workspace chưa có mô tả." %></p>
+          <footer class="workspace-card__footer">
+            <span><%= workspace.documents.count %> tài liệu</span>
+            <%= link_to "Mở Workspace →", workspace_chat_sessions_path(workspace) %>
+          </footer>
+        </article>
       <% end %>
-    </ul>
+    </div>
   <% else %>
-    <p>Hiện chưa có workspace nào.</p>
+    <%= render "shared/empty_state",
+      icon: "+",
+      title: "Bạn chưa có Workspace nào",
+      description: "Tạo Workspace đầu tiên để tải tài liệu và bắt đầu hỏi đáp.",
+      action_label: "Tạo Workspace",
+      action_path: new_workspace_path %>
   <% end %>
-
-  <%= link_to "Quay lại trang chủ", root_path %>
-</main>
+</section>

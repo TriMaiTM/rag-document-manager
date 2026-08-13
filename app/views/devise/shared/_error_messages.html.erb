@@ -1,0 +1,13 @@
+<% if resource.errors.any? %>
+  <div class="alert-panel" role="alert">
+    <div class="alert-panel__icon" aria-hidden="true">!</div>
+    <div>
+      <h2>Vui lòng kiểm tra lại thông tin</h2>
+      <ul>
+        <% resource.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>

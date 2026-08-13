@@ -1,17 +1,18 @@
-<main>
-  <header>
-    <h1>Tải tài liệu lên</h1>
+<% content_for :title, "Tải tài liệu lên · #{@workspace.name} · Codexys" %>
 
-    <p>
-      Thêm tài liệu PDF vào
-      <strong><%= @workspace.name %></strong>.
-    </p>
-  </header>
+<section class="codex-modal-layer" aria-labelledby="upload-document-title">
+  <div class="codex-modal-card">
+    <header class="modal-heading">
+      <div class="modal-heading__title">
+        <%= link_to workspace_documents_path(@workspace),
+          class: "modal-back",
+          aria: { label: "Quay lại danh sách tài liệu" } do %>
+          <%= ui_icon "arrow-back-outline" %>
+        <% end %>
+        <h1 id="upload-document-title">Tải tài liệu lên <%= @workspace.name %></h1>
+      </div>
+    </header>
 
-  <%= render "form",
-    workspace: @workspace,
-    document: @document %>
-
-  <%= link_to "Quay lại danh sách",
-    workspace_documents_path(@workspace) %>
-</main>
+    <%= render "form", workspace: @workspace, document: @document %>
+  </div>
+</section>

@@ -2,6 +2,8 @@ class Membership < ApplicationRecord
   belongs_to :user
   belongs_to :workspace
 
+  before_validation :assign_sidebar_position, on: :create
+
   enum :role, {
     owner: "owner",
     admin: "admin",
@@ -21,6 +23,13 @@ class Membership < ApplicationRecord
   before_destroy :keep_workspace_owner
 
   private
+
+  def assign_sidebar_position
+    return unless user
+
+    last_position = user.memberships.maximum(:position)
+    self.position = last_position ? last_position + 1 : 0
+  end
 
   def owner_role_cannot_change
     return unless role_in_database == "owner" && will_save_change_to_role?

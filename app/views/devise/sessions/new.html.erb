@@ -1,0 +1,42 @@
+<% content_for :title, "Đăng nhập · Codexys" %>
+
+<div class="auth-card">
+  <%= link_to root_path, class: "auth-brand" do %>
+    <%= image_tag "codexys/logo.png", alt: "" %>
+    <span>Codexys</span>
+  <% end %>
+
+  <h1>Đăng nhập</h1>
+  <p class="auth-card__intro">Tiếp tục làm việc với tài liệu và các cuộc trò chuyện của bạn.</p>
+
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |form| %>
+    <div class="field">
+      <%= form.label :email, "Email" %>
+      <%= form.email_field :email,
+        autofocus: true,
+        autocomplete: "email",
+        placeholder: "you@example.com" %>
+    </div>
+
+    <div class="field">
+      <%= form.label :password, "Mật khẩu" %>
+      <%= form.password_field :password,
+        autocomplete: "current-password",
+        placeholder: "Nhập mật khẩu" %>
+    </div>
+
+    <% if devise_mapping.rememberable? %>
+      <div class="field field--inline">
+        <label>
+          <%= form.check_box :remember_me %>
+          Ghi nhớ đăng nhập
+        </label>
+      </div>
+    <% end %>
+
+    <div class="actions"><%= form.submit "Đăng nhập", class: "button button--primary" %></div>
+  <% end %>
+
+  <%= render "devise/shared/links" %>
+  <%= link_to "← Về trang chủ", root_path, class: "auth-back" %>
+</div>

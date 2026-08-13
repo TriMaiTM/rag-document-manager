@@ -20,10 +20,7 @@ class DeviseAuthenticationTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to root_path
-
-    get workspaces_path
-    assert_response :success
+    assert_redirected_to workspaces_path
   end
 
   test "does not sign in with invalid credentials" do
@@ -62,7 +59,7 @@ class DeviseAuthenticationTest < ActionDispatch::IntegrationTest
     user = User.find_by!(email: "new-user@example.com")
 
     assert user.valid_password?("password")
-    assert_redirected_to root_path
+    assert_redirected_to workspaces_path
   end
 
   test "sends password reset instructions" do

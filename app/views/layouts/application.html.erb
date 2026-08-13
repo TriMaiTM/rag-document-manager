@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
   <head>
     <title><%= content_for(:title) || "Codexys" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -11,39 +11,78 @@
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@7.4.0/dist/ionicons/ionicons.js"></script>
+
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <nav>
-      <%= link_to "Trang chủ", root_path %>
+  <body class="<%= body_class %>">
+    <% if app_shell? %>
+      <div class="app-shell"
+        data-controller="mobile-navigation sidebar-collapse"
+        data-sidebar-collapse-target="shell">
+        <%= render "shared/sidebar" %>
 
-      <% if user_signed_in? %>
-        <%= link_to "Workspaces", workspaces_path %>
-        <%= button_to "Đăng xuất",
-          destroy_user_session_path,
-          method: :delete %>
-      <% else %>
-        <%= link_to "Đăng nhập", new_user_session_path %>
-        <%= link_to "Đăng ký", new_user_registration_path %>
-      <% end %>
-    </nav>
+        <button class="sidebar-backdrop"
+          type="button"
+          aria-label="Đóng thanh điều hướng"
+          data-mobile-navigation-target="backdrop"
+          data-action="mobile-navigation#close"
+          hidden></button>
 
-    <% flash.each do |type, message| %>
-      <div class="flash flash--<%= type %>" role="status">
-        <%= message %>
+        <section class="app-stage">
+          <header class="mobile-header">
+            <button class="figma-icon-button"
+              type="button"
+              aria-label="Mở thanh điều hướng"
+              aria-expanded="false"
+              data-mobile-navigation-target="toggle"
+              data-action="mobile-navigation#toggle">
+              <%= ui_icon "menu-outline" %>
+            </button>
+
+            <%= link_to workspaces_path, class: "mobile-brand" do %>
+              <%= image_tag "codexys/logo.png", alt: "", class: "brand-logo" %>
+              <span>Codexys</span>
+            <% end %>
+          </header>
+
+          <% flash.each do |type, message| %>
+            <div class="flash flash--<%= type %>" role="status">
+              <span><%= message %></span>
+            </div>
+          <% end %>
+
+          <main class="app-main">
+            <%= yield %>
+          </main>
+        </section>
       </div>
-    <% end %>
+    <% else %>
+      <% flash.each do |type, message| %>
+        <div class="flash flash--public flash--<%= type %>" role="status">
+          <span><%= message %></span>
+        </div>
+      <% end %>
 
-    <%= yield %>
+      <main class="public-main">
+        <% if devise_controller? %>
+          <section class="auth-shell">
+            <%= yield %>
+          </section>
+        <% else %>
+          <%= yield %>
+        <% end %>
+      </main>
+    <% end %>
   </body>
 </html>

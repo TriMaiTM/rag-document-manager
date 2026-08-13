@@ -1,0 +1,159 @@
+<aside class="sidebar"
+  aria-label="Điều hướng chính"
+  data-mobile-navigation-target="sidebar"
+  data-sidebar-collapse-target="sidebar">
+  <div class="sidebar-brand-row">
+    <%= link_to workspaces_path, class: "brand brand--sidebar" do %>
+      <%= image_tag "codexys/logo.png", alt: "", class: "brand-logo" %>
+      <span>Codexys</span>
+    <% end %>
+
+    <button class="sidebar-toggle figma-icon-button"
+      type="button"
+      aria-label="Thu gọn thanh điều hướng"
+      aria-expanded="true"
+      data-sidebar-collapse-target="toggle"
+      data-action="sidebar-collapse#toggle">
+      <%= ui_icon "menu-outline" %>
+    </button>
+
+    <button class="sidebar-mobile-close figma-icon-button"
+      type="button"
+      aria-label="Đóng thanh điều hướng"
+      data-action="mobile-navigation#close">
+      <%= ui_icon "close-outline" %>
+    </button>
+  </div>
+
+  <div class="sidebar-panel" data-controller="sidebar-filter">
+    <%= link_to new_workspace_path, class: "new-workspace-button" do %>
+      <span class="new-workspace-button__icon" aria-hidden="true">
+        <%= ui_icon "add-outline" %>
+      </span>
+      <span>Workspace mới</span>
+    <% end %>
+
+    <label class="sidebar-search__field">
+      <%= ui_icon "search-outline" %>
+      <span class="visually-hidden">Tìm workspace hoặc cuộc trò chuyện</span>
+      <input type="search"
+        placeholder="Tìm kiếm"
+        autocomplete="off"
+        data-sidebar-filter-target="input"
+        data-action="input->sidebar-filter#filter">
+    </label>
+
+    <nav class="workspace-navigation"
+      aria-label="Danh sách Workspace"
+      data-controller="workspace-sort"
+      data-workspace-sort-url-value="<%= reorder_workspaces_path %>"
+      data-action="dragover->workspace-sort#dragOver drop->workspace-sort#drop">
+      <% @navigation_workspaces.each do |workspace| %>
+        <section class="workspace-nav-item <%= "workspace-nav-item--active" if active_workspace?(workspace) %>"
+          draggable="false"
+          data-workspace-sort-target="item"
+          data-workspace-id="<%= workspace.id %>"
+          data-sidebar-filter-target="item"
+          data-filter-value="<%= [ workspace.name, *sidebar_chat_sessions(workspace).map(&:title) ].join(" ").downcase %>"
+          data-action="pointerdown->workspace-sort#prepare dragstart->workspace-sort#dragStart dragend->workspace-sort#dragEnd">
+          <div class="workspace-nav-item__row">
+            <button class="workspace-drag-handle"
+              type="button"
+              title="Kéo để sắp xếp Workspace"
+              aria-label="Sắp xếp <%= workspace.name %>"
+              data-workspace-sort-handle
+              data-action="keydown->workspace-sort#moveWithKeyboard">
+              <%= ui_icon "reorder-three-outline" %>
+            </button>
+
+            <%= link_to workspace_chat_sessions_path(workspace),
+              class: "workspace-nav-item__link",
+              aria: { current: active_workspace?(workspace) ? "page" : nil } do %>
+              <span class="workspace-nav-item__name"><%= workspace.name %></span>
+            <% end %>
+
+            <%= link_to workspace_documents_path(workspace),
+              class: "workspace-nav-action",
+              title: "Quản lý tài liệu",
+              aria: { label: "Quản lý tài liệu của #{workspace.name}" } do %>
+              <%= ui_icon "cloud-upload-outline" %>
+            <% end %>
+
+            <% if policy(workspace).update? %>
+              <%= link_to edit_workspace_path(workspace),
+                class: "workspace-nav-action",
+                title: "Cài đặt Workspace",
+                aria: { label: "Cài đặt #{workspace.name}" } do %>
+                <%= ui_icon "settings-outline" %>
+              <% end %>
+            <% end %>
+          </div>
+
+          <% if active_workspace?(workspace) %>
+            <div class="workspace-subnav">
+              <div class="workspace-subnav__heading">
+                <span>Cuộc trò chuyện</span>
+                <%= link_to workspace_chat_sessions_path(workspace), aria: { label: "Cuộc trò chuyện mới" } do %>
+                  <%= ui_icon "add-outline" %>
+                <% end %>
+              </div>
+
+              <% sidebar_chat_sessions(workspace).each do |chat_session| %>
+                <%= link_to workspace_chat_session_path(workspace, chat_session),
+                  class: "workspace-chat-link #{"workspace-chat-link--active" if defined?(@chat_session) && @chat_session == chat_session}" do %>
+                  <%= ui_icon "chatbox-outline", class_name: "workspace-chat-link__icon" %>
+                  <span><%= chat_session.title %></span>
+                <% end %>
+              <% end %>
+
+              <% if sidebar_chat_sessions(workspace).empty? %>
+                <span class="workspace-chat-empty">Chưa có cuộc trò chuyện</span>
+              <% end %>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
+
+      <% if @navigation_workspaces.empty? %>
+        <div class="sidebar-empty">
+          <p>Chưa có Workspace.</p>
+          <%= link_to "Tạo Workspace đầu tiên", new_workspace_path %>
+        </div>
+      <% end %>
+    </nav>
+
+    <details class="sidebar-profile">
+      <summary>
+        <span class="user-avatar" aria-hidden="true"><%= current_user_initial %></span>
+        <span class="sidebar-profile__identity">
+          <strong><%= Current.user.email.split("@").first %></strong>
+        </span>
+        <%= ui_icon "chevron-up-outline", class_name: "profile-chevron" %>
+      </summary>
+
+      <div class="profile-menu__panel">
+        <strong><%= Current.user.email %></strong>
+        <hr>
+        <%= link_to edit_user_registration_path do %>
+          <%= ui_icon "person-circle-outline" %>
+          <span>Cài đặt tài khoản</span>
+        <% end %>
+        <span class="profile-menu__disabled">
+          <%= ui_icon "notifications-outline" %>
+          <span>Thông báo</span>
+        </span>
+        <span class="profile-menu__disabled">
+          <%= ui_icon "help-circle-outline" %>
+          <span>FAQ</span>
+        </span>
+        <hr>
+        <%= button_to destroy_user_session_path,
+          method: :delete,
+          class: "profile-logout" do %>
+          <%= ui_icon "log-out-outline" %>
+          <span>Đăng xuất</span>
+        <% end %>
+      </div>
+    </details>
+  </div>
+</aside>

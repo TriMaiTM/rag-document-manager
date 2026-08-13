@@ -16,13 +16,69 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_url
   end
 
-  test "renders workspace index" do
+  test "opens the first workspace chat when no conversation exists" do
     get workspaces_url
 
-    assert_response :success
-    assert_select "h1", "Danh sách Workspace"
-    assert_select "a", text: @workspace.name
-    assert_select "a", text: workspaces(:two).name, count: 0
+    assert_redirected_to workspace_chat_sessions_url(@workspace)
+  end
+
+  test "opens the most recently used conversation" do
+    older_session = ChatSession.create!(
+      user: @user,
+      workspace: @workspace,
+      title: "Older conversation",
+      updated_at: 2.days.ago
+    )
+    newer_workspace = workspaces(:two)
+    Membership.create!(user: @user, workspace: newer_workspace, role: :member)
+    newer_session = ChatSession.create!(
+      user: @user,
+      workspace: newer_workspace,
+      title: "Most recent conversation",
+      updated_at: 1.hour.ago
+    )
+
+    get workspaces_url
+
+    assert_redirected_to workspace_chat_session_url(
+      newer_workspace,
+      newer_session
+    )
+    assert_not_equal older_session, newer_session
+  end
+
+  test "opens workspace creation when the user has no workspace" do
+    sign_out
+    sign_in_as users(:four)
+
+    get workspaces_url
+
+    assert_redirected_to new_workspace_url
+  end
+
+  test "persists the current user's workspace order" do
+    second_workspace = workspaces(:two)
+    second_membership = Membership.create!(
+      user: @user,
+      workspace: second_workspace,
+      role: :member
+    )
+
+    patch reorder_workspaces_url,
+      params: { workspace_ids: [ second_workspace.id, @workspace.id ] },
+      as: :json
+
+    assert_response :no_content
+    assert_equal 0, second_membership.reload.position
+    assert_equal 1, @workspace.membership_for(@user).reload.position
+  end
+
+  test "rejects an incomplete workspace order" do
+    patch reorder_workspaces_url,
+      params: { workspace_ids: [] },
+      as: :json
+
+    assert_response :unprocessable_entity
   end
 
   test "renders workspace details" do
@@ -30,9 +86,9 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", @workspace.name
-    assert_select "a", text: "Tìm kiếm ngữ nghĩa"
+    assert_select "a", text: "Tìm kiếm ngữ nghĩa", count: 0
     assert_select "a", text: "Hỏi đáp tài liệu"
-    assert_select "a", text: "Danh sách Workspace"
+    assert_select "a", text: "Workspaces"
   end
 
   test "renders new workspace form" do
@@ -137,10 +193,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to workspaces_url
     follow_redirect!
-    assert_response :success
-    assert_select "[role='status']",
-      text: "Workspace đã được xóa thành công."
-    assert_select "h1", "Danh sách Workspace"
+    assert_redirected_to new_workspace_url
   end
 
   test "returns not found for a workspace outside current user scope" do

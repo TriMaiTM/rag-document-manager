@@ -1,69 +1,69 @@
-<main>
-  <article>
-    <header>
+<% content_for :title, "#{@workspace.name} · Codexys" %>
+
+<section class="page-shell">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <%= link_to "Workspaces", workspaces_path %>
+    <span aria-hidden="true">/</span>
+    <span><%= @workspace.name %></span>
+  </nav>
+
+  <header class="page-heading">
+    <div>
+      <p class="page-heading__eyebrow"><%= membership_role_label(@membership) %></p>
       <h1><%= @workspace.name %></h1>
-    </header>
-    <nav>
-      <%= link_to "Tài liệu",
-        workspace_documents_path(@workspace) %>
+      <p><%= @workspace.description.presence || "Workspace này chưa có mô tả." %></p>
+    </div>
+    <div class="page-heading__actions">
+      <% if policy(@workspace).update? %>
+        <%= link_to "Chỉnh sửa Workspace", edit_workspace_path(@workspace), class: "button button--secondary" %>
+      <% end %>
+      <%= link_to "Hỏi đáp tài liệu", workspace_chat_sessions_path(@workspace), class: "button button--primary" %>
+    </div>
+  </header>
 
-      <%= link_to "Tìm kiếm ngữ nghĩa",
-        workspace_semantic_search_path(@workspace) %>
+  <div class="dashboard-grid">
+    <article class="stat-card"><span>Tổng tài liệu</span><strong><%= @document_count %></strong></article>
+    <article class="stat-card"><span>Đã xử lý</span><strong><%= @completed_document_count %></strong></article>
+    <article class="stat-card"><span>Thành viên</span><strong><%= @member_count %></strong></article>
+  </div>
 
-      <%= link_to "Hỏi đáp tài liệu",
-        workspace_chat_sessions_path(@workspace) %>
-    </nav>
-
-    <% if policy(@workspace).update? %>
-      <nav>
-        <%= link_to "Chỉnh sửa Workspace",
-          edit_workspace_path(@workspace) %>
-      </nav>
+  <div class="quick-actions">
+    <%= link_to workspace_chat_sessions_path(@workspace), class: "quick-action" do %>
+      <strong>Hỏi đáp tài liệu</strong>
     <% end %>
-
+    <%= link_to workspace_documents_path(@workspace), class: "quick-action" do %>
+      <strong>Quản lý tài liệu</strong>
+    <% end %>
     <% if policy(@workspace).manage_members? %>
-      <nav>
-        <%= link_to "Quản lý thành viên",
-          workspace_memberships_path(@workspace) %>
-      </nav>
-    <% end %>
-
-    <% if @workspace.description.present? %>
-      <section>
-        <h2>Mô tả</h2>
-
-        <%= simple_format @workspace.description %>
-      </section>
+      <%= link_to workspace_memberships_path(@workspace), class: "quick-action" do %>
+        <strong>Quản lý thành viên</strong>
+      <% end %>
     <% else %>
-      <p>Workspace này chưa có mô tả.</p>
+      <div class="quick-action"><strong><%= @member_count %> thành viên</strong></div>
     <% end %>
+  </div>
 
-    <footer>
-      <p>
-        Được tạo lúc:
-        <%= @workspace.created_at.strftime("%d/%m/%Y %H:%M") %>
-      </p>
-
-      <%= link_to "Danh sách Workspace", workspaces_path %>
-    </footer>
-
-    <% if policy(@workspace).destroy? %>
-      <section>
-        <h2>Vùng nguy hiểm</h2>
-
-        <p>
-          Workspace sau khi xóa sẽ không thể khôi phục.
-        </p>
-
-        <%= button_to "Xóa Workspace",
-          workspace_path(@workspace),
-          method: :delete,
-          form: {
-            data: {
-              turbo_confirm: "Bạn có chắc muốn xóa Workspace này?"
-            }
-          } %>
-      </section>
-    <% end %>
-  </article>
-</main>
+  <% if @recent_documents.any? %>
+    <section class="surface-card surface-card--spaced">
+      <header class="surface-card__header">
+        <div><h2>Tài liệu gần đây</h2><p>Các tài liệu mới nhất trong Workspace.</p></div>
+        <%= link_to "Xem tất cả", workspace_documents_path(@workspace), class: "button button--ghost button--compact" %>
+      </header>
+      <div class="table-shell">
+        <table class="data-table">
+          <tbody>
+            <% @recent_documents.each do |document| %>
+              <tr>
+                <td class="table-primary">
+                  <%= link_to document.title, workspace_document_path(@workspace, document) %>
+                  <small><%= document.created_at.strftime("%d/%m/%Y %H:%M") %></small>
+                </td>
+                <td><%= render "documents/processing_status", document: document %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% end %>
+</section>

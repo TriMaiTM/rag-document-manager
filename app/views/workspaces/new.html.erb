@@ -1,14 +1,18 @@
-<main>
-  <header>
-    <h1>Tạo Workspace</h1>
+<% content_for :title, "Tạo Workspace · Codexys" %>
 
-    <p>
-      Workspace là không gian chứa tài liệu,
-      thành viên và cuộc trò chuyện.
-    </p>
-  </header>
+<section class="settings-page">
+  <nav class="settings-tabs" aria-label="Tạo Workspace">
+    <%= link_to workspaces_path, class: "settings-tabs__back", aria: { label: "Quay lại" } do %>
+      <%= ui_icon "arrow-back-outline" %>
+    <% end %>
+    <span class="settings-tab settings-tab--active">Tạo Workspace</span>
+  </nav>
 
-  <%= render "form", workspace: @workspace %>
-
-  <%= link_to "Hủy", workspaces_path %>
-</main>
+  <div class="settings-content">
+    <section class="settings-section">
+      <h1>Tạo Workspace</h1>
+      <p>Workspace chứa tài liệu, thành viên và toàn bộ cuộc trò chuyện liên quan.</p>
+      <%= render "form", workspace: @workspace %>
+    </section>
+  </div>
+</section>

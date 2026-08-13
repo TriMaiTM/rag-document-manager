@@ -1,62 +1,72 @@
-<main>
-  <header>
-    <h1>Tài liệu</h1>
+<% content_for :title, "Tài liệu · #{@workspace.name} · Codexys" %>
 
-    <p>
-      Tài liệu thuộc Workspace
-      <strong><%= @workspace.name %></strong>.
-    </p>
+<section class="codex-modal-layer" aria-labelledby="documents-title">
+  <div class="codex-modal-card">
+    <header class="modal-heading">
+      <div class="modal-heading__title">
+        <%= link_to workspace_chat_sessions_path(@workspace),
+          class: "modal-back",
+          aria: { label: "Quay lại cuộc trò chuyện" } do %>
+          <%= ui_icon "arrow-back-outline" %>
+        <% end %>
+        <div>
+          <h1 id="documents-title">Tài liệu</h1>
+          <small>Trong <%= @workspace.name %></small>
+        </div>
+      </div>
+
+      <% if policy(@document_context).create? %>
+        <%= link_to "Tải tài liệu lên",
+          new_workspace_document_path(@workspace),
+          class: "button button--secondary button--compact" %>
+      <% end %>
+    </header>
+
+    <div class="resource-list" id="documents">
+      <% if @documents.any? %>
+        <% @documents.each do |document| %>
+          <article class="resource-row" id="<%= dom_id(document) %>">
+            <span class="resource-checkbox" aria-hidden="true"></span>
+            <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
+            <div class="resource-primary">
+              <%= link_to document.title, workspace_document_path(@workspace, document) %>
+              <small>
+                <%= document.file.filename %> · <%= document_file_size(document) %>
+                · <%= document.page_count || "—" %> trang
+              </small>
+            </div>
+            <%= render "processing_status", document: document %>
+          </article>
+        <% end %>
+      <% else %>
+        <div class="empty-state">
+          <div>
+            <h2>Workspace chưa có tài liệu</h2>
+            <p>Tải PDF lên để Codexys trích xuất nội dung, tạo embedding và bắt đầu hỏi đáp.</p>
+          </div>
+        </div>
+      <% end %>
+    </div>
 
     <% if policy(@document_context).create? %>
-      <%= link_to "Tải tài liệu lên",
-        new_workspace_document_path(@workspace) %>
+      <%= form_with model: [ @workspace, @document_context ], class: "upload-zone" do |form| %>
+        <div class="upload-zone__inner">
+          <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
+          <strong>Nhấn để tải lên hoặc kéo và thả</strong>
+          <p>Hỗ trợ tệp PDF tối đa 20 MB và <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang</p>
+          <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
+          <%= form.text_field :title,
+            required: true,
+            maxlength: 200,
+            class: "upload-title-field",
+            placeholder: "Tên tài liệu" %>
+          <%= form.label :file, "Tệp PDF", class: "visually-hidden" %>
+          <%= form.file_field :file,
+            required: true,
+            accept: "application/pdf,.pdf" %>
+          <%= form.submit "Tải lên và xử lý", class: "button button--primary" %>
+        </div>
+      <% end %>
     <% end %>
-  </header>
-
-  <% if @documents.any? %>
-    <table>
-      <thead>
-        <tr>
-          <th>Tiêu đề</th>
-          <th>Tệp</th>
-          <th>Dung lượng</th>
-          <th>Số trang</th>
-          <th>Trạng thái</th>
-          <th>Ngày tải lên</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% @documents.each do |document| %>
-          <tr id="<%= dom_id(document) %>">
-            <td>
-              <%= link_to document.title,
-                workspace_document_path(
-                  @workspace,
-                  document
-                ) %>
-            </td>
-
-            <td><%= document.file.filename %></td>
-            <td><%= document_file_size(document) %></td>
-            <td><%= document.page_count || "—" %></td>
-            <td>
-              <%= render "processing_status", document: document %>
-            </td>
-
-            <td>
-              <%= document.created_at.strftime(
-                "%d/%m/%Y %H:%M"
-              ) %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p>Workspace chưa có tài liệu nào.</p>
-  <% end %>
-
-  <%= link_to "Quay lại Workspace",
-    workspace_path(@workspace) %>
-</main>;
+  </div>
+</section>

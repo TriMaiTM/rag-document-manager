@@ -29,6 +29,23 @@ class MembershipTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:user_id], "has already been taken"
   end
 
+  test "assigns sidebar positions independently for each user" do
+    user = users(:four)
+    first_membership = Membership.create!(
+      user: user,
+      workspace: workspaces(:one),
+      role: :member
+    )
+    second_membership = Membership.create!(
+      user: user,
+      workspace: workspaces(:two),
+      role: :member
+    )
+
+    assert_equal 0, first_membership.position
+    assert_equal 1, second_membership.position
+  end
+
   test "a workspace cannot have a second owner" do
     second_owner = Membership.new(
       user: users(:three),

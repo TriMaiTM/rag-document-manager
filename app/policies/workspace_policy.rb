@@ -8,6 +8,10 @@ class WorkspacePolicy < ApplicationPolicy
   end
   alias_method :new?, :create?
 
+  def reorder?
+    user.present?
+  end
+
   def update?
     membership&.owner? || membership&.admin?
   end

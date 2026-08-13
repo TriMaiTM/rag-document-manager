@@ -2,6 +2,7 @@
 
 <%= tag.span document_status_label(document),
   id: dom_id(document, :processing_status),
+  class: "status-badge status-badge--#{document.status}",
   aria: { live: "polite" },
   data: polling ? {
     controller: "document-status",

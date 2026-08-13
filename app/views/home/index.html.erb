@@ -1,18 +1,35 @@
-<main>
-  <header>
-    <h1><%= @application_name %></h1>
-    <p><%= @description %></p>
-  </header>
-  
-  <section>
-    <nav>
-        <%= link_to "Xem danh sách Workspace", workspaces_path %>
-    </nav>
-    <h2>Trạng thái dự án</h2>
-    <ul>
-      <li>Ruby on Rails đã hoạt động</li>
-      <li>Route trang chủ đã được cấu hình</li>
-      <li>Controller đã truyền dữ liệu sang View</li>
-    </ul>
+<% content_for :title, "Codexys · Document management using RAG" %>
+
+<section class="landing">
+  <%= image_tag "codexys/landing-logo.png", alt: "", class: "landing__logo" %>
+  <h1>Codexys</h1>
+  <p class="landing__tagline">Document management system using RAG &amp; Ruby on Rails</p>
+
+  <div class="landing-composer" aria-label="Minh họa hộp thoại Codexys">
+    <p>Send a message...</p>
+    <div class="landing-composer__footer">
+      <%= ui_icon "add-outline" %>
+      <span class="landing-composer__model">
+        Gemini 3.5 Flash-Lite
+        <%= ui_icon "chevron-down-outline" %>
+      </span>
+      <%= ui_icon "arrow-up-outline", class_name: "landing-composer__send" %>
+    </div>
+  </div>
+
+  <div class="landing__actions">
+    <% if user_signed_in? %>
+      <%= link_to "Mở Workspaces", workspaces_path, class: "button button--primary" %>
+    <% else %>
+      <%= link_to "Đăng nhập", new_user_session_path, class: "button button--primary" %>
+      <%= link_to "Tạo tài khoản", new_user_registration_path, class: "button button--primary" %>
+    <% end %>
+  </div>
+
+  <section class="visually-hidden" aria-labelledby="project-status">
+    <h2 id="project-status">Trạng thái dự án</h2>
+    <p>Ruby on Rails, PostgreSQL, pgvector và Gemini đã sẵn sàng cho quy trình RAG.</p>
   </section>
-</main>
+
+  <%= image_tag "codexys/landing-footer.svg", alt: "", class: "landing__footer" %>
+</section>

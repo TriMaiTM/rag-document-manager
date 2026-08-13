@@ -69,6 +69,9 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", /request forgery attack \[1\]/
     assert_select "h4", /\[1\].*Security Guide/
     assert_select "p", /80,0%|80\.0%/
+    assert_select "aside#sources-panel[hidden]"
+    assert_select "button.sources-trigger[data-action='sources-drawer#open']",
+      text: /Sources/
     assert_select "form[action=?]",
       workspace_chat_session_chat_messages_path(
         @workspace,

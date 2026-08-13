@@ -1,0 +1,102 @@
+<% content_for :title, "Cài đặt tài khoản · Codexys" %>
+
+<section class="account-settings-page">
+  <header class="account-settings-header">
+    <div>
+      <p class="page-heading__eyebrow">Codexys settings</p>
+      <h1>Cài đặt</h1>
+      <p>Quản lý tài khoản và các tùy chọn sử dụng Codexys.</p>
+    </div>
+  </header>
+
+  <div class="account-settings-layout">
+    <nav class="account-settings-nav" aria-label="Nhóm cài đặt tài khoản">
+      <p>Tài khoản</p>
+      <a href="#profile-security" class="account-settings-nav__item account-settings-nav__item--active" aria-current="page">
+        <%= ui_icon "person-outline" %>
+        <span>
+          <strong>Hồ sơ & bảo mật</strong>
+          <small>Email và mật khẩu</small>
+        </span>
+      </a>
+
+      <p>Tùy chọn</p>
+      <span class="account-settings-nav__item account-settings-nav__item--disabled">
+        <%= ui_icon "color-palette-outline" %>
+        <span>
+          <strong>Giao diện</strong>
+          <small>Sắp ra mắt</small>
+        </span>
+      </span>
+      <span class="account-settings-nav__item account-settings-nav__item--disabled">
+        <%= ui_icon "notifications-outline" %>
+        <span>
+          <strong>Thông báo</strong>
+          <small>Sắp ra mắt</small>
+        </span>
+      </span>
+
+      <p>Dữ liệu</p>
+      <span class="account-settings-nav__item account-settings-nav__item--disabled">
+        <%= ui_icon "shield-checkmark-outline" %>
+        <span>
+          <strong>Quyền riêng tư</strong>
+          <small>Sắp ra mắt</small>
+        </span>
+      </span>
+    </nav>
+
+    <div class="account-settings-content">
+      <section id="profile-security" class="settings-section settings-section--account">
+        <header class="settings-section__header">
+          <div class="settings-section__icon"><%= ui_icon "person-circle-outline" %></div>
+          <div>
+            <h2>Hồ sơ & bảo mật</h2>
+            <p>Cập nhật email hoặc thay đổi mật khẩu đăng nhập.</p>
+          </div>
+        </header>
+
+        <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, class: "form-stack" }) do |form| %>
+          <%= render "devise/shared/error_messages", resource: resource %>
+
+          <div class="field">
+            <%= form.label :email, "Email" %>
+            <%= form.email_field :email, autofocus: true, autocomplete: "email" %>
+          </div>
+
+          <div class="account-settings-divider">
+            <strong>Đổi mật khẩu</strong>
+            <span>Để trống nếu bạn chỉ muốn cập nhật email.</span>
+          </div>
+
+          <div class="field">
+            <%= form.label :password, "Mật khẩu mới" %>
+            <%= form.password_field :password,
+              autocomplete: "new-password",
+              placeholder: "Nhập mật khẩu mới" %>
+          </div>
+
+          <div class="field">
+            <%= form.label :password_confirmation, "Xác nhận mật khẩu mới" %>
+            <%= form.password_field :password_confirmation,
+              autocomplete: "new-password",
+              placeholder: "Nhập lại mật khẩu mới" %>
+          </div>
+
+          <div class="field">
+            <%= form.label :current_password, "Mật khẩu hiện tại" %>
+            <%= form.password_field :current_password,
+              autocomplete: "current-password",
+              placeholder: "Bắt buộc để lưu thay đổi" %>
+            <small class="form-field__hint">Devise yêu cầu mật khẩu hiện tại để xác nhận thay đổi quan trọng.</small>
+          </div>
+
+          <div class="form-actions">
+            <%= link_to "Hủy", workspaces_path, class: "button button--secondary" %>
+            <%= form.submit "Lưu thay đổi", class: "button button--primary" %>
+          </div>
+        <% end %>
+      </section>
+    </div>
+  </div>
+</section>

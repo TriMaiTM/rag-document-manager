@@ -1,0 +1,42 @@
+<% content_for :title, "Tạo tài khoản · Codexys" %>
+
+<div class="auth-card">
+  <%= link_to root_path, class: "auth-brand" do %>
+    <%= image_tag "codexys/logo.png", alt: "" %>
+    <span>Codexys</span>
+  <% end %>
+
+  <h1>Tạo tài khoản</h1>
+  <p class="auth-card__intro">Bắt đầu xây dựng thư viện tri thức có thể hỏi đáp.</p>
+
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |form| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <div class="field">
+      <%= form.label :email, "Email" %>
+      <%= form.email_field :email,
+        autofocus: true,
+        autocomplete: "email",
+        placeholder: "you@example.com" %>
+    </div>
+
+    <div class="field">
+      <%= form.label :password, "Mật khẩu" %>
+      <%= form.password_field :password,
+        autocomplete: "new-password",
+        placeholder: @minimum_password_length ? "Tối thiểu #{@minimum_password_length} ký tự" : "Mật khẩu" %>
+    </div>
+
+    <div class="field">
+      <%= form.label :password_confirmation, "Xác nhận mật khẩu" %>
+      <%= form.password_field :password_confirmation,
+        autocomplete: "new-password",
+        placeholder: "Nhập lại mật khẩu" %>
+    </div>
+
+    <div class="actions"><%= form.submit "Tạo tài khoản", class: "button button--primary" %></div>
+  <% end %>
+
+  <%= render "devise/shared/links" %>
+  <%= link_to "← Về trang chủ", root_path, class: "auth-back" %>
+</div>

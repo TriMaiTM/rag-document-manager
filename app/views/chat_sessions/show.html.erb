@@ -1,122 +1,203 @@
-<main>
-  <header>
-    <h1><%= @chat_session.title %></h1>
+<% content_for :title, "#{@chat_session.title} · #{@workspace.name} · Codexys" %>
 
-    <%= link_to "Lịch sử hỏi đáp",
-      workspace_chat_sessions_path(@workspace) %>
+<section class="chat-page"
+  data-controller="sources-drawer"
+  data-action="keydown.esc@window->sources-drawer#close">
+  <header class="chat-topbar">
+    <div class="chat-topbar__identity chat-topbar__identity--session">
+      <h1><%= @chat_session.title %></h1>
+      <p><%= @workspace.name %></p>
+    </div>
+
+    <nav class="chat-topbar__actions" aria-label="Công cụ cuộc trò chuyện">
+      <%= link_to workspace_documents_path(@workspace), class: "button button--secondary button--compact" do %>
+        <%= ui_icon "documents-outline" %>
+        <span>Tài liệu</span>
+      <% end %>
+
+      <details class="conversation-menu">
+        <summary class="icon-button" aria-label="Tùy chọn cuộc trò chuyện">
+          <%= ui_icon "ellipsis-vertical-outline" %>
+        </summary>
+        <div class="conversation-menu__panel">
+          <%= link_to "Cuộc trò chuyện mới", workspace_chat_sessions_path(@workspace) %>
+          <%= button_to "Xóa cuộc trò chuyện",
+            workspace_chat_session_path(@workspace, @chat_session),
+            method: :delete,
+            class: "text-button text-button--danger",
+            form: { data: { turbo_confirm: "Bạn có chắc muốn xóa cuộc trò chuyện này?" } } %>
+        </div>
+      </details>
+    </nav>
   </header>
 
-  <section aria-label="Nội dung hỏi đáp">
-    <% @chat_messages.each do |chat_message| %>
-      <article id="<%= dom_id(chat_message) %>"
-        data-message-status="<%= chat_message.status %>">
-        <header>
-          <h2><%= chat_message_role_label(chat_message) %></h2>
+  <div class="chat-layout" data-sources-drawer-target="layout">
+    <section class="chat-conversation" aria-label="Nội dung hỏi đáp">
+      <div class="chat-scroll" data-controller="chat-scroll">
+        <div class="chat-thread">
+          <% @chat_messages.each do |chat_message| %>
+            <article id="<%= dom_id(chat_message) %>"
+              class="chat-message chat-message--<%= chat_message.role %>"
+              data-message-status="<%= chat_message.status %>">
+              <header class="chat-message__header">
+                <span class="chat-message__avatar" aria-hidden="true">
+                  <%= chat_message.user? ? current_user_initial : "C" %>
+                </span>
+                <div>
+                  <h2><%= chat_message_role_label(chat_message) %></h2>
+                  <time datetime="<%= chat_message.created_at.iso8601 %>">
+                    <%= chat_message.created_at.strftime("%H:%M") %>
+                  </time>
+                </div>
+              </header>
 
-          <small>
-            <%= chat_message.created_at.strftime("%d/%m/%Y %H:%M") %>
-          </small>
-        </header>
+              <div class="chat-message__content">
+                <% if chat_message.pending? %>
+                  <div class="answer-loading" role="status">
+                    <span></span><span></span><span></span>
+                    <span>Đang thử tạo lại câu trả lời...</span>
+                  </div>
+                <% elsif chat_message.failed? %>
+                  <div class="message-error" role="alert">
+                    <%= simple_format chat_message.content %>
+                  </div>
 
-        <% if chat_message.pending? %>
-          <p role="status">Đang thử tạo lại câu trả lời...</p>
-        <% elsif chat_message.failed? %>
-          <div role="alert">
-            <%= simple_format chat_message.content %>
-          </div>
-
-          <% if chat_message.retryable? %>
-            <%= button_to "Thử lại",
-              retry_workspace_chat_session_chat_message_path(
-                @workspace,
-                @chat_session,
-                chat_message
-              ),
-              method: :post,
-              data: {
-                turbo_submits_with: "Đang thử lại..."
-              } %>
-          <% end %>
-        <% else %>
-          <%= simple_format chat_message.content %>
-        <% end %>
-
-        <% if chat_message.assistant? && chat_message.model.present? %>
-          <details>
-            <summary>Thông tin xử lý</summary>
-            <p>Model: <%= chat_message.model %></p>
-            <p>Tổng tokens: <%= chat_message.total_tokens %></p>
-          </details>
-        <% end %>
-
-        <% if chat_message.chat_message_sources.any? %>
-          <section>
-            <h3>Nguồn tham khảo</h3>
-
-            <% chat_message.chat_message_sources.each do |source| %>
-              <article id="<%= dom_id(source) %>">
-                <h4>
-                  [<%= source.rank %>]
-
-                  <% if source.document.present? %>
-                    <%= link_to source.document_title,
-                      workspace_document_path(
+                  <% if chat_message.retryable? %>
+                    <%= button_to "Thử lại",
+                      retry_workspace_chat_session_chat_message_path(
                         @workspace,
-                        source.document
-                      ) %>
-                  <% else %>
-                    <%= source.document_title %>
+                        @chat_session,
+                        chat_message
+                      ),
+                      method: :post,
+                      class: "button button--secondary button--compact",
+                      data: { turbo_submits_with: "Đang thử lại..." } %>
                   <% end %>
-                </h4>
+                <% else %>
+                  <div class="answer-copy"><%= simple_format chat_message.content %></div>
+                <% end %>
 
-                <p>
-                  Trang <%= source.page_number %>
-                  · Độ tương đồng
-                  <%= chat_source_similarity_percentage(source) %>
-                </p>
+                <% if chat_message.assistant? && chat_message.completed? %>
+                  <div class="answer-actions">
+                    <% if chat_message.chat_message_sources.any? %>
+                      <button class="sources-trigger"
+                        type="button"
+                        aria-expanded="false"
+                        aria-controls="sources-panel"
+                        data-sources-drawer-target="button"
+                        data-message-id="<%= chat_message.id %>"
+                        data-action="sources-drawer#open">
+                        <%= ui_icon "document-text-outline" %>
+                        <span>Sources</span>
+                        <span class="sources-trigger__count"><%= chat_message.chat_message_sources.size %></span>
+                      </button>
+                    <% end %>
 
-                <%= simple_format source.content %>
-              </article>
-            <% end %>
-          </section>
-        <% end %>
-      </article>
-    <% end %>
-  </section>
+                    <% if chat_message.model.present? %>
+                      <details class="generation-details">
+                        <summary>Thông tin xử lý</summary>
+                        <p>Model: <%= chat_message.model %></p>
+                        <p>Tổng tokens: <%= chat_message.total_tokens %></p>
+                      </details>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
 
-  <section>
-    <h2>Hỏi tiếp</h2>
+              <% if chat_message.chat_message_sources.any? %>
+                <template data-sources-drawer-target="template"
+                  data-message-id="<%= chat_message.id %>">
+                  <div class="sources-list">
+                    <% chat_message.chat_message_sources.each do |source| %>
+                      <article id="<%= dom_id(source) %>" class="source-card">
+                        <header class="source-card__header">
+                          <h4>
+                            [<%= source.rank %>]
+                            <% if source.document.present? %>
+                              <%= link_to source.document_title,
+                                workspace_document_path(@workspace, source.document) %>
+                            <% else %>
+                              <%= source.document_title %>
+                            <% end %>
+                          </h4>
+                          <p>
+                            Trang <%= source.page_number || "—" %>
+                            · Độ tương đồng <%= chat_source_similarity_percentage(source) %>
+                          </p>
+                        </header>
 
-    <%= form_with url: workspace_chat_session_chat_messages_path(
-      @workspace,
-      @chat_session
-    ) do |form| %>
-      <div>
-        <%= form.label :question, "Câu hỏi tiếp theo" %>
-        <%= form.text_area :question,
-          required: true,
-          minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
-          maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
-          rows: 4 %>
+                        <div class="source-card__excerpt">
+                          <%= simple_format truncate(source.content, length: 520) %>
+                        </div>
+                      </article>
+                    <% end %>
+                  </div>
+                </template>
+              <% end %>
+            </article>
+          <% end %>
+        </div>
       </div>
 
-      <%= form.submit "Gửi câu hỏi",
-        data: {
-          turbo_submits_with: "Đang gửi..."
-        } %>
-    <% end %>
-  </section>
+      <div class="chat-composer-wrap">
+        <%= form_with url: workspace_chat_session_chat_messages_path(
+          @workspace,
+          @chat_session
+        ), class: "composer", data: { controller: "composer" } do |form| %>
+          <%= form.label :question, "Câu hỏi tiếp theo", class: "visually-hidden" %>
+          <%= form.text_area :question,
+            required: true,
+            minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
+            maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
+            rows: 1,
+            placeholder: "Send a message...",
+            data: {
+              composer_target: "input",
+              action: "input->composer#resize keydown->composer#submitOnEnter"
+            } %>
 
-  <section>
-    <h2>Xóa lịch sử</h2>
+          <div class="composer__footer">
+          <span class="composer__add" aria-hidden="true">
+              <%= ui_icon "add-outline" %>
+          </span>
+          <span class="composer__model">
+            Gemini 3.5 Flash-Lite
+              <%= ui_icon "chevron-down-outline" %>
+            </span>
+            <%= form.button type: :submit,
+              class: "composer__submit",
+              aria: { label: "Gửi câu hỏi" },
+              data: { turbo_submits_with: "…" } do %>
+              <%= ui_icon "arrow-up-outline" %>
+            <% end %>
+          </div>
+        <% end %>
 
-    <%= button_to "Xóa phiên hỏi đáp",
-      workspace_chat_session_path(@workspace, @chat_session),
-      method: :delete,
-      form: {
-        data: {
-          turbo_confirm: "Bạn có chắc muốn xóa phiên hỏi đáp này?"
-        }
-      } %>
-  </section>
-</main>
+        <p class="ai-disclaimer">
+          Codexys có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng trong nguồn trích dẫn.
+        </p>
+      </div>
+    </section>
+
+    <aside id="sources-panel"
+      class="sources-drawer"
+      aria-label="Nguồn tham khảo"
+      data-sources-drawer-target="panel"
+      hidden>
+      <header class="sources-drawer__header">
+        <div>
+          <h2>Sources</h2>
+          <p>Nguồn được dùng cho câu trả lời</p>
+        </div>
+        <button class="icon-button"
+          type="button"
+          aria-label="Đóng Sources"
+          data-sources-close
+          data-action="sources-drawer#close">
+          <%= ui_icon "close-outline" %>
+        </button>
+      </header>
+      <div class="sources-drawer__content" data-sources-drawer-target="content"></div>
+    </aside>
+  </div>
+</section>

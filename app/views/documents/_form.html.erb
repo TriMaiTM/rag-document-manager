@@ -1,36 +1,32 @@
-<%= form_with model: [ workspace, document ] do |form| %>
-  <% if document.errors.any? %>
-    <section role="alert">
-      <h2>Không thể tải tài liệu lên</h2>
+<%= render "shared/form_errors",
+  object: document,
+  title: "Không thể tải tài liệu lên" %>
 
-      <ul>
-        <% document.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </section>
-  <% end %>
+<%= form_with model: [ workspace, document ], class: "upload-zone upload-zone--standalone" do |form| %>
+  <div class="upload-zone__inner">
+    <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
+    <strong>Nhấn để tải lên hoặc kéo và thả</strong>
+    <p>
+      Chỉ nhận PDF, tối đa 20 MB và không quá
+      <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang
+    </p>
 
-  <div>
-    <%= form.label :title, "Tiêu đề" %>
+    <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
     <%= form.text_field :title,
       required: true,
       maxlength: 200,
       autofocus: true,
-      placeholder: "Ruby on Rails Guide" %>
-  </div>
+      class: "upload-title-field",
+      placeholder: "Tên tài liệu, ví dụ: Ruby on Rails Guide" %>
 
-  <div>
-    <%= form.label :file, "Tệp PDF" %>
+    <%= form.label :file, "Tệp PDF", class: "visually-hidden" %>
     <%= form.file_field :file,
       required: true,
       accept: "application/pdf,.pdf" %>
 
-    <p>
-      Chỉ nhận PDF, dung lượng tối đa 20 MB và không quá
-      <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang.
-    </p>
+    <div class="form-actions">
+      <%= link_to "Hủy", workspace_documents_path(workspace), class: "button button--ghost" %>
+      <%= form.submit "Tải lên và xử lý", class: "button button--primary" %>
+    </div>
   </div>
-
-  <%= form.submit "Tải tài liệu lên" %>
 <% end %>

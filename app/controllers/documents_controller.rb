@@ -17,6 +17,7 @@ class DocumentsController < ApplicationController
 
     @documents = @workspace
       .documents
+      .includes(:uploaded_by)
       .with_attached_file
       .order(created_at: :desc)
   end

@@ -1,12 +1,17 @@
-<main>
-  <section role="alert">
+<section class="page-shell page-shell--narrow">
+  <div class="empty-state" role="alert">
+    <div class="empty-state__icon" aria-hidden="true">⌛</div>
     <h1>Bạn đang gửi câu hỏi quá nhanh</h1>
-
     <p>
       Codexys tạm dừng các yêu cầu AI để bảo vệ quota dùng chung.
       Vui lòng đợi một lúc rồi thử lại.
     </p>
-
-    <%= link_to "Quay lại Workspaces", workspaces_path %>
-  </section>
-</main>
+    <% if defined?(@workspace) && @workspace.present? %>
+      <%= link_to "Quay lại cuộc trò chuyện",
+        workspace_chat_sessions_path(@workspace),
+        class: "button button--primary" %>
+    <% else %>
+      <%= link_to "Quay lại Workspaces", workspaces_path, class: "button button--primary" %>
+    <% end %>
+  </div>
+</section>

@@ -1,63 +1,64 @@
-<main>
-  <header>
-    <h1>Hỏi đáp tài liệu</h1>
+<% content_for :title, "Hỏi đáp tài liệu · #{@workspace.name} · Codexys" %>
 
-    <p>
-      Đặt câu hỏi dựa trên tài liệu trong Workspace
-      <strong><%= @workspace.name %></strong>.
-    </p>
+<section class="chat-page chat-page--empty">
+  <header class="chat-topbar">
+    <div class="chat-topbar__identity">
+      <h1>Hỏi đáp tài liệu</h1>
+      <p><%= @workspace.name %></p>
+    </div>
   </header>
 
-  <% if @chat_error.present? %>
-    <p role="alert"><%= @chat_error %></p>
-  <% end %>
+  <div class="chat-empty-layout">
+    <div class="chat-empty-state">
+      <h2>Bạn muốn hỏi điều gì về tài liệu?</h2>
+      <p>
+        Đặt câu hỏi về các tài liệu đã xử lý trong <strong><%= @workspace.name %></strong>.
+        Codexys sẽ trả lời kèm nguồn để bạn kiểm chứng.
+      </p>
+    </div>
 
-  <section>
-    <h2>Bắt đầu phiên mới</h2>
+    <% if @chat_error.present? %>
+      <div class="inline-alert" role="alert"><%= @chat_error %></div>
+    <% end %>
 
-    <%= form_with url: workspace_chat_sessions_path(@workspace) do |form| %>
-      <div>
-        <%= form.label :question, "Câu hỏi" %>
+    <div class="chat-empty-composer">
+      <%= form_with url: workspace_chat_sessions_path(@workspace),
+        class: "composer",
+        data: { controller: "composer" } do |form| %>
+        <%= form.label :question, "Câu hỏi", class: "visually-hidden" %>
         <%= form.text_area :question,
           value: @question,
           required: true,
           minlength: SemanticSearch::Search::MIN_QUERY_LENGTH,
           maxlength: SemanticSearch::Search::MAX_QUERY_LENGTH,
-          rows: 4,
-          placeholder: "Ví dụ: Tài liệu giải thích semantic search như thế nào?" %>
-      </div>
+          rows: 1,
+          autofocus: true,
+          placeholder: "Send a message...",
+          data: {
+            composer_target: "input",
+            action: "input->composer#resize keydown->composer#submitOnEnter"
+          } %>
 
-      <%= form.submit "Hỏi Codexys",
-        data: {
-          turbo_submits_with: "Đang gửi..."
-        } %>
-    <% end %>
-  </section>
+        <div class="composer__footer">
+          <span class="composer__add" aria-hidden="true">
+            <%= ui_icon "add-outline" %>
+          </span>
+          <span class="composer__model">
+            Gemini 3.5 Flash-Lite
+            <%= ui_icon "chevron-down-outline" %>
+          </span>
+          <%= form.button type: :submit,
+            class: "composer__submit",
+            aria: { label: "Gửi câu hỏi" },
+            data: { turbo_submits_with: "…" } do %>
+            <%= ui_icon "arrow-up-outline" %>
+          <% end %>
+        </div>
+      <% end %>
 
-  <section>
-    <h2>Lịch sử của bạn</h2>
-
-    <% if @chat_sessions.any? %>
-      <ul>
-        <% @chat_sessions.each do |chat_session| %>
-          <li>
-            <%= link_to chat_session.title,
-              workspace_chat_session_path(
-                @workspace,
-                chat_session
-              ) %>
-
-            <small>
-              Cập nhật lúc
-              <%= chat_session.updated_at.strftime("%d/%m/%Y %H:%M") %>
-            </small>
-          </li>
-        <% end %>
-      </ul>
-    <% else %>
-      <p>Bạn chưa có phiên hỏi đáp nào.</p>
-    <% end %>
-  </section>
-
-  <%= link_to "Quay lại Workspace", workspace_path(@workspace) %>
-</main>
+      <p class="ai-disclaimer">
+        Codexys có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng trong nguồn trích dẫn.
+      </p>
+    </div>
+  </div>
+</section>
