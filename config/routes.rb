@@ -1,12 +1,12 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: { registrations: "users/registrations" }
 
   root "home#index"
   get "up" => "rails/health#show", as: :rails_health_check
   resources :workspaces, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
     patch :reorder, on: :collection
     resource :semantic_search, only: :show
-    resources :chat_sessions, only: [ :index, :show, :create, :destroy ] do
+    resources :chat_sessions, only: [ :index, :show, :create, :update, :destroy ] do
       resources :chat_messages, only: :create do
         post :retry, on: :member
       end

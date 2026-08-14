@@ -13,13 +13,33 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@7.4.0/dist/ionicons/ionicons.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="if(window.renderMathInElement){window.renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});}"></script>
+    <script>
+      function triggerMathRender() {
+        if (window.renderMathInElement) {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+          });
+        }
+      }
+      document.addEventListener("turbo:load", triggerMathRender);
+      document.addEventListener("turbo:frame-load", triggerMathRender);
+      document.addEventListener("turbo:render", triggerMathRender);
+    </script>
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
@@ -65,8 +85,9 @@
           </header>
 
           <% flash.each do |type, message| %>
-            <div class="flash flash--<%= type %>" role="status">
-              <span><%= message %></span>
+            <div class="flash flash--<%= type %>" data-controller="flash">
+              <span role="status"><%= message %></span>
+              <button type="button" class="flash__close" data-action="click->flash#dismiss" aria-label="Đóng">&times;</button>
             </div>
           <% end %>
 
@@ -77,8 +98,9 @@
       </div>
     <% else %>
       <% flash.each do |type, message| %>
-        <div class="flash flash--public flash--<%= type %>" role="status">
-          <span><%= message %></span>
+        <div class="flash flash--public flash--<%= type %>" data-controller="flash">
+          <span role="status"><%= message %></span>
+          <button type="button" class="flash__close" data-action="click->flash#dismiss" aria-label="Đóng">&times;</button>
         </div>
       <% end %>
 

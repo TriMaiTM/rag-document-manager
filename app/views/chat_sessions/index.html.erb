@@ -1,12 +1,6 @@
 <% content_for :title, "Hỏi đáp tài liệu · #{@workspace.name} · Codexys" %>
 
 <section class="chat-page chat-page--empty">
-  <header class="chat-topbar">
-    <div class="chat-topbar__identity">
-      <h1>Hỏi đáp tài liệu</h1>
-      <p><%= @workspace.name %></p>
-    </div>
-  </header>
 
   <div class="chat-empty-layout">
     <div class="chat-empty-state">
@@ -40,13 +34,19 @@
           } %>
 
         <div class="composer__footer">
-          <span class="composer__add" aria-hidden="true">
-            <%= ui_icon "add-outline" %>
-          </span>
-          <span class="composer__model">
-            Gemini 3.5 Flash-Lite
-            <%= ui_icon "chevron-down-outline" %>
-          </span>
+          <div class="composer__model-picker">
+            <%= select_tag :model,
+              options_for_select([
+                ["Gemini 3.5 Flash-Lite", "gemini-3.5-flash-lite"],
+                ["Gemini 2.5 Flash", "gemini-2.5-flash"],
+                ["Gemini 2.5 Pro", "gemini-2.5-pro"],
+                ["Gemini 1.5 Flash", "gemini-1.5-flash"],
+                ["Gemini 1.5 Pro", "gemini-1.5-pro"]
+              ], params[:model] || "gemini-3.5-flash-lite"),
+              class: "composer__model-select",
+              aria: { label: "Chọn mô hình AI" } %>
+            <%= ui_icon "chevron-down-outline", class_name: "composer__model-icon" %>
+          </div>
           <%= form.button type: :submit,
             class: "composer__submit",
             aria: { label: "Gửi câu hỏi" },

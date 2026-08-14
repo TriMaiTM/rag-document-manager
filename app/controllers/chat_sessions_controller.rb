@@ -1,6 +1,6 @@
 class ChatSessionsController < ApplicationController
   before_action :set_workspace
-  before_action :set_chat_session, only: [ :show, :destroy ]
+  before_action :set_chat_session, only: [ :show, :update, :destroy ]
   rate_limit_ai_requests only: :create
 
   after_action :verify_authorized
@@ -13,6 +13,27 @@ class ChatSessionsController < ApplicationController
   def show
     authorize @chat_session
     prepare_show
+  end
+
+  def update
+    authorize @chat_session
+    if @chat_session.update(chat_session_params)
+      respond_to do |format|
+        format.html do
+          redirect_to workspace_chat_session_path(@workspace, @chat_session),
+            notice: "Tiêu đề cuộc trò chuyện đã được cập nhật."
+        end
+        format.json { render json: { status: "ok", title: @chat_session.title } }
+      end
+    else
+      respond_to do |format|
+        format.html do
+          redirect_to workspace_chat_session_path(@workspace, @chat_session),
+            alert: "Không thể cập nhật tiêu đề."
+        end
+        format.json { render json: { error: "Không thể cập nhật tiêu đề." }, status: :unprocessable_entity }
+      end
+    end
   end
 
   def create
@@ -117,5 +138,9 @@ class ChatSessionsController < ApplicationController
       "Chat question failed: " \
         "#{original_error.class}: #{original_error.message}"
     )
+  end
+
+  def chat_session_params
+    params.expect(chat_session: [ :title ])
   end
 end

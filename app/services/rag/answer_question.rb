@@ -81,7 +81,7 @@ module Rag
       :answer_generator
 
     def search(retrieval_query)
-      service = searcher || SemanticSearch::Search.new(
+      service = searcher || SemanticSearch::HybridSearch.new(
         workspace: workspace,
         query: retrieval_query,
         limit: Ai::GenerateGroundedAnswer::MAX_CONTEXTS

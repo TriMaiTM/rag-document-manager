@@ -208,6 +208,12 @@ module Chat
 
     def create_sources(assistant_message, chunks)
       chunks.each_with_index do |chunk, index|
+        distance = if chunk.respond_to?(:neighbor_distance) && chunk.neighbor_distance.present?
+          chunk.neighbor_distance
+        else
+          0.2
+        end
+
         assistant_message.chat_message_sources.create!(
           document: chunk.document,
           document_chunk: chunk,
@@ -216,7 +222,7 @@ module Chat
           page_number: chunk.page_number,
           chunk_position: chunk.position,
           content: chunk.content,
-          cosine_distance: chunk.neighbor_distance
+          cosine_distance: distance
         )
       end
     end

@@ -54,10 +54,12 @@ class Documents::ExtractTextTest < ActiveSupport::TestCase
     pdf = create_pdf(nil)
     document = create_document_with(pdf)
 
-    assert_raises(
-      Documents::ExtractText::EmptyTextError
-    ) do
-      extract(document)
+    Documents::GeminiOcr.stub :new, ->(**_) { Struct.new(:call).new("") } do
+      assert_raises(
+        Documents::ExtractText::EmptyTextError
+      ) do
+        extract(document)
+      end
     end
   end
 

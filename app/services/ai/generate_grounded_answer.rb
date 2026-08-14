@@ -34,6 +34,7 @@ module Ai
       không cung cấp đủ thông tin; không được tự suy đoán.
       Trích dẫn nguồn ngay sau thông tin liên quan bằng ký hiệu [1], [2]...
       Trả lời cùng ngôn ngữ với câu hỏi, rõ ràng, tự nhiên và súc tích. Không bao quanh văn bản bằng dấu ngoặc kép hoặc ngoặc đơn không cần thiết.
+      VỀ ĐỊNH DẠNG TOÁN HỌC: Chỉ đặt ký hiệu toán LaTeX ($ ... $ hoặc $$ ... $$) đối với các công thức/phương trình toán học phức tạp (ví dụ: $V = \\frac{4}{3}\\pi R^3$, $3x^2 - 4x - 2 = 0$). KHÔNG bọc các số tự nhiên đơn lẻ, số tiền, hoặc số đo thông thường trong dấu dollar (ví dụ: viết 400 km, 189 000 đồng, 374 đồng thay vì bọc dấu $).
     TEXT
 
     def initialize(client: Ai::GeminiClient.new)

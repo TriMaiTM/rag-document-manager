@@ -2,6 +2,7 @@
 
 <script>
   window.currentUserInitial = "<%= current_user_initial %>";
+  window.currentUserAvatarUrl = "<%= (current_user.avatar.attached? && current_user.avatar.persisted?) ? url_for(current_user.avatar) : '' %>";
   window.codexysLogoUrl = "<%= asset_path('codexys/logo.png') %>";
 </script>
 
@@ -9,13 +10,33 @@
   data-controller="sources-drawer"
   data-action="keydown.esc@window->sources-drawer#close">
   <header class="chat-topbar">
-    <div class="chat-topbar__identity chat-topbar__identity--session">
-      <h1><%= @chat_session.title %></h1>
-      <p><%= @workspace.name %></p>
+    <div class="chat-topbar__identity chat-topbar__identity--session"
+      data-controller="inline-title-edit"
+      data-inline-title-edit-url-value="<%= workspace_chat_session_path(@workspace, @chat_session) %>">
+      
+      <div class="title-display"
+        data-inline-title-edit-target="display"
+        data-action="click->inline-title-edit#startEditing"
+        title="Bấm để đổi tên cuộc trò chuyện">
+        <h1 data-inline-title-edit-target="heading"><%= @chat_session.title %></h1>
+      </div>
+
+      <form class="title-form"
+        data-inline-title-edit-target="form"
+        data-action="submit->inline-title-edit#save"
+        style="display: none;">
+        <input type="text"
+          name="chat_session[title]"
+          value="<%= @chat_session.title %>"
+          class="title-input"
+          data-inline-title-edit-target="input"
+          data-action="keydown->inline-title-edit#handleKeydown blur->inline-title-edit#save"
+          required />
+      </form>
     </div>
 
     <nav class="chat-topbar__actions" aria-label="Công cụ cuộc trò chuyện">
-      <%= link_to workspace_documents_path(@workspace), class: "button button--secondary button--compact" do %>
+      <%= link_to workspace_documents_path(@workspace, return_to: workspace_chat_session_path(@workspace, @chat_session)), class: "button button--secondary button--compact" do %>
         <%= ui_icon "documents-outline" %>
         <span>Tài liệu</span>
       <% end %>
@@ -47,8 +68,8 @@
               <header class="chat-message__header">
                 <span class="chat-message__avatar chat-message__avatar--<%= chat_message.role %>" aria-hidden="true">
                   <% if chat_message.user? %>
-                    <% if current_user.respond_to?(:avatar_url) && current_user.avatar_url.present? %>
-                      <%= image_tag current_user.avatar_url, alt: "", class: "user-avatar-image" %>
+                    <% if current_user.avatar.attached? && current_user.avatar.persisted? %>
+                      <%= image_tag current_user.avatar, alt: "", class: "user-avatar-image" %>
                     <% else %>
                       <%= current_user_initial %>
                     <% end %>
@@ -140,7 +161,7 @@
                         </header>
 
                         <div class="source-card__excerpt">
-                          <%= simple_format truncate(source.content, length: 520) %>
+                          <%= simple_format chat_source_focused_snippet(source, chat_message.question_message&.content) %>
                         </div>
                       </article>
                     <% end %>
@@ -169,13 +190,19 @@
             } %>
 
           <div class="composer__footer">
-            <span class="composer__add" aria-hidden="true">
-              <%= ui_icon "add-outline" %>
-            </span>
-            <span class="composer__model">
-              Gemini 3.5 Flash-Lite
-              <%= ui_icon "chevron-down-outline" %>
-            </span>
+            <div class="composer__model-picker">
+              <%= select_tag :model,
+                options_for_select([
+                  ["Gemini 3.5 Flash-Lite", "gemini-3.5-flash-lite"],
+                  ["Gemini 2.5 Flash", "gemini-2.5-flash"],
+                  ["Gemini 2.5 Pro", "gemini-2.5-pro"],
+                  ["Gemini 1.5 Flash", "gemini-1.5-flash"],
+                  ["Gemini 1.5 Pro", "gemini-1.5-pro"]
+                ], params[:model] || "gemini-3.5-flash-lite"),
+                class: "composer__model-select",
+                aria: { label: "Chọn mô hình AI" } %>
+              <%= ui_icon "chevron-down-outline", class_name: "composer__model-icon" %>
+            </div>
             <%= form.button type: :submit,
               class: "composer__submit",
               aria: { label: "Gửi câu hỏi" } do %>

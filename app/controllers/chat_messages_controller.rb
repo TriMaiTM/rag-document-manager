@@ -48,7 +48,7 @@ class ChatMessagesController < ApplicationController
       redirect_to workspace_chat_session_path(
         @workspace,
         @chat_session
-      ), notice: "Câu trả lời mới đã được lưu."
+      )
     end
   rescue SemanticSearch::Search::InvalidQueryError => error
     redirect_with_error(error.message)

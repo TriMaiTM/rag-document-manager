@@ -48,6 +48,29 @@
         </dl>
       </section>
 
+      <% if @document.file.attached? %>
+        <section class="surface-card surface-card--spaced" style="margin-bottom: 1.5rem;">
+          <header class="surface-card__header">
+            <div>
+              <h2>Nội dung PDF</h2>
+              <p>Xem trực tiếp toàn bộ trang tệp PDF trong ứng dụng.</p>
+            </div>
+            <%= link_to rails_blob_path(@document.file, disposition: "inline"), target: "_blank", class: "button button--secondary button--compact", rel: "noopener" do %>
+              <%= ui_icon "open-outline" %>
+              <span>Mở tab mới</span>
+            <% end %>
+          </header>
+
+          <div class="pdf-viewer-container">
+            <iframe
+              src="<%= rails_blob_path(@document.file, disposition: "inline") %>"
+              title="<%= @document.title %>"
+              class="pdf-viewer-iframe">
+            </iframe>
+          </div>
+        </section>
+      <% end %>
+
       <% if @document.failed? %>
         <div class="alert-panel alert-panel--spaced" role="alert" style="margin-bottom: 1.5rem;">
           <div class="alert-panel__icon" aria-hidden="true">!</div>

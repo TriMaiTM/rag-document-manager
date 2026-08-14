@@ -1,23 +1,38 @@
+<%
+  return_to_param = params[:return_to].presence
+  back_url = if return_to_param
+    return_to_param
+  elsif defined?(@chat_session) && @chat_session.persisted?
+    workspace_chat_session_path(@workspace, @chat_session)
+  elsif (recent_session = Current.user.chat_sessions.where(workspace: @workspace).recent_first.first)
+    workspace_chat_session_path(@workspace, recent_session)
+  else
+    workspace_chat_sessions_path(@workspace)
+  end
+
+  tab_params = return_to_param ? { return_to: return_to_param } : {}
+%>
+
 <nav class="settings-tabs" aria-label="Điều hướng Workspace">
-  <%= link_to workspace_chat_sessions_path(@workspace),
+  <%= link_to back_url,
     class: "settings-tabs__back",
     aria: { label: "Quay lại cuộc trò chuyện" } do %>
     <%= ui_icon "arrow-back-outline" %>
   <% end %>
 
   <% if policy(@workspace).update? %>
-    <%= link_to "Cài đặt Workspace", edit_workspace_path(@workspace),
+    <%= link_to "Cài đặt Workspace", edit_workspace_path(@workspace, tab_params),
       class: "settings-tab #{current_page?(edit_workspace_path(@workspace)) ? 'settings-tab--active' : ''}" %>
   <% end %>
 
   <% if policy(@workspace).manage_members? %>
-    <%= link_to "Thành viên", workspace_memberships_path(@workspace),
+    <%= link_to "Thành viên", workspace_memberships_path(@workspace, tab_params),
       class: "settings-tab #{current_page?(workspace_memberships_path(@workspace)) ? 'settings-tab--active' : ''}" %>
   <% end %>
 
-  <%= link_to "Tài liệu", workspace_documents_path(@workspace),
+  <%= link_to "Tài liệu", workspace_documents_path(@workspace, tab_params),
     class: "settings-tab #{current_page?(workspace_documents_path(@workspace)) || controller_name == 'documents' ? 'settings-tab--active' : ''}" %>
 
-  <%= link_to "Tổng quan", workspace_path(@workspace),
+  <%= link_to "Tổng quan", workspace_path(@workspace, tab_params),
     class: "settings-tab #{current_page?(workspace_path(@workspace)) ? 'settings-tab--active' : ''}" %>
 </nav>

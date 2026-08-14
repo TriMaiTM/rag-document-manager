@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   include Pundit::Authorization
 
   before_action :authenticate_user!, unless: :devise_controller?
+  before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :set_current_user
   before_action :set_navigation_workspaces, if: :user_signed_in?
 
@@ -84,5 +85,11 @@ class ApplicationController < ActionController::Base
   def render_forbidden
     render plain: "Bạn không có quyền thực hiện hành động này.",
       status: :forbidden
+  end
+
+  protected
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:account_update, keys: [ :avatar ])
   end
 end

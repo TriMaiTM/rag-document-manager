@@ -60,13 +60,41 @@
           <%= render "devise/shared/error_messages", resource: resource %>
 
           <div class="field">
+            <%= form.label :avatar, "Ảnh đại diện (Avatar)" %>
+            <div class="avatar-upload-row" data-controller="avatar-preview">
+              <div class="user-avatar user-avatar--large" aria-hidden="true">
+                <% if resource.avatar.attached? && resource.avatar.persisted? %>
+                  <%= image_tag resource.avatar, class: "user-avatar-image", alt: "Avatar", data: { avatar_preview_target: "image" } %>
+                <% else %>
+                  <span data-avatar-preview-target="initial"><%= current_user_initial %></span>
+                  <img data-avatar-preview-target="image" class="user-avatar-image" style="display: none;" alt="Avatar" />
+                <% end %>
+              </div>
+              <div class="avatar-upload-inputs">
+                <label class="button button--secondary button--compact avatar-upload-button">
+                  <%= ui_icon "cloud-upload-outline" %>
+                  <span data-avatar-preview-target="filename">Chọn tệp ảnh mới...</span>
+                  <%= form.file_field :avatar,
+                    accept: "image/png,image/jpeg,image/webp,image/gif",
+                    class: "visually-hidden",
+                    data: {
+                      avatar_preview_target: "input",
+                      action: "change->avatar-preview#update"
+                    } %>
+                </label>
+                <small class="form-field__hint">Hỗ trợ các định dạng PNG, JPG, WEBP hoặc GIF (dưới 5MB).</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
             <%= form.label :email, "Email" %>
             <%= form.email_field :email, autofocus: true, autocomplete: "email" %>
           </div>
 
           <div class="account-settings-divider">
             <strong>Đổi mật khẩu</strong>
-            <span>Để trống nếu bạn chỉ muốn cập nhật email.</span>
+            <span>Để trống nếu bạn chỉ muốn cập nhật email hoặc ảnh đại diện.</span>
           </div>
 
           <div class="field">
@@ -87,8 +115,8 @@
             <%= form.label :current_password, "Mật khẩu hiện tại" %>
             <%= form.password_field :current_password,
               autocomplete: "current-password",
-              placeholder: "Bắt buộc để lưu thay đổi" %>
-            <small class="form-field__hint">Devise yêu cầu mật khẩu hiện tại để xác nhận thay đổi quan trọng.</small>
+              placeholder: "Chỉ nhập khi đổi mật khẩu" %>
+            <small class="form-field__hint">Chỉ bắt buộc nhập mật khẩu hiện tại khi bạn thực hiện đổi mật khẩu mới.</small>
           </div>
 
           <div class="form-actions">

@@ -102,6 +102,34 @@ module Ai
       parse_generation_response(response)
     end
 
+    def generate_content_with_inline_data(
+      prompt:,
+      mime_type:,
+      base64_data:,
+      system_instruction: "Bạn là chuyên gia trích xuất văn bản và tài liệu OCR chính xác.",
+      max_output_tokens: 2048
+    )
+      validate_api_key!
+
+      uri = generation_endpoint_uri
+      request = build_inline_data_generation_request(
+        uri,
+        system_instruction,
+        prompt,
+        mime_type,
+        base64_data,
+        max_output_tokens
+      )
+      response = request_with_retries(
+        uri,
+        request,
+        timeout: config.generation_timeout_seconds,
+        max_retries: 1
+      )
+
+      parse_generation_response(response)
+    end
+
     private
 
     attr_reader :config, :requester, :sleeper
@@ -195,6 +223,61 @@ module Ai
           {
             role: "user",
             parts: [ { text: prompt } ]
+          }
+        ],
+        generationConfig: {
+          maxOutputTokens: max_output_tokens,
+          responseMimeType: "text/plain"
+        }
+      }
+    end
+
+    def build_inline_data_generation_request(
+      uri,
+      system_instruction,
+      prompt,
+      mime_type,
+      base64_data,
+      max_output_tokens
+    )
+      Net::HTTP::Post.new(uri).tap do |request|
+        request["Content-Type"] = "application/json"
+        request["x-goog-api-key"] = config.api_key
+        request.body = JSON.generate(
+          inline_data_generation_request_body(
+            system_instruction,
+            prompt,
+            mime_type,
+            base64_data,
+            max_output_tokens
+          )
+        )
+      end
+    end
+
+    def inline_data_generation_request_body(
+      system_instruction,
+      prompt,
+      mime_type,
+      base64_data,
+      max_output_tokens
+    )
+      {
+        systemInstruction: {
+          parts: [ { text: system_instruction } ]
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  mimeType: mime_type,
+                  data: base64_data
+                }
+              },
+              { text: prompt }
+            ]
           }
         ],
         generationConfig: {

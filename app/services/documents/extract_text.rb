@@ -55,12 +55,28 @@ module Documents
       reader = PDF::Reader.new(file)
       validate_page_count!(reader.page_count)
 
-      reader.pages.each_with_index.map do |page, index|
+      pages = reader.pages.each_with_index.map do |page, index|
         Page.new(
           number: index + 1,
           text: normalize(page.text)
         )
       end
+
+      if pages.none? { |p| p.text.present? }
+        ai_ocr_text = normalize(Documents::GeminiOcr.new(file_path: file.path).call)
+        if ai_ocr_text.present?
+          return [ Page.new(number: 1, text: ai_ocr_text) ]
+        end
+
+        if Documents::OcrText.tesseract_available?
+          tesseract_text = normalize(Documents::OcrText.new(file_path: file.path).call)
+          if tesseract_text.present?
+            return [ Page.new(number: 1, text: tesseract_text) ]
+          end
+        end
+      end
+
+      pages
     end
 
     def validate_page_count!(page_count)

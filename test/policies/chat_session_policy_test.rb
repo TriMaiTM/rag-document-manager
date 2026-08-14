@@ -18,6 +18,7 @@ class ChatSessionPolicyTest < ActiveSupport::TestCase
     assert policy.create?
     assert policy.ask?
     assert policy.destroy?
+    assert policy.update?
     assert policy.update_title?
   end
 

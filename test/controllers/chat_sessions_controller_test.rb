@@ -32,7 +32,7 @@ class ChatSessionsControllerTest < ActionDispatch::IntegrationTest
     get workspace_chat_sessions_url(@workspace)
 
     assert_response :success
-    assert_select "h1", "Hỏi đáp tài liệu"
+    assert_select "h2", "Bạn muốn hỏi điều gì về tài liệu?"
     assert_select "form[action=?]",
       workspace_chat_sessions_path(@workspace)
     assert_select "a", @chat_session.title

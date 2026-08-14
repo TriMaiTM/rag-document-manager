@@ -8,6 +8,16 @@ class DocumentChunk < ApplicationRecord
 
   validates :content, presence: true
 
+  def self.keyword_search(query)
+    keywords = query.to_s.scan(/\p{L}+|\p{N}+/).select { |w| w.length >= 2 }
+    return none if keywords.empty?
+
+    conditions = keywords.map { "content ILIKE ?" }.join(" OR ")
+    values = keywords.map { |kw| "%#{sanitize_sql_like(kw)}%" }
+
+    where(conditions, *values)
+  end
+
   validates :page_number,
     numericality: {
       only_integer: true,

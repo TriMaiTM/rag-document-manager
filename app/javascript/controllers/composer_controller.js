@@ -63,12 +63,15 @@ export default class extends Controller {
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
     const userInitial = window.currentUserInitial || 'U'
     const logoUrl = window.codexysLogoUrl || '/assets/codexys/logo.png'
+    const avatarContent = window.currentUserAvatarUrl
+      ? `<img src="${window.currentUserAvatarUrl}" alt="" class="user-avatar-image">`
+      : this.escapeHtml(userInitial)
 
     // User Message (RIGHT)
     const userMsgHtml = `
       <article class="chat-message chat-message--user" data-pending-placeholder="true">
         <header class="chat-message__header">
-          <span class="chat-message__avatar chat-message__avatar--user">${this.escapeHtml(userInitial)}</span>
+          <span class="chat-message__avatar chat-message__avatar--user">${avatarContent}</span>
           <div>
             <h2>Bạn</h2>
             <time>${timeStr}</time>

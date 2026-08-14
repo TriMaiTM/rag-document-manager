@@ -22,7 +22,6 @@
         <% if @documents.any? %>
           <% @documents.each do |document| %>
             <article class="resource-row" id="<%= dom_id(document) %>">
-              <span class="resource-checkbox" aria-hidden="true"></span>
               <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
               <div class="resource-primary">
                 <%= link_to document.title, workspace_document_path(@workspace, document) %>
@@ -31,7 +30,13 @@
                   · <%= document.page_count || "—" %> trang
                 </small>
               </div>
-              <%= render "processing_status", document: document %>
+              <div class="resource-actions" style="display: flex; align-items: center; gap: 8px;">
+                <%= link_to workspace_document_path(@workspace, document), class: "button button--secondary doc-preview-btn", title: "Xem nội dung PDF" do %>
+                  <%= ui_icon "eye-outline" %>
+                  <span>Xem PDF</span>
+                <% end %>
+                <%= render "processing_status", document: document %>
+              </div>
             </article>
           <% end %>
         <% else %>

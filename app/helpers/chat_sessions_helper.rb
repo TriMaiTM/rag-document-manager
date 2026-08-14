@@ -10,10 +10,56 @@ module ChatSessionsHelper
     number_to_percentage(percentage, precision: 1)
   end
 
+  def chat_source_focused_snippet(source, query = nil)
+    return "" if source.blank? || source.content.blank?
+
+    content = source.content.to_s.strip
+    query_text = query.to_s.strip
+
+    if query_text.present?
+      keywords = query_text.scan(/\p{L}+|\p{N}+/).select { |w| w.length >= 2 }
+
+      match_index = nil
+      keywords.each do |kw|
+        idx = content.downcase.index(kw.downcase)
+        if idx
+          match_index = idx
+          break
+        end
+      end
+
+      if match_index
+        start_pos = [ 0, match_index - 80 ].max
+        length = 480
+        snippet = content[start_pos, length]
+
+        snippet = "... #{snippet}" if start_pos > 0
+        snippet = "#{snippet} ..." if (start_pos + length) < content.length
+
+        return snippet
+      end
+    end
+
+    truncate(content, length: 500)
+  end
+
+  def normalize_plain_numbers_in_math(text)
+    return "" if text.blank?
+
+    text.gsub(/\$(.*?)\$/) do |match|
+      inner = $1.strip
+      if inner.match?(/\A[\d\s\,\.\\\:]+(\\text\{[^\}]*\}|[a-zA-Z]{1,4})?\z/)
+        inner.gsub(/\\text\{([^\}]*)\}/, "\\1").gsub(/\\,/, " ").gsub(/\\/, "")
+      else
+        match
+      end
+    end
+  end
+
   def render_chat_markdown(content)
     return "" if content.blank?
 
-    text = content.to_s.strip
+    text = normalize_plain_numbers_in_math(content.to_s.strip)
 
     # Split into lines to parse markdown bullet lists and bold text
     lines = text.split("\n")

@@ -7,8 +7,12 @@ class ChatSessionPolicy < ApplicationPolicy
     membership.present? && owned_by_user?
   end
 
-  def update_title?
+  def update?
     show?
+  end
+
+  def update_title?
+    update?
   end
 
   def create?
