@@ -3,14 +3,16 @@ version: '3.8'
 services:
   web:
     build: .
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0 -p 3000"
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails db:prepare && ./bin/thrust ./bin/rails server"
     ports:
-      - "80:3000"
+      - "80:80"
+      - "443:443"
     env_file:
       - .env
     environment:
       - RAILS_ENV=${RAILS_ENV:-production}
       - DATABASE_URL=${DATABASE_URL}
+      - TLS_DOMAIN=${TLS_DOMAIN}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
       - ACTIVE_STORAGE_SERVICE=${ACTIVE_STORAGE_SERVICE:-amazon}
