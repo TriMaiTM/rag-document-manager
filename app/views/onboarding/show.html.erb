@@ -1,0 +1,79 @@
+<% content_for :title, "Chào mừng đến với Codexys · Hướng dẫn khởi tạo" %>
+
+<div class="onboarding-card" data-controller="onboarding-wizard">
+  <div class="onboarding-header">
+    <%= image_tag "codexys/landing-logo.png", class: "onboarding-logo", alt: "Codexys Logo" %>
+    <h1>Chào mừng bạn đến với Codexys!</h1>
+    <p>Hãy hoàn tất 2 bước đơn giản dưới đây để bắt đầu trải nghiệm trợ lý hỏi đáp tài liệu thông minh.</p>
+  </div>
+
+  <div class="onboarding-steps">
+    <div class="onboarding-step-indicator is-active" data-onboarding-wizard-target="step1Indicator">
+      <span class="step-num">1</span>
+      <span class="step-title">Tên hiển thị</span>
+    </div>
+    <div class="onboarding-step-divider"></div>
+    <div class="onboarding-step-indicator" data-onboarding-wizard-target="step2Indicator">
+      <span class="step-num">2</span>
+      <span class="step-title">Tạo Workspace</span>
+    </div>
+  </div>
+
+  <%= form_with scope: :onboarding, url: onboarding_path, method: :patch, class: "onboarding-form" do |f| %>
+    <!-- Step 1: Set Name -->
+    <div class="onboarding-step-content" data-onboarding-wizard-target="step1">
+      <div class="field" style="margin-bottom: 24px;">
+        <label for="user_name_input" class="onboarding-label">Bạn muốn được gọi là gì?</label>
+        <%= f.text_field :name,
+          id: "user_name_input",
+          value: current_user.name.presence || current_user.email.split("@").first,
+          placeholder: "Nhập tên hiển thị của bạn (Ví dụ: Nguyễn Văn A)",
+          class: "onboarding-input",
+          autofocus: true,
+          data: { onboarding_wizard_target: "nameInput" } %>
+        <small class="form-field__hint">Tên này sẽ xuất hiện trên góc hồ sơ và các hội thoại trò chuyện.</small>
+      </div>
+
+      <div class="onboarding-actions">
+        <button type="button" class="button button--primary button--large" data-action="click->onboarding-wizard#nextStep">
+          <span>Tiếp tục</span>
+          <%= ui_icon "arrow-forward-outline" %>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Create Workspace -->
+    <div class="onboarding-step-content is-hidden" data-onboarding-wizard-target="step2">
+      <div class="field" style="margin-bottom: 18px;">
+        <label for="workspace_name_input" class="onboarding-label">Tên Không gian làm việc (Workspace) đầu tiên</label>
+        <%= f.text_field :workspace_name,
+          id: "workspace_name_input",
+          value: "Đồ án / Dự án của tôi",
+          placeholder: "Nhập tên Workspace (Ví dụ: Nghiên cứu sinh học, Dự án Công ty)",
+          class: "onboarding-input",
+          required: true %>
+        <small class="form-field__hint">Workspace giúp bạn phân loại và quản lý bộ tài liệu theo từng chủ đề.</small>
+      </div>
+
+      <div class="field" style="margin-bottom: 24px;">
+        <label for="workspace_desc_input" class="onboarding-label">Mô tả ngắn (Không bắt buộc)</label>
+        <%= f.text_area :workspace_description,
+          id: "workspace_desc_input",
+          rows: 2,
+          placeholder: "Mô tả mục đích của không gian làm việc này...",
+          class: "onboarding-input" %>
+      </div>
+
+      <div class="onboarding-actions" style="display: flex; gap: 12px; align-items: center; justify-content: space-between;">
+        <button type="button" class="button button--secondary" data-action="click->onboarding-wizard#prevStep">
+          <%= ui_icon "arrow-back-outline" %>
+          <span>Quay lại</span>
+        </button>
+
+        <button type="submit" class="button button--primary button--large">
+          <span>Hoàn tất & Bắt đầu</span>
+        </button>
+      </div>
+    </div>
+  <% end %>
+</div>

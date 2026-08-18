@@ -88,8 +88,14 @@
           </div>
 
           <div class="field">
+            <%= form.label :name, "Tên hiển thị" %>
+            <%= form.text_field :name, autofocus: true, autocomplete: "name", placeholder: "Ví dụ: Nguyễn Văn A" %>
+            <small class="form-field__hint">Tên này sẽ hiển thị thay cho email của bạn trên toàn hệ thống.</small>
+          </div>
+
+          <div class="field">
             <%= form.label :email, "Email" %>
-            <%= form.email_field :email, autofocus: true, autocomplete: "email" %>
+            <%= form.email_field :email, autocomplete: "email" %>
           </div>
 
           <div class="account-settings-divider">

@@ -13,8 +13,14 @@ class User < ApplicationRecord
   has_many :workspaces, through: :memberships
   has_many :chat_sessions, dependent: :restrict_with_error
   has_many :uploaded_documents,
-           class_name: "Document",
-           foreign_key: :uploaded_by_id,
-           inverse_of: :uploaded_by,
-           dependent: :restrict_with_error
+    class_name: "Document",
+    foreign_key: :uploaded_by_id,
+    inverse_of: :uploaded_by,
+    dependent: :restrict_with_error
+
+  validates :name, length: { maximum: 100 }, allow_blank: true
+
+  def display_name
+    name.presence || email.split("@").first
+  end
 end

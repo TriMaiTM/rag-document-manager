@@ -85,7 +85,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", @workspace.name
     assert_select "a", text: "Tìm kiếm ngữ nghĩa", count: 0
     assert_select "a", text: "Hỏi đáp tài liệu"
-    assert_select "a", text: "Workspaces"
+    assert_select "a", text: "Codexys"
   end
 
   test "renders new workspace form" do

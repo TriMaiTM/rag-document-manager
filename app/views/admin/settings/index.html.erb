@@ -1,0 +1,170 @@
+<% content_for :title, "Cài đặt & Hệ thống · Admin · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header">
+        <h1>Cài đặt & Trạng thái Hệ thống</h1>
+        <p>Cấu hình mô hình AI Gemini, cơ chế tìm kiếm RAG và trạng thái dịch vụ hạ tầng.</p>
+      </header>
+
+      <%= form_with scope: :settings, url: admin_settings_path, method: :patch, class: "form-stack" do |form| %>
+        <div style="margin-top: 10px;">
+          <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">1. Mô hình AI & Cấu hình Gemini (Tùy biến trực tiếp)</h2>
+          
+          <div class="resource-list">
+            <div class="resource-row" style="padding: 16px;">
+              <div class="resource-primary">
+                <strong>Mô hình AI Chat mặc định (Gemini Model)</strong>
+                <small>Chọn mô hình Gemini sinh câu trả lời RAG cho người dùng</small>
+              </div>
+              <div class="resource-actions">
+                <%= form.select :chat_model,
+                  options_for_select([
+                    ["Gemini 3.5 Flash-Lite (Khuyến nghị)", "gemini-3.5-flash-lite"],
+                    ["Gemini 2.5 Flash", "gemini-2.5-flash"],
+                    ["Gemini 2.5 Pro (Tối ưu nâng cao)", "gemini-2.5-pro"],
+                    ["Gemini 1.5 Flash", "gemini-1.5-flash"],
+                    ["Gemini 1.5 Pro", "gemini-1.5-pro"]
+                  ], @gemini_config.chat_model),
+                  {},
+                  class: "onboarding-input",
+                  style: "max-width: 280px;" %>
+              </div>
+            </div>
+
+            <div class="resource-row" style="padding: 16px;">
+              <div class="resource-primary">
+                <strong>Số đoạn văn bản trích xuất tối đa (MAX_CONTEXTS)</strong>
+                <small>Giới hạn số lượng Chunks văn bản đưa vào Prompt sinh câu trả lời</small>
+              </div>
+              <div class="resource-actions">
+                <%= form.select :max_contexts,
+                  options_for_select([
+                    ["5 đoạn văn bản", "5"],
+                    ["8 đoạn văn bản (Mặc định)", "8"],
+                    ["10 đoạn văn bản", "10"],
+                    ["12 đoạn văn bản", "12"],
+                    ["15 đoạn văn bản", "15"]
+                  ], @max_contexts),
+                  {},
+                  class: "onboarding-input",
+                  style: "max-width: 220px;" %>
+              </div>
+            </div>
+
+            <div class="resource-row" style="padding: 16px;">
+              <div class="resource-primary">
+                <strong>Chế độ Bảo trì Hệ thống (Maintenance Mode)</strong>
+                <small>Tạm thời khóa tính năng hỏi đáp RAG để bảo trì hạ tầng</small>
+              </div>
+              <div class="resource-actions">
+                <%= form.select :maintenance_mode,
+                  options_for_select([
+                    ["Hoạt động bình thường (Tắt)", "false"],
+                    ["Bật bảo trì hệ thống", "true"]
+                  ], @maintenance_mode),
+                  {},
+                  class: "onboarding-input",
+                  style: "max-width: 220px;" %>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; text-align: right;">
+            <button type="submit" class="button button--primary button--large">
+              <%= ui_icon "save-outline" %>
+              <span>Lưu Cài đặt Hệ thống</span>
+            </button>
+          </div>
+        </div>
+      <% end %>
+
+      <div style="margin-top: 36px;">
+        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 16px;">2. Hạ tầng & Dịch vụ Xử lý Tài liệu</h2>
+
+        <div class="resource-list">
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Trạng thái Gemini API Key</strong>
+              <small>Dùng cho tạo câu trả lời RAG và nhúng Embeddings</small>
+            </div>
+            <div class="resource-actions">
+              <% if @gemini_config.configured? %>
+                <span class="status-badge status-badge--completed">Đã cấu hình (Khả dụng)</span>
+              <% else %>
+                <span class="status-badge status-badge--failed">Chưa cấu hình API Key</span>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Embedding Model & Dimensions</strong>
+              <small>Mô hình tạo vector nhúng dữ liệu</small>
+            </div>
+            <div class="resource-actions">
+              <strong style="color: var(--ui-primary-dark); font-size: 0.9rem;"><%= @gemini_config.embedding_model %> (<%= @gemini_config.embedding_dimensions %>d)</strong>
+            </div>
+          </div>
+
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Thuật toán Truy xuất Dữ liệu (Retrieval Engine)</strong>
+              <small>Kết hợp Vector Search + Keyword Search (PostgreSQL ILIKE)</small>
+            </div>
+            <div class="resource-actions">
+              <span class="status-badge status-badge--completed">Hybrid Search + RRF (k=60)</span>
+            </div>
+          </div>
+
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Cơ chế Trích xuất PDF & OCR</strong>
+              <small>Tự động đọc chữ kỹ thuật số và ảnh quét PDF</small>
+            </div>
+            <div class="resource-actions">
+              <% if @tesseract_available %>
+                <span class="status-badge status-badge--completed">Tesseract OCR + Gemini Vision</span>
+              <% else %>
+                <span class="status-badge status-badge--pending">Gemini AI Vision OCR (Multi-tier)</span>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Cơ sở dữ liệu (Database)</strong>
+              <small>Hệ quản trị CSDL & mở rộng Vector</small>
+            </div>
+            <div class="resource-actions">
+              <strong style="font-size: 0.875rem;"><%= @database_adapter %> + pgvector</strong>
+            </div>
+          </div>
+
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Hàng đợi Xử lý ngầm (ActiveJob Adapter)</strong>
+              <small>Xử lý embedding và trích xuất tài liệu ngầm</small>
+            </div>
+            <div class="resource-actions">
+              <strong style="font-size: 0.875rem;"><%= @active_job_adapter.to_s.camelize %></strong>
+            </div>
+          </div>
+
+          <div class="resource-row">
+            <div class="resource-primary">
+              <strong>Cache Store</strong>
+              <small>Lưu trữ bộ nhớ tạm</small>
+            </div>
+            <div class="resource-actions">
+              <strong style="font-size: 0.875rem;"><%= @cache_store %></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

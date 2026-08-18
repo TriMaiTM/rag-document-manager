@@ -132,14 +132,21 @@
           <% end %>
         </span>
         <span class="sidebar-profile__identity">
-          <strong><%= Current.user.email.split("@").first %></strong>
+          <strong><%= Current.user.display_name %></strong>
         </span>
         <%= ui_icon "chevron-up-outline", class_name: "profile-chevron" %>
       </summary>
 
       <div class="profile-menu__panel">
-        <strong><%= Current.user.email %></strong>
+        <strong><%= Current.user.display_name %></strong>
         <hr>
+        <% if Current.user.system_admin? %>
+          <%= link_to admin_root_path, style: "color: var(--ui-primary-dark); font-weight: 600;" do %>
+            <%= ui_icon "shield-checkmark-outline" %>
+            <span>Quản trị hệ thống</span>
+          <% end %>
+          <hr>
+        <% end %>
         <%= link_to edit_user_registration_path do %>
           <%= ui_icon "person-circle-outline" %>
           <span>Cài đặt tài khoản</span>

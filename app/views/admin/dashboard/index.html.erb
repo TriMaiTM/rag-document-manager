@@ -1,0 +1,124 @@
+<% content_for :title, "Quản trị hệ thống · Dashboard · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header">
+        <h1>Quản trị Hệ thống</h1>
+        <p>Tổng quan chỉ số và hoạt động trên toàn hệ thống Codexys.</p>
+      </header>
+
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon">
+            <%= ui_icon "people-outline" %>
+          </div>
+          <div class="admin-stat-card__info">
+            <span class="admin-stat-card__value"><%= number_with_delimiter(@total_users) %></span>
+            <span class="admin-stat-card__label">Tổng Người dùng (<%= @system_admins_count %> Admin)</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon">
+            <%= ui_icon "briefcase-outline" %>
+          </div>
+          <div class="admin-stat-card__info">
+            <span class="admin-stat-card__value"><%= number_with_delimiter(@total_workspaces) %></span>
+            <span class="admin-stat-card__label">Workspace</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon">
+            <%= ui_icon "document-text-outline" %>
+          </div>
+          <div class="admin-stat-card__info">
+            <span class="admin-stat-card__value"><%= number_with_delimiter(@total_documents) %></span>
+            <span class="admin-stat-card__label">Tài liệu (<%= @completed_documents %> Đã xử lý)</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon">
+            <%= ui_icon "hardware-chip-outline" %>
+          </div>
+          <div class="admin-stat-card__info">
+            <span class="admin-stat-card__value"><%= number_with_delimiter(@total_chunks) %></span>
+            <span class="admin-stat-card__label">Vector Chunks (Embedding)</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon">
+            <%= ui_icon "chatbubbles-outline" %>
+          </div>
+          <div class="admin-stat-card__info">
+            <span class="admin-stat-card__value"><%= number_with_delimiter(@total_chat_sessions) %></span>
+            <span class="admin-stat-card__label">Cuộc trò chuyện (<%= @total_chat_messages %> tin nhắn)</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon">
+            <%= ui_icon "sparkles-outline" %>
+          </div>
+          <div class="admin-stat-card__info">
+            <span class="admin-stat-card__value"><%= number_with_delimiter(@total_tokens_consumed) %></span>
+            <span class="admin-stat-card__label">Token AI Gemini đã dùng</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-recent-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+        <div class="admin-recent-block">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Người dùng mới nhất</h2>
+          <div class="resource-list">
+            <% @recent_users.each do |user| %>
+              <div class="resource-row" style="padding: 10px 14px;">
+                <div class="user-avatar user-avatar--sm" style="margin-right: 10px;">
+                  <% if user.avatar.attached? %>
+                    <%= image_tag user.avatar, alt: user.email %>
+                  <% else %>
+                    <span><%= user.email.first.upcase %></span>
+                  <% end %>
+                </div>
+                <div class="resource-primary">
+                  <strong><%= user.email %></strong>
+                  <small>Tham gia <%= user.created_at.strftime("%d/%m/%Y") %></small>
+                </div>
+                <div class="resource-actions">
+                  <span class="status-badge status-badge--<%= user.system_admin? ? 'pending' : 'completed' %>">
+                    <%= user.system_admin? ? 'Admin' : 'User' %>
+                  </span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="admin-recent-block">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Tài liệu mới nhất</h2>
+          <div class="resource-list">
+            <% @recent_documents.each do |doc| %>
+              <div class="resource-row" style="padding: 10px 14px;">
+                <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
+                <div class="resource-primary">
+                  <strong><%= doc.title %></strong>
+                  <small><%= doc.workspace.name %> · <%= doc.page_count || 0 %> trang</small>
+                </div>
+                <div class="resource-actions">
+                  <span class="status-badge status-badge--<%= doc.status %>">
+                    <%= document_status_label(doc) %>
+                  </span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

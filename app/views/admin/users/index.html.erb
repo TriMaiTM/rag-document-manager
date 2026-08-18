@@ -1,0 +1,44 @@
+<% content_for :title, "Quản lý Người dùng · Admin · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header">
+        <h1>Quản lý Người dùng</h1>
+        <p>Danh sách tất cả người dùng trong hệ thống và phân quyền System Admin.</p>
+      </header>
+
+      <div class="resource-list">
+        <% @users.each do |user| %>
+          <article class="resource-row" style="padding: 14px 18px;">
+            <div class="user-avatar user-avatar--sm" style="margin-right: 12px; width: 38px; height: 38px; flex: 0 0 38px;">
+              <% if user.avatar.attached? && user.avatar.persisted? %>
+                <%= image_tag user.avatar, alt: user.display_name, class: "user-avatar-image" %>
+              <% else %>
+                <span><%= user.display_name.first.upcase %></span>
+              <% end %>
+            </div>
+
+            <div class="resource-primary">
+              <strong style="font-size: 0.95rem; color: var(--ui-text);"><%= user.display_name %></strong>
+              <small style="color: var(--ui-muted); font-size: 0.85rem;"><%= user.email %></small>
+            </div>
+
+            <div class="resource-actions" style="display: flex; align-items: center; gap: 12px;">
+              <span class="status-badge status-badge--<%= user.system_admin? ? 'pending' : 'completed' %>">
+                <%= user.system_admin? ? 'System Admin' : 'Người dùng' %>
+              </span>
+
+              <%= link_to admin_user_path(user), class: "button button--secondary doc-preview-btn" do %>
+                <%= ui_icon "eye-outline" %>
+                <span>Xem</span>
+              <% end %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  </div>
+</section>

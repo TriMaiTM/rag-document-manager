@@ -32,10 +32,11 @@ module Codexys
         DEFAULT_BASE_URL
       )
 
-      @chat_model = env.fetch(
-        "GEMINI_CHAT_MODEL",
-        DEFAULT_CHAT_MODEL
-      )
+      @chat_model = if defined?(SystemSetting) && ActiveRecord::Base.connection.table_exists?("system_settings")
+        SystemSetting.get("chat_model", env.fetch("GEMINI_CHAT_MODEL", DEFAULT_CHAT_MODEL))
+      else
+        env.fetch("GEMINI_CHAT_MODEL", DEFAULT_CHAT_MODEL)
+      end
 
       @timeout_seconds = Integer(
         env.fetch(

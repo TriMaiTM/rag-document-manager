@@ -1,0 +1,17 @@
+<nav class="settings-tabs" aria-label="Quản trị hệ thống">
+  <%= link_to "Tổng quan",
+    admin_root_path,
+    class: ["settings-tab", ("settings-tab--active" if current_page?(admin_root_path) || current_page?(admin_dashboard_path))] %>
+
+  <%= link_to "Người dùng",
+    admin_users_path,
+    class: ["settings-tab", ("settings-tab--active" if current_page?(admin_users_path))] %>
+
+  <%= link_to "Workspace",
+    admin_workspaces_path,
+    class: ["settings-tab", ("settings-tab--active" if current_page?(admin_workspaces_path) || request.path.start_with?("/admin/workspaces"))] %>
+
+  <%= link_to "Cài đặt & Hệ thống",
+    admin_settings_path,
+    class: ["settings-tab", ("settings-tab--active" if current_page?(admin_settings_path))] %>
+</nav>

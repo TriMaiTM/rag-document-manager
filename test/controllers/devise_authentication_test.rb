@@ -59,7 +59,7 @@ class DeviseAuthenticationTest < ActionDispatch::IntegrationTest
     user = User.find_by!(email: "new-user@example.com")
 
     assert user.valid_password?("password")
-    assert_redirected_to workspaces_path
+    assert_redirected_to onboarding_path
   end
 
   test "sends password reset instructions" do

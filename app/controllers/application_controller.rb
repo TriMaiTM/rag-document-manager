@@ -15,12 +15,16 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  def after_sign_in_path_for(_resource)
-    workspaces_path
+  def after_sign_in_path_for(resource)
+    if resource.workspaces.none?
+      onboarding_path
+    else
+      workspaces_path
+    end
   end
 
   def after_sign_up_path_for(_resource)
-    workspaces_path
+    onboarding_path
   end
 
   def self.rate_limit_ai_requests(**options)
@@ -90,6 +94,7 @@ class ApplicationController < ActionController::Base
   protected
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:account_update, keys: [ :avatar ])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :name ])
+    devise_parameter_sanitizer.permit(:account_update, keys: [ :name, :avatar ])
   end
 end

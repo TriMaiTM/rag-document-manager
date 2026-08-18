@@ -87,7 +87,6 @@
           <% flash.each do |type, message| %>
             <div class="flash flash--<%= type %>" data-controller="flash">
               <span role="status"><%= message %></span>
-              <button type="button" class="flash__close" data-action="click->flash#dismiss" aria-label="Đóng">&times;</button>
             </div>
           <% end %>
 
@@ -100,7 +99,6 @@
       <% flash.each do |type, message| %>
         <div class="flash flash--public flash--<%= type %>" data-controller="flash">
           <span role="status"><%= message %></span>
-          <button type="button" class="flash__close" data-action="click->flash#dismiss" aria-label="Đóng">&times;</button>
         </div>
       <% end %>
 

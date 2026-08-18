@@ -18,4 +18,15 @@ Rails.application.routes.draw do
       post :retry_processing, on: :member
     end
   end
+
+  resource :onboarding, controller: "onboarding", only: [ :show, :update ]
+
+  namespace :admin do
+    root to: "dashboard#index"
+    get "dashboard", to: "dashboard#index"
+    resources :users, only: [ :index, :show, :update ]
+    resources :workspaces, only: [ :index, :show ]
+    resources :settings, only: [ :index, :create, :update ]
+    patch "settings", to: "settings#update"
+  end
 end

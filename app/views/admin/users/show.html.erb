@@ -1,0 +1,93 @@
+<% content_for :title, "Chi tiết người dùng #{@user.display_name} · Admin · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h1 style="margin-bottom: 4px;">Chi tiết Người dùng: <%= @user.display_name %></h1>
+          <p>Email: <strong><%= @user.email %></strong> · Tham gia ngày: <%= @user.created_at.strftime("%H:%M %d/%m/%Y") %></p>
+        </div>
+        <%= link_to "Quay lại danh sách", admin_users_path, class: "button button--secondary doc-preview-btn" %>
+      </header>
+
+      <div class="account-settings-layout" style="grid-template-columns: 1fr; margin-top: 20px;">
+        <div class="resource-list" style="margin-bottom: 24px;">
+          <div class="resource-row" style="padding: 16px;">
+            <div class="user-avatar user-avatar--large" style="margin-right: 16px; width: 56px; height: 56px; flex: 0 0 56px;">
+              <% if @user.avatar.attached? && @user.avatar.persisted? %>
+                <%= image_tag @user.avatar, alt: @user.display_name, class: "user-avatar-image" %>
+              <% else %>
+                <span style="font-size: 20px;"><%= @user.display_name.first.upcase %></span>
+              <% end %>
+            </div>
+
+            <div class="resource-primary">
+              <strong style="font-size: 1.1rem;"><%= @user.display_name %></strong>
+              <small><%= @user.email %></small>
+            </div>
+
+            <div class="resource-actions" style="display: flex; align-items: center; gap: 16px;">
+              <%= form_with model: [:admin, @user], method: :patch, class: "inline-role-form" do |form| %>
+                <label style="font-size: 0.85rem; font-weight: 600; margin-right: 8px;">Phân quyền:</label>
+                <%= form.select :system_role,
+                  options_for_select([["Người dùng thường", "user"], ["System Admin", "system_admin"]], @user.system_role),
+                  {},
+                  onchange: "this.form.requestSubmit()",
+                  disabled: (@user == current_user) %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Các Workspace tham gia (<%= @workspaces.size %>)</h2>
+          <div class="resource-list">
+            <% if @workspaces.any? %>
+              <% @workspaces.each do |workspace| %>
+                <div class="resource-row" style="padding: 10px 14px;">
+                  <%= ui_icon "briefcase-outline", class_name: "resource-icon" %>
+                  <div class="resource-primary">
+                    <%= link_to workspace.name, admin_workspace_path(workspace), style: "font-weight: 600; color: var(--ui-text);" %>
+                    <small>Tạo ngày <%= workspace.created_at.strftime("%d/%m/%Y") %> · <%= workspace.memberships.count %> thành viên</small>
+                  </div>
+                  <div class="resource-actions">
+                    <%= link_to "Chi tiết", admin_workspace_path(workspace), class: "button button--secondary button--compact" %>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <p style="color: var(--ui-muted); font-size: 0.9rem; padding: 12px 0;">Người dùng chưa tham gia Workspace nào.</p>
+            <% end %>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px;">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Tài liệu đã tải lên (<%= @uploaded_documents.size %>)</h2>
+          <div class="resource-list">
+            <% if @uploaded_documents.any? %>
+              <% @uploaded_documents.each do |doc| %>
+                <div class="resource-row" style="padding: 10px 14px;">
+                  <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
+                  <div class="resource-primary">
+                    <strong><%= doc.title %></strong>
+                    <small><%= doc.workspace.name %> · <%= doc.page_count || 0 %> trang</small>
+                  </div>
+                  <div class="resource-actions">
+                    <span class="status-badge status-badge--<%= doc.status %>">
+                      <%= document_status_label(doc) %>
+                    </span>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <p style="color: var(--ui-muted); font-size: 0.9rem; padding: 12px 0;">Người dùng chưa tải lên tài liệu nào.</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

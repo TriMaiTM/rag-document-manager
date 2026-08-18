@@ -1,0 +1,63 @@
+<% content_for :title, "Chi tiết Workspace #{@workspace.name} · Admin · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <h1>Workspace: <%= @workspace.name %></h1>
+          <p>Tạo ngày <%= @workspace.created_at.strftime("%H:%M %d/%m/%Y") %> · Chủ sở hữu: <strong><%= @workspace.owner&.email || "—" %></strong></p>
+        </div>
+        <%= link_to "Quay lại danh sách", admin_workspaces_path, class: "button button--secondary doc-preview-btn" %>
+      </header>
+
+      <div style="margin-top: 24px;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Thành viên (<%= @memberships.size %>)</h2>
+        <div class="resource-list">
+          <% @memberships.each do |membership| %>
+            <div class="resource-row" style="padding: 10px 14px;">
+              <div class="user-avatar user-avatar--sm" style="margin-right: 10px;">
+                <% if membership.user.avatar.attached? %>
+                  <%= image_tag membership.user.avatar, alt: membership.user.email %>
+                <% else %>
+                  <span><%= membership.user.email.first.upcase %></span>
+                <% end %>
+              </div>
+              <div class="resource-primary">
+                <strong><%= membership.user.email %></strong>
+                <small>Tham gia <%= membership.created_at.strftime("%d/%m/%Y") %></small>
+              </div>
+              <div class="resource-actions">
+                <span class="status-badge status-badge--<%= membership.owner? ? 'pending' : 'completed' %>">
+                  <%= membership.role.capitalize %>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div style="margin-top: 32px;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Tài liệu trong Workspace (<%= @documents.size %>)</h2>
+        <div class="resource-list">
+          <% @documents.each do |doc| %>
+            <div class="resource-row" style="padding: 10px 14px;">
+              <%= ui_icon "document-text-outline", class_name: "resource-icon" %>
+              <div class="resource-primary">
+                <strong><%= doc.title %></strong>
+                <small><%= doc.file.filename %> · <%= document_file_size(doc) %> · <%= doc.page_count || 0 %> trang</small>
+              </div>
+              <div class="resource-actions">
+                <span class="status-badge status-badge--<%= doc.status %>">
+                  <%= document_status_label(doc) %>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

@@ -57,6 +57,8 @@ module ApplicationHelper
   end
 
   def current_user_initial
-    Current.user.email.first.upcase
+    return "" unless Current.user
+
+    Current.user.display_name.first.upcase
   end
 end

@@ -41,7 +41,9 @@ module Rag
 
     def standalone_query?(question)
       cleaned = question.to_s.strip.downcase
-      !cleaned.match?(/\A(nó|cái này|cái đó|ở trên|đó)\b/i) && cleaned.split.size >= 2
+      return false if cleaned.match?(/\A(còn|nó|cái này|cái đó|ở trên|đó)\b/i) || cleaned.match?(/(thì sao|thế nào)\??\z/i)
+
+      cleaned.split.size >= 4
     end
 
     def entries

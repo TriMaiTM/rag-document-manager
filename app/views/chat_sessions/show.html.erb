@@ -89,7 +89,7 @@
                 <% if chat_message.pending? %>
                   <div class="answer-loading" role="status" style="display: flex; align-items: center; gap: 8px;">
                     <span class="spinner-ring spinner-ring--dark spinner-ring--sm"></span>
-                    <span>Codexys đang đọc các tài liệu...</span>
+                    <span><%= chat_message.retry_claimed? ? "Đang thử tạo lại câu trả lời..." : "Codexys đang đọc các tài liệu..." %></span>
                   </div>
                 <% elsif chat_message.failed? %>
                   <div class="message-error" role="alert">

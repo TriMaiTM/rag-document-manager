@@ -63,6 +63,10 @@ class ChatMessage < ApplicationRecord
     assistant? && failed? && question_message&.user?
   end
 
+  def retry_claimed?
+    assistant? && pending? && content == Chat::Ask::FAILURE_ANSWER
+  end
+
   def claim_retry!
     with_lock do
       unless retryable?

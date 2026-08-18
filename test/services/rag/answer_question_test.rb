@@ -144,7 +144,7 @@ class Rag::AnswerQuestionTest < ActiveSupport::TestCase
       searcher
     end
 
-    result = SemanticSearch::Search.stub(:new, search_factory) do
+    result = SemanticSearch::HybridSearch.stub(:new, search_factory) do
       Rag::AnswerQuestion.new(
         workspace: workspaces(:one),
         question: "  Còn đăng nhập thì sao?  ",

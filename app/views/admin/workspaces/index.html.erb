@@ -1,0 +1,39 @@
+<% content_for :title, "Quản lý Workspace · Admin · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header">
+        <h1>Quản lý Workspace</h1>
+        <p>Danh sách tất cả Workspace trên toàn hệ thống Codexys.</p>
+      </header>
+
+      <div class="resource-list">
+        <% @workspaces.each do |workspace| %>
+          <article class="resource-row" style="padding: 14px 18px;">
+            <%= ui_icon "briefcase-outline", class_name: "resource-icon" %>
+
+            <div class="resource-primary">
+              <%= link_to workspace.name, admin_workspace_path(workspace), style: "font-weight: 700; color: var(--ui-text);" %>
+              <small>
+                Tạo ngày <%= workspace.created_at.strftime("%d/%m/%Y") %>
+                · Chủ sở hữu: <%= workspace.owner&.email || "—" %>
+                · <%= workspace.memberships.count %> thành viên
+                · <%= workspace.documents.count %> tài liệu
+              </small>
+            </div>
+
+            <div class="resource-actions">
+              <%= link_to admin_workspace_path(workspace), class: "button button--secondary doc-preview-btn" do %>
+                <%= ui_icon "eye-outline" %>
+                <span>Chi tiết</span>
+              <% end %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  </div>
+</section>
