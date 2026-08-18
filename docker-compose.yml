@@ -3,12 +3,21 @@ version: '3.8'
 services:
   web:
     build: .
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails db:prepare && bundle exec rails s>
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0 -p 3000"
     ports:
       - "80:3000"
     env_file:
       - .env
     environment:
+      - RAILS_ENV=${RAILS_ENV:-production}
       - DATABASE_URL=${DATABASE_URL}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - ACTIVE_STORAGE_SERVICE=${ACTIVE_STORAGE_SERVICE:-amazon}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-ap-southeast-1}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - GEMINI_CHAT_MODEL=${GEMINI_CHAT_MODEL:-gemini-3.5-flash-lite}
+      - MAX_CONTEXTS=${MAX_CONTEXTS:-8}
     restart: always
