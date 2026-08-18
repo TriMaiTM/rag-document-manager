@@ -125,4 +125,4 @@ module Codexys
 end
 
 Rails.application.config.x.gemini =
-  Codexys::GeminiConfiguration.new.validate!
+  Codexys::GeminiConfiguration.new.validate! unless ENV["SECRET_KEY_BASE_DUMMY"]
