@@ -61,4 +61,13 @@ module ApplicationHelper
 
     Current.user.display_name.first.upcase
   end
+
+  def safe_return_to(url)
+    return nil if url.blank?
+
+    str = url.to_s
+    return str if str.start_with?("/") && !str.start_with?("//") && !str.include?(":")
+
+    nil
+  end
 end

@@ -1,5 +1,5 @@
 <%
-  return_to_param = params[:return_to].presence
+  return_to_param = safe_return_to(params[:return_to])
   back_url = if return_to_param
     return_to_param
   elsif defined?(@chat_session) && @chat_session.persisted?

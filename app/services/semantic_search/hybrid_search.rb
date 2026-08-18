@@ -9,12 +9,14 @@ module SemanticSearch
       workspace:,
       query:,
       searcher: SemanticSearch::Search,
+      generator: nil,
       limit: DEFAULT_LIMIT,
       rrf_k: RRF_K
     )
       @workspace = workspace
       @query = query
       @searcher = searcher
+      @generator = generator
       @limit = limit
       @rrf_k = rrf_k
     end
@@ -40,14 +42,17 @@ module SemanticSearch
 
     private
 
-    attr_reader :workspace, :query, :searcher, :limit, :rrf_k
+    attr_reader :workspace, :query, :searcher, :generator, :limit, :rrf_k
 
     def vector_search(normalized_query)
-      searcher.new(
+      search_args = {
         workspace: workspace,
         query: normalized_query,
         limit: limit * 2
-      ).call
+      }
+      search_args[:generator] = generator if generator.present?
+
+      searcher.new(**search_args).call
     rescue SemanticSearch::Search::Error => error
       Rails.logger.warn("Vector search failed in hybrid search: #{error.message}")
       SemanticSearch::Search::Result.new(

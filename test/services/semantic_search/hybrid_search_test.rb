@@ -2,6 +2,17 @@ require "test_helper"
 
 module SemanticSearch
   class HybridSearchTest < ActiveSupport::TestCase
+    class FakeGenerator
+      def call(query:)
+        Ai::GenerateQueryEmbedding::Result.new(
+          vector: Array.new(Ai::EmbeddingConfig::DIMENSIONS, 0.0),
+          model: Ai::EmbeddingConfig::MODEL,
+          prompt_tokens: 3,
+          total_tokens: 3
+        )
+      end
+    end
+
     setup do
       @workspace = workspaces(:one)
     end
@@ -11,6 +22,7 @@ module SemanticSearch
       result = HybridSearch.new(
         workspace: @workspace,
         query: query,
+        generator: FakeGenerator.new,
         limit: 5
       ).call
 
