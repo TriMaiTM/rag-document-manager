@@ -46,6 +46,7 @@ gem "pdf-reader", "~> 2.15"
 gem "rtesseract"
 gem "pgvector"
 gem "neighbor"
+gem "aws-sdk-s3", require: false
 
 
 group :development, :test do
