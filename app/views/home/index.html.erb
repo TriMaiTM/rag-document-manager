@@ -1,35 +1,382 @@
-<% content_for :title, "Codexys - Document management using RAG" %>
+<% content_for :title, "Codexys - Quản trị Tri thức & Hỏi đáp Tài liệu Thông minh" %>
 
-<section class="landing">
-  <%= image_tag "codexys/landing-logo.png", alt: "", class: "landing__logo" %>
-  <h1>Codexys</h1>
-  <p class="landing__tagline">Document management system using RAG &amp; Ruby on Rails</p>
+<div class="landing-shell">
+  <!-- Minimalist Editorial Header -->
+  <header class="landing-nav">
+    <div class="landing-nav__inner">
+      <div class="landing-nav__brand">
+        <%= image_tag "codexys/landing-logo.png", alt: "Codexys Logo", class: "landing-nav__logo" %>
+        <span class="landing-nav__name">Codexys</span>
+      </div>
 
-  <div class="landing-composer" aria-label="Minh họa hộp thoại Codexys">
-    <p>Send a message...</p>
-    <div class="landing-composer__footer">
-      <%= ui_icon "add-outline" %>
-      <span class="landing-composer__model">
-        Gemini 3.5 Flash-Lite
-        <%= ui_icon "chevron-down-outline" %>
-      </span>
-      <%= ui_icon "arrow-up-outline", class_name: "landing-composer__send" %>
+      <nav class="landing-nav__menu" aria-label="Điều hướng">
+        <a href="#engine" class="landing-nav__link">Động cơ RAG</a>
+        <a href="#pipeline" class="landing-nav__link">Quy trình</a>
+        <a href="#specifications" class="landing-nav__link">Kiến trúc</a>
+        <a href="#security" class="landing-nav__link">Bảo mật</a>
+      </nav>
+
+      <div class="landing-nav__cta">
+        <% if user_signed_in? %>
+          <%= link_to "Vào Không gian làm việc", workspaces_path, class: "btn-editorial btn-editorial--dark" %>
+        <% else %>
+          <%= link_to "Đăng nhập", new_user_session_path, class: "btn-editorial btn-editorial--plain" %>
+          <%= link_to "Bắt đầu", new_user_registration_path, class: "btn-editorial btn-editorial--dark" %>
+        <% end %>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div class="landing__actions">
-    <% if user_signed_in? %>
-      <%= link_to "Mở Workspaces", workspaces_path, class: "button button--primary" %>
-    <% else %>
-      <%= link_to "Đăng nhập", new_user_session_path, class: "button button--primary" %>
-      <%= link_to "Tạo tài khoản", new_user_registration_path, class: "button button--primary" %>
-    <% end %>
-  </div>
+  <main>
+    <!-- Hero Section (Editorial Asymmetric Layout) -->
+    <section class="hero-editorial">
+      <div class="hero-editorial__container">
+        <div class="hero-editorial__lead">
+          <h1 class="hero-editorial__title">
+            Làm chủ toàn bộ tri thức tài liệu của bạn.
+          </h1>
+          <p class="hero-editorial__desc">
+            Trợ lý AI chuyên sâu cho tổ chức. Tự động OCR đa tầng, tìm kiếm ngữ nghĩa và đối soát nguồn trích dẫn số trang với độ chính xác đáng kinh ngạc.
+          </p>
 
-  <section class="visually-hidden" aria-labelledby="project-status">
-    <h2 id="project-status">Trạng thái dự án</h2>
-    <p>Ruby on Rails, PostgreSQL, pgvector và Gemini đã sẵn sàng cho quy trình RAG.</p>
-  </section>
+          <div class="hero-editorial__actions">
+            <% if user_signed_in? %>
+              <%= link_to workspaces_path, class: "btn-hero-neo btn-hero-neo--primary" do %>
+                <span>Truy cập Workspace</span>
+                <%= ui_icon "arrow-forward-outline" %>
+              <% end %>
+              <%= link_to "https://github.com/TriMaiTM/rag-document-manager", target: "_blank", rel: "noopener noreferrer", class: "btn-hero-neo btn-hero-neo--github", title: "Mã nguồn Codexys trên GitHub" do %>
+                <%= ui_icon "logo-github" %>
+                <span>GitHub</span>
+              <% end %>
+            <% else %>
+              <%= link_to new_user_registration_path, class: "btn-hero-neo btn-hero-neo--primary" do %>
+                <span>Bắt đầu ngay</span>
+                <%= ui_icon "arrow-forward-outline" %>
+              <% end %>
+              <%= link_to new_user_session_path, class: "btn-hero-neo btn-hero-neo--secondary" do %>
+                <span>Đăng nhập</span>
+              <% end %>
+              <%= link_to "https://github.com/TriMaiTM/rag-document-manager", target: "_blank", rel: "noopener noreferrer", class: "btn-hero-neo btn-hero-neo--github", title: "Mã nguồn Codexys trên GitHub" do %>
+                <%= ui_icon "logo-github" %>
+                <span>GitHub</span>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
 
-  <%= image_tag "codexys/landing-footer.svg", alt: "", class: "landing__footer" %>
-</section>
+        <!-- Real Showcase Frame (Blue Shadow Glow) -->
+        <div class="hero-showcase" aria-label="Giao diện đối soát nguồn tài liệu thực tế của Codexys">
+          <div class="hero-showcase__frame">
+            <%= image_tag "codexys/hero-qa-preview.png", alt: "Giao diện hỏi đáp đối soát nguồn Codexys", class: "hero-showcase__img" %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Performance Metrics Strip (Clean Hairline Borders, No Cards) -->
+    <section class="metrics-strip">
+      <div class="metrics-strip__container">
+        <div class="metric-item">
+          <span class="metric-item__num">768d</span>
+          <span class="metric-item__label">Chỉ mục Vector Embeddings</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-item__num">k=60</span>
+          <span class="metric-item__label">Thuật toán Tái xếp hạng RRF</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-item__num">100%</span>
+          <span class="metric-item__label">Đối soát Trích dẫn Số trang</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-item__num">&lt; 1.5s</span>
+          <span class="metric-item__label">Thời gian Phản hồi Truy vấn</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Mechanics Pipeline (Dynamic Hover with Large Icons) -->
+    <section class="pipeline-section" id="pipeline">
+      <div class="pipeline-section__container">
+        <div class="section-lead">
+          <h2 class="section-lead__title">Khởi tạo nhanh. Xử lý triệt để trong bốn bước.</h2>
+        </div>
+
+        <div class="pipeline-grid">
+          <div class="pipeline-col">
+            <div class="pipeline-col__top">
+              <span class="pipeline-col__step">01</span>
+              <div class="pipeline-col__icon-wrap">
+                <%= ui_icon "folder-open-outline" %>
+              </div>
+            </div>
+            <h3 class="pipeline-col__heading">Khởi tạo Workspace</h3>
+            <p class="pipeline-col__text">
+              Tạo không gian làm việc độc lập cho từng dự án, phòng ban và tải tệp tài liệu PDF vào hệ thống lưu trữ.
+            </p>
+          </div>
+
+          <div class="pipeline-col">
+            <div class="pipeline-col__top">
+              <span class="pipeline-col__step">02</span>
+              <div class="pipeline-col__icon-wrap">
+                <%= ui_icon "scan-outline" %>
+              </div>
+            </div>
+            <h3 class="pipeline-col__heading">OCR &amp; Lập chỉ mục</h3>
+            <p class="pipeline-col__text">
+              Tự động phân mảnh nội dung, kích hoạt Vision OCR cho bản scan và đồng bộ hóa embedding vào pgvector.
+            </p>
+          </div>
+
+          <div class="pipeline-col">
+            <div class="pipeline-col__top">
+              <span class="pipeline-col__step">03</span>
+              <div class="pipeline-col__icon-wrap">
+                <%= ui_icon "git-network-outline" %>
+              </div>
+            </div>
+            <h3 class="pipeline-col__heading">Truy vấn Lai Hybrid RRF</h3>
+            <p class="pipeline-col__text">
+              Kết hợp song song Vector ngữ nghĩa và Full-text search toàn văn bản, tối ưu hóa điểm số với hằng số k=60.
+            </p>
+          </div>
+
+          <div class="pipeline-col">
+            <div class="pipeline-col__top">
+              <span class="pipeline-col__step">04</span>
+              <div class="pipeline-col__icon-wrap">
+                <%= ui_icon "checkmark-done-circle-outline" %>
+              </div>
+            </div>
+            <h3 class="pipeline-col__heading">Đối soát &amp; Khai thác</h3>
+            <p class="pipeline-col__text">
+              Nhận câu trả lời hoàn chỉnh kèm số trang dẫn chiếu và mở trình đọc PDF song song đến đúng đoạn nguồn.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deep Engine Capabilities (Interactive Hover Rows with Large Icons) -->
+    <section class="engine-section" id="engine">
+      <div class="engine-section__container">
+        <div class="engine-section__header">
+          <h2 class="section-lead__title">Được thiết kế cho độ chuẩn xác và tốc độ khai thác.</h2>
+          <p class="section-lead__desc">
+            Không sử dụng các mô hình phỏng đoán mơ hồ. Mọi tri thức sinh ra từ Codexys đều được neo chặt vào văn bản nguồn và bảo vệ trong vùng dữ liệu an toàn.
+          </p>
+        </div>
+
+        <div class="engine-table">
+          <div class="engine-row">
+            <div class="engine-row__meta">
+              <div class="engine-row__indicator">
+                <span class="engine-row__num">01</span>
+                <div class="engine-row__icon-wrap">
+                  <%= ui_icon "git-compare-outline" %>
+                </div>
+              </div>
+              <h3 class="engine-row__title">Tìm kiếm lai Hybrid Search RRF</h3>
+            </div>
+            <div class="engine-row__body">
+              <p>
+                Khắc phục nhược điểm của tìm kiếm vector thuần túy khi gặp từ khóa chuyên ngành, mã số hợp đồng hoặc thuật ngữ viết tắt. Hệ thống kết hợp thuật toán truy vấn toàn văn bản PostgreSQL và Vector Cosine Similarity để đưa ra kết quả hội tụ chuẩn xác nhất.
+              </p>
+            </div>
+          </div>
+
+          <div class="engine-row">
+            <div class="engine-row__meta">
+              <div class="engine-row__indicator">
+                <span class="engine-row__num">02</span>
+                <div class="engine-row__icon-wrap">
+                  <%= ui_icon "eye-outline" %>
+                </div>
+              </div>
+              <h3 class="engine-row__title">Trích xuất OCR Đa tầng Gemini Vision</h3>
+            </div>
+            <div class="engine-row__body">
+              <p>
+                Tự động nhận diện tài liệu dạng số hoặc dạng scan hình ảnh. Với các trang chứa bảng biểu phức tạp hoặc chất lượng scan mờ, hệ thống định tuyến trực tiếp qua Gemini Vision để trích xuất văn bản có cấu trúc trước khi vector hóa.
+              </p>
+            </div>
+          </div>
+
+          <div class="engine-row">
+            <div class="engine-row__meta">
+              <div class="engine-row__indicator">
+                <span class="engine-row__num">03</span>
+                <div class="engine-row__icon-wrap">
+                  <%= ui_icon "book-outline" %>
+                </div>
+              </div>
+              <h3 class="engine-row__title">Trình đọc PDF Song song &amp; Deep-link</h3>
+            </div>
+            <div class="engine-row__body">
+              <p>
+                Khung xem tài liệu PDF được tích hợp ngay bên cạnh hội thoại. Khi nhấp vào bất kỳ số trang nào trong phần trích dẫn, hệ thống tự động cuộn trang và làm nổi bật phân đoạn văn bản gốc tương ứng để người dùng đối soát tức thì.
+              </p>
+            </div>
+          </div>
+
+          <div class="engine-row">
+            <div class="engine-row__meta">
+              <div class="engine-row__indicator">
+                <span class="engine-row__num">04</span>
+                <div class="engine-row__icon-wrap">
+                  <%= ui_icon "shield-checkmark-outline" %>
+                </div>
+              </div>
+              <h3 class="engine-row__title">Không gian làm việc &amp; Phân quyền RBAC</h3>
+            </div>
+            <div class="engine-row__body">
+              <p>
+                Quản lý tri thức linh hoạt theo từng phòng ban hoặc dự án độc lập. Kiểm soát quyền truy cập chặt chẽ với ba cấp độ Owner, Admin và Member, ngăn chặn hoàn toàn việc truy cập trái phép giữa các không gian làm việc.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture & Cloud Stack (Clean Technical Specs) -->
+    <section class="specs-section" id="specifications">
+      <div class="specs-section__container">
+        <div class="specs-section__lead">
+          <span class="section-lead__pill">HẠ TẦNG ĐÁM MÂY</span>
+          <h2 class="section-lead__title">Kiến trúc Tối ưu hóa trên AWS Cloud.</h2>
+          <p class="section-lead__desc">
+            Ứng dụng được đóng gói container chuẩn hóa, vận hành mượt mà với Ruby on Rails 8, PostgreSQL pgvector và dịch vụ lưu trữ đối tượng AWS S3.
+          </p>
+        </div>
+
+        <div class="specs-grid">
+          <div class="specs-cell">
+            <div class="specs-cell__header">
+              <span class="specs-cell__title">Puma &amp; Rails 8 Engine</span>
+              <span class="specs-cell__tag">Application Layer</span>
+            </div>
+            <p class="specs-cell__desc">
+              Xử lý I/O đa luồng tốc độ cao, hỗ trợ Solid Cache và kiến trúc dịch vụ mô-đun hóa dễ mở rộng.
+            </p>
+          </div>
+
+          <div class="specs-cell">
+            <div class="specs-cell__header">
+              <span class="specs-cell__title">PostgreSQL 16 RDS + pgvector</span>
+              <span class="specs-cell__tag">Data &amp; Vector Store</span>
+            </div>
+            <p class="specs-cell__desc">
+              Lưu trữ quan hệ toàn vẹn, hỗ trợ chỉ mục HNSW/IVFFlat cho hàng triệu vector đa chiều và full-text search.
+            </p>
+          </div>
+
+          <div class="specs-cell">
+            <div class="specs-cell__header">
+              <span class="specs-cell__title">AWS S3 ActiveStorage</span>
+              <span class="specs-cell__tag">Object Storage</span>
+            </div>
+            <p class="specs-cell__desc">
+              Quản lý tệp PDF và dữ liệu nhị phân với cơ chế Signed URLs phân quyền theo thời gian thực an toàn.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security & Isolation (Authoritative Statement & Columns) -->
+    <section class="security-editorial" id="security">
+      <div class="security-editorial__container">
+        <div class="security-editorial__intro">
+          <span class="section-lead__pill">BẢO MẬT &amp; QUYỀN RIÊNG TƯ</span>
+          <h2 class="section-lead__title">Bảo vệ Trọn vẹn Dữ liệu Tri thức Doanh nghiệp.</h2>
+          <p class="section-lead__desc">
+            Không sử dụng dữ liệu khách hàng để huấn luyện AI công cộng. Cô lập tuyệt đối theo ranh giới tổ chức.
+          </p>
+        </div>
+
+        <div class="security-editorial__columns">
+          <div class="sec-col">
+            <h4 class="sec-col__title">Cô lập Dữ liệu Theo Hàng</h4>
+            <p class="sec-col__text">
+              Mỗi bản ghi và phân đoạn văn bản được ràng buộc theo Workspace ID và áp dụng chính sách kiểm soát truy cập nghiêm ngặt.
+            </p>
+          </div>
+
+          <div class="sec-col">
+            <h4 class="sec-col__title">Lưu trữ Đối tượng Mã hóa</h4>
+            <p class="sec-col__text">
+              Tệp tài liệu trên AWS S3 được mã hóa ở trạng thái tĩnh (Server-Side Encryption) và chỉ truy xuất qua đường dẫn có chữ ký ngắn hạn.
+            </p>
+          </div>
+
+          <div class="sec-col">
+            <h4 class="sec-col__title">Không Huấn luyện Ngoài luồng</h4>
+            <p class="sec-col__text">
+              Nội dung tài liệu chỉ phục vụ mục đích suy luận trong phiên truy vấn tức thời, không lưu vết để tái huấn luyện mô hình bên thứ ba.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Editorial Categorized Footer -->
+  <footer class="footer-editorial">
+    <div class="footer-editorial__container">
+      <div class="footer-editorial__grid">
+        <div class="footer-editorial__columns">
+          <div class="footer-col">
+            <span class="footer-col__title">TÍNH NĂNG</span>
+            <ul class="footer-col__list">
+              <li><%= link_to "Không gian làm việc", workspaces_path, class: "footer-col__link" %></li>
+              <li><a href="#engine" class="footer-col__link">Tìm kiếm ngữ nghĩa</a></li>
+              <li><a href="#engine" class="footer-col__link">Trích xuất Vision OCR</a></li>
+              <li><a href="#engine" class="footer-col__link">Trình đọc PDF song song</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <span class="footer-col__title">KIẾN TRÚC HỆ THỐNG</span>
+            <ul class="footer-col__list">
+              <li><a href="#specifications" class="footer-col__link">Ruby on Rails 8 Engine</a></li>
+              <li><a href="#specifications" class="footer-col__link">PostgreSQL &amp; pgvector</a></li>
+              <li><a href="#specifications" class="footer-col__link">Lưu trữ Đối tượng AWS S3</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <span class="footer-col__title">BẢO MẬT &amp; DỮ LIỆU</span>
+            <ul class="footer-col__list">
+              <li><a href="#security" class="footer-col__link">Phân quyền RBAC</a></li>
+              <li><a href="#security" class="footer-col__link">Cô lập cấp Workspace</a></li>
+              <li><a href="#security" class="footer-col__link">Mã hóa dữ liệu S3</a></li>
+              <li><a href="#security" class="footer-col__link">Quyền riêng tư AI</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <span class="footer-col__title">MÃ NGUỒN &amp; DỰ ÁN</span>
+            <ul class="footer-col__list">
+              <li><a href="https://github.com/TriMaiTM/rag-document-manager" target="_blank" rel="noopener noreferrer" class="footer-col__link">GitHub</a></li>
+              <li><a href="https://github.com/TriMaiTM/rag-document-manager/issues" target="_blank" rel="noopener noreferrer" class="footer-col__link">Báo cáo lỗi</a></li>
+              <li><a href="#pipeline" class="footer-col__link">Pipeline</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-editorial__brand-side">
+          <%= image_tag "codexys/landing-logo-white.png", alt: "Codexys Logo", class: "footer-editorial__big-logo" %>
+        </div>
+      </div>
+
+      <div class="footer-editorial__bottom">
+        <p class="footer-editorial__copy">
+          &copy; <%= Time.current.year %> Codexys. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+</div>
