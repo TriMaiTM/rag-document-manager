@@ -1,0 +1,21 @@
+<header class="auth-top-nav">
+  <div class="auth-top-nav__inner">
+    <%= link_to root_path, class: "auth-nav-brand" do %>
+      <%= image_tag "codexys/landing-logo.png", alt: "Codexys Logo", class: "auth-nav-logo" %>
+      <span class="auth-nav-name">Codexys</span>
+    <% end %>
+
+    <div class="auth-top-nav__actions">
+      <%= link_to root_path, class: "btn-editorial btn-editorial--plain" do %>
+        <%= ui_icon "arrow-back-outline" %>
+        <span>Trang chủ</span>
+      <% end %>
+
+      <% if controller_name == "sessions" %>
+        <%= link_to "Tạo tài khoản", new_registration_path(resource_name), class: "btn-editorial btn-editorial--dark" %>
+      <% else %>
+        <%= link_to "Đăng nhập", new_session_path(resource_name), class: "btn-editorial btn-editorial--dark" %>
+      <% end %>
+    </div>
+  </div>
+</header>

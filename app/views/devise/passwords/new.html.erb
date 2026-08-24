@@ -1,22 +1,43 @@
-<% content_for :title, "Quên mật khẩu · Codexys" %>
+<% content_for :title, "Khôi phục mật khẩu · Codexys" %>
 
-<div class="auth-card">
-  <%= link_to root_path, class: "auth-brand" do %>
-    <%= image_tag "codexys/logo.png", alt: "" %>
-    <span>Codexys</span>
-  <% end %>
+<div class="auth-page">
+  <%= render "devise/shared/auth_nav" %>
 
-  <h1>Khôi phục mật khẩu</h1>
-  <p class="auth-card__intro">Nhập email để nhận hướng dẫn đặt lại mật khẩu.</p>
+  <div class="auth-page__body">
+    <div class="auth-page__container">
+      <!-- Form Column -->
+      <div class="auth-box">
+        <div class="auth-box__header">
+          <span class="auth-box__pill">KHÔI PHỤC MẬT KHẨU</span>
+          <h1 class="auth-box__title">Đặt lại mật khẩu.</h1>
+          <p class="auth-box__subtitle">Nhập địa chỉ email để nhận liên kết khôi phục tài khoản an toàn.</p>
+        </div>
 
-  <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |form| %>
-    <%= render "devise/shared/error_messages", resource: resource %>
-    <div class="field">
-      <%= form.label :email, "Email" %>
-      <%= form.email_field :email, autofocus: true, autocomplete: "email" %>
+        <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "auth-form-neo" }) do |form| %>
+          <%= render "devise/shared/error_messages", resource: resource %>
+
+          <div class="auth-input-group">
+            <%= form.label :email, "Email", class: "auth-input-label" %>
+            <%= form.email_field :email,
+              autofocus: true,
+              autocomplete: "email",
+              placeholder: "you@example.com",
+              class: "auth-input-field" %>
+          </div>
+
+          <div class="auth-btn-row">
+            <%= form.submit "Gửi liên kết khôi phục", class: "btn-hero-neo btn-hero-neo--primary btn-hero-neo--full" %>
+          </div>
+        <% end %>
+
+        <div class="auth-box__footer">
+          <span>Nhớ mật khẩu?</span>
+          <%= link_to "Quay lại Đăng nhập", new_session_path(resource_name), class: "auth-link-bold" %>
+        </div>
+      </div>
+
+      <!-- Animated Orbit Showcase Column -->
+      <%= render "devise/shared/auth_orbit" %>
     </div>
-    <div class="actions"><%= form.submit "Gửi hướng dẫn", class: "button button--primary" %></div>
-  <% end %>
-
-  <%= render "devise/shared/links" %>
+  </div>
 </div>

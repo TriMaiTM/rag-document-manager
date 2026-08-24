@@ -3615,82 +3615,293 @@ a.account-settings-nav__item:hover {
   }
 }
 
+/* ==========================================================================
+   11. Unified White/Dark Auth Experience (Matches Landing Design System)
+   ========================================================================== */
 .auth-shell {
-  display: grid;
   min-height: 100dvh;
-  place-items: center;
-  padding: 38px 20px;
-  background:
-    radial-gradient(circle at top left, rgb(206 223 240 / 70%), transparent 35%),
-    radial-gradient(circle at bottom right, rgb(176 204 241 / 38%), transparent 30%),
-    var(--ui-bg);
+  width: 100%;
+  background: #ffffff;
+  padding: 0;
+  display: block;
 }
 
-.auth-card {
-  width: min(100%, 440px);
-  padding: 28px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-lg);
-  background: var(--ui-surface);
-  box-shadow: var(--ui-shadow-md);
+.auth-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
 }
 
-.auth-brand {
+/* Top Navigation */
+.auth-top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgb(255 255 255 / 85%);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.auth-top-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 16px 24px;
+}
+
+.auth-nav-brand {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 28px;
-  color: var(--ui-text);
-  font-size: 17px;
-  font-weight: 700;
+  gap: 7px;
+  text-decoration: none;
 }
 
-.auth-brand img {
-  width: 31px;
-  height: 24px;
+.auth-nav-logo {
+  height: 32px;
+  width: auto;
+  max-width: 36px;
+  display: block;
   object-fit: contain;
 }
 
-.auth-card h1 {
-  margin-bottom: 8px;
-  font-size: 24px;
-  letter-spacing: -0.025em;
+.auth-nav-name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: #0f172a;
+  line-height: 1;
 }
 
-.auth-card__intro {
-  margin-bottom: 22px;
-  color: var(--ui-muted);
-  font-size: 12px;
-}
-
-.auth-card form {
-  display: grid;
-  gap: 15px;
-}
-
-.auth-card .actions input {
-  width: 100%;
-}
-
-.auth-links {
+.auth-top-nav__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px 12px;
-  margin-top: 18px;
-  color: var(--ui-primary-dark);
-  font-size: 11px;
+  align-items: center;
+  gap: 12px;
 }
 
-.auth-links a:hover,
-.auth-back:hover {
+/* Main Body & Container */
+.auth-page__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 72px;
+}
+
+.auth-page__container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(360px, 440px) 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+/* Left Form Box */
+.auth-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-box__header {
+  margin-bottom: 28px;
+}
+
+.auth-box__pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.auth-box__title {
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: #0f172a;
+  margin: 0 0 10px;
+}
+
+.auth-box__subtitle {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #64748b;
+  margin: 0;
+}
+
+.auth-form-neo {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-input-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-input-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.auth-link-subtle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.auth-link-subtle:hover {
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
-.auth-back {
-  display: inline-block;
-  margin-top: 18px;
-  color: var(--ui-muted);
-  font-size: 10px;
+.auth-input-field {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.auth-input-field:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.auth-input-field::placeholder {
+  color: #94a3b8;
+}
+
+.auth-checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.auth-checkbox-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+}
+
+.auth-checkbox-input {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1.5px solid #cbd5e1;
+  cursor: pointer;
+  accent-color: #0f172a;
+}
+
+.auth-btn-row {
+  margin-top: 6px;
+}
+
+.btn-hero-neo--full {
+  width: 100%;
+  padding: 13px 24px;
+  font-size: 15px;
+}
+
+.auth-box__footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+.auth-link-bold {
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.auth-link-bold:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Super-Large Frameless 3D Mascot Artwork (Cline Interactive 3D Experience)
+   ========================================================================== */
+.auth-ambient-orbit {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: visible;
+}
+
+.ambient-orbit-stage {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  height: 540px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  user-select: none;
+}
+
+.ambient-orbit-stage pre {
+  margin: 0;
+  padding: 0;
+  font-family: "Courier New", Courier, monospace !important;
+  font-weight: 700;
+  line-height: 1 !important;
+  letter-spacing: -0.02em;
+  user-select: none;
+  cursor: grab;
+}
+
+.ambient-orbit-stage pre:active {
+  cursor: grabbing;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .auth-page__container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .auth-ambient-orbit {
+    display: none;
+  }
 }
 
 /* Responsive */
