@@ -7,6 +7,7 @@ class OnboardingControllerTest < ActionDispatch::IntegrationTest
       password: "password123",
       password_confirmation: "password123"
     )
+    @user.confirm
   end
 
   test "redirects existing user with workspace away from onboarding" do

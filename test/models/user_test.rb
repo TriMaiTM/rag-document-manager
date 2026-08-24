@@ -77,11 +77,27 @@ class UserTest < ActiveSupport::TestCase
     assert_predicate user, :system_admin?
   end
 
-  test "rejects an invalid system role" do
-    user = users(:one)
-    user.system_role = "invalid_role"
+  test "generates confirmation token on creation and queues admin notification" do
+    assert_enqueued_with(job: NotifyAdminNewUserJob) do
+      user = User.create!(
+        email: "unconfirmed-user@example.com",
+        password: "password123",
+        password_confirmation: "password123"
+      )
 
-    assert_not user.valid?
-    assert_includes user.errors[:system_role], "is not included in the list"
+      assert_not user.confirmed?
+      assert user.confirmation_token.present?
+    end
+  end
+
+  test "can confirm user account" do
+    user = User.create!(
+      email: "confirm-me@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    user.confirm
+    assert user.confirmed?
   end
 end

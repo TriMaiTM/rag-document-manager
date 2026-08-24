@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
-    :recoverable, :rememberable, :validatable
+    :recoverable, :rememberable, :validatable, :confirmable
 
   has_one_attached :avatar
 
@@ -20,7 +20,20 @@ class User < ApplicationRecord
 
   validates :name, length: { maximum: 100 }, allow_blank: true
 
+  after_commit :notify_admin_on_registration, on: :create
+
   def display_name
     name.presence || email.split("@").first
+  end
+
+  # Send Devise emails (confirmations, password resets) asynchronously via ActiveJob
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
+
+  private
+
+  def notify_admin_on_registration
+    NotifyAdminNewUserJob.perform_later(id)
   end
 end

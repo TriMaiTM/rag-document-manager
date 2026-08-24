@@ -1,0 +1,27 @@
+<h1 class="email-title">Chào mừng bạn đến với <%= @workspace.name %></h1>
+
+<p>
+  Xin chào <strong><%= @user.display_name %></strong>,
+</p>
+
+<p>
+  Bạn vừa được thêm vào workspace <strong><%= @workspace.name %></strong> trên nền tảng Codexys với vai trò:
+  <span style="display: inline-block; background-color: #f1f5f9; color: #09090b; font-weight: 700; padding: 2px 10px; border-radius: 9999px; margin-left: 4px; font-size: 13px;">
+    <%= @membership.role.upcase %>
+  </span>
+</p>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+  <p style="margin: 0 0 8px 0; font-size: 14px; color: #64748b; font-weight: 600;">Mô tả không gian làm việc:</p>
+  <p style="margin: 0; font-size: 14px; color: #09090b;">
+    <%= @workspace.description.presence || "Không có mô tả chi tiết." %>
+  </p>
+</div>
+
+<div style="text-align: center; margin: 32px 0;">
+  <%= link_to "Truy cập Workspace ngay →", workspace_url(@workspace), class: "email-btn" %>
+</div>
+
+<p style="color: #64748b; font-size: 13px;">
+  Tại workspace này, bạn có thể xem các tài liệu nội bộ, hỏi đáp cùng trợ lý AI và cộng tác cùng các thành viên khác.
+</p>

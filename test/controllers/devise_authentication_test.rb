@@ -45,7 +45,7 @@ class DeviseAuthenticationTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
-  test "registers a new user" do
+  test "registers a new user and requires email confirmation" do
     assert_difference("User.count", 1) do
       post user_registration_path, params: {
         user: {
@@ -59,7 +59,12 @@ class DeviseAuthenticationTest < ActionDispatch::IntegrationTest
     user = User.find_by!(email: "new-user@example.com")
 
     assert user.valid_password?("password")
-    assert_redirected_to onboarding_path
+    assert_not user.confirmed?
+    assert_redirected_to root_path
+
+    # User confirms email via token
+    get user_confirmation_path(confirmation_token: user.confirmation_token)
+    assert user.reload.confirmed?
   end
 
   test "sends password reset instructions" do

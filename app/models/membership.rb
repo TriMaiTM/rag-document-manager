@@ -22,7 +22,17 @@ class Membership < ApplicationRecord
 
   before_destroy :keep_workspace_owner
 
+  after_create_commit :send_membership_notifications
+
   private
+
+  def send_membership_notifications
+    # Send welcome email to the newly joined user
+    WorkspaceMailer.with(membership: self).welcome_member.deliver_later
+
+    # Send join notification to other workspace admins/owners (unless owner initializing workspace)
+    WorkspaceMailer.with(membership: self).member_joined.deliver_later unless owner?
+  end
 
   def assign_sidebar_position
     return unless user

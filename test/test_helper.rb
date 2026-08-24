@@ -5,6 +5,9 @@ require_relative "test_helpers/session_test_helper"
 
 module ActiveSupport
   class TestCase
+    include ActiveJob::TestHelper
+    include ActionMailer::TestHelper
+
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
 

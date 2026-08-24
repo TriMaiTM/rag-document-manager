@@ -1,0 +1,25 @@
+<h1 class="email-title">Xác thực tài khoản của bạn</h1>
+
+<p>
+  Chào mừng bạn đến với <strong>Codexys</strong>! Cảm ơn bạn đã đăng ký tài khoản (<code><%= @email %></code>).
+</p>
+
+<p>
+  Để hoàn tất đăng ký và bắt đầu tải lên tài liệu, xây dựng cơ sở tri thức và hội thoại RAG AI, vui lòng bấm vào nút xác nhận bên dưới:
+</p>
+
+<div style="text-align: center; margin: 32px 0;">
+  <%= link_to "Xác nhận tài khoản ngay →", confirmation_url(@resource, confirmation_token: @token), class: "email-btn" %>
+</div>
+
+<p style="font-size: 13px; color: #64748b; margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+  Nếu nút bấm phía trên không hoạt động, bạn có thể sao chép và dán trực tiếp đường dẫn sau vào trình duyệt:
+  <br>
+  <a href="<%= confirmation_url(@resource, confirmation_token: @token) %>" style="color: #2563eb; word-break: break-all; font-size: 12px;">
+    <%= confirmation_url(@resource, confirmation_token: @token) %>
+  </a>
+</p>
+
+<p style="font-size: 13px; color: #94a3b8; margin-top: 16px;">
+  Nếu bạn không thực hiện yêu cầu đăng ký này, vui lòng bỏ qua email này. Tài khoản sẽ không được kích hoạt nếu chưa xác nhận.
+</p>

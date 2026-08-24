@@ -1,0 +1,38 @@
+<h1 class="email-title">Thông báo: Người dùng mới đăng ký</h1>
+
+<p>
+  Hệ thống <strong>Codexys</strong> vừa ghi nhận một lượt đăng ký tài khoản mới với thông tin chi tiết như sau:
+</p>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; width: 140px; font-weight: 600;">ID Người dùng:</td>
+      <td style="padding: 6px 0; color: #09090b; font-family: monospace;">#<%= @user.id %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Email:</td>
+      <td style="padding: 6px 0; color: #09090b; font-weight: 700;"><%= @user.email %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Tên hiển thị:</td>
+      <td style="padding: 6px 0; color: #09090b;"><%= @user.display_name %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Thời gian đăng ký:</td>
+      <td style="padding: 6px 0; color: #09090b;"><%= Time.current.strftime("%H:%M:%S ngày %d/%m/%Y") %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Trạng thái:</td>
+      <td style="padding: 6px 0;">
+        <span style="display: inline-block; background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">
+          Chờ xác thực Email
+        </span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p style="color: #64748b; font-size: 13px;">
+  Email này được gửi tự động tới các tài khoản có quyền System Admin hoặc email quản trị hệ thống.
+</p>

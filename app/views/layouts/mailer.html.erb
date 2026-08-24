@@ -1,13 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codexys</title>
     <style>
-      /* Email styles need to be inline */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: #09090b;
+        -webkit-font-smoothing: antialiased;
+      }
+      .email-wrapper {
+        width: 100%;
+        background-color: #f8fafc;
+        padding: 40px 0;
+      }
+      .email-container {
+        max-width: 560px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      }
+      .email-header {
+        padding: 32px 40px 24px 40px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+      }
+      .brand-logo {
+        font-size: 20px;
+        font-weight: 800;
+        color: #09090b;
+        letter-spacing: -0.03em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .brand-badge {
+        font-size: 11px;
+        font-weight: 600;
+        background-color: #f1f5f9;
+        color: #475569;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        margin-left: 8px;
+      }
+      .email-body {
+        padding: 36px 40px;
+        color: #334155;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      .email-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #09090b;
+        margin: 0 0 16px 0;
+        letter-spacing: -0.02em;
+      }
+      .email-btn {
+        display: inline-block;
+        background-color: #09090b;
+        color: #ffffff !important;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 10px;
+        margin: 24px 0;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      }
+      .email-btn:hover {
+        background-color: #27272a;
+      }
+      .email-footer {
+        padding: 24px 40px;
+        background-color: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.5;
+      }
+      .email-footer a {
+        color: #09090b;
+        text-decoration: underline;
+      }
     </style>
   </head>
-
   <body>
-    <%= yield %>
+    <div class="email-wrapper">
+      <div class="email-container">
+        <div class="email-header">
+          <a href="<%= root_url %>" class="brand-logo">
+            ⬡ Codexys
+            <span class="brand-badge">RAG AI</span>
+          </a>
+        </div>
+
+        <div class="email-body">
+          <%= yield %>
+        </div>
+
+        <div class="email-footer">
+          <p style="margin: 0 0 8px 0;">
+            Email này được gửi tự động từ nền tảng <strong>Codexys</strong>.
+          </p>
+          <p style="margin: 0;">
+            Truy cập <a href="<%= root_url %>"><%= root_url.sub(%r{https?://}, '').chomp('/') %></a> để khám phá trợ lý tri thức chuyên sâu.
+          </p>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

@@ -89,4 +89,14 @@ class MembershipTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "enqueues welcome and join notification emails when new member is added" do
+    assert_enqueued_emails 2 do
+      Membership.create!(
+        user: users(:four),
+        workspace: workspaces(:one),
+        role: :member
+      )
+    end
+  end
 end

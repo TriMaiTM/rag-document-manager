@@ -1,0 +1,34 @@
+<h1 class="email-title">Thành viên mới gia nhập Workspace</h1>
+
+<p>
+  Workspace <strong><%= @workspace.name %></strong> của bạn vừa có thêm một thành viên mới:
+</p>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; width: 140px; font-weight: 600;">Thành viên:</td>
+      <td style="padding: 6px 0; color: #09090b; font-weight: 700;"><%= @user.display_name %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Email:</td>
+      <td style="padding: 6px 0; color: #09090b;"><%= @user.email %></td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Vai trò:</td>
+      <td style="padding: 6px 0;">
+        <span style="display: inline-block; background-color: #f1f5f9; color: #09090b; font-weight: 600; padding: 2px 8px; border-radius: 9999px; font-size: 12px;">
+          <%= @membership.role.upcase %>
+        </span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div style="text-align: center; margin: 32px 0;">
+  <%= link_to "Quản lý thành viên Workspace →", workspace_url(@workspace), class: "email-btn" %>
+</div>
+
+<p style="color: #64748b; font-size: 13px;">
+  Email này được gửi tự động tới Ban quản trị (Owner/Admin) của workspace <%= @workspace.name %>.
+</p>
