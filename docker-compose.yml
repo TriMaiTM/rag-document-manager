@@ -31,4 +31,9 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - SMTP_DOMAIN=${SMTP_DOMAIN}
       - MAILER_DEFAULT_FROM=${MAILER_DEFAULT_FROM}  
+      - STORAGE_PATH=/rails/storage/thruster
+    volumes:
+      - thruster_storage:/rails/storage/thruster
     restart: always
+volumes:
+  thruster_storage:
