@@ -129,7 +129,7 @@ export default class extends Controller {
     // Load Cline DAE Model
     const loader = new THREE.ColladaLoader()
     loader.load(
-      "/assets/3d/cline.dae",
+      "/3d/cline.dae",
       (collada) => {
         if (this.isCleanedUp) return
         const model = collada.scene
