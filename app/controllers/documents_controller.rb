@@ -35,21 +35,77 @@ class DocumentsController < ApplicationController
     candidate = document_context
     authorize candidate
 
-    @document = Documents::Upload.new(
-      workspace: @workspace,
-      uploaded_by: Current.user,
-      attributes: document_params
-    ).call
+    # Support multiple files as well as single file
+    raw_files = params.dig(:document, :files)
+    files = Array(raw_files).compact_blank
+    single_file = params.dig(:document, :file)
+    files << single_file if single_file.present? && !files.include?(single_file)
 
-    if @document.persisted?
-      enqueue_processing(@document)
+    if files.blank?
+      @document = candidate
+      @document.errors.add(:file, "vui lòng chọn ít nhất một tệp PDF")
+      @document_context = @document
+      render :new, status: :unprocessable_entity and return
+    end
 
-      redirect_to workspace_document_path(
-        @workspace,
-        @document
-      ), notice: "Tài liệu đã được tải lên thành công."
+    if files.size > 1
+      # Multiple files upload flow
+      successes = []
+      failures = []
+
+      files.each do |file|
+        derived_title = File.basename(file.original_filename, ".*").tr("_-", " ").strip
+        derived_title = "Tài liệu không tên" if derived_title.blank?
+
+        doc = Documents::Upload.new(
+          workspace: @workspace,
+          uploaded_by: Current.user,
+          attributes: { title: derived_title, file: file }
+        ).call
+
+        if doc.persisted?
+          enqueue_processing(doc)
+          successes << doc
+        else
+          error_msg = doc.errors.full_messages.to_sentence
+          failures << "#{file.original_filename} (#{error_msg})"
+        end
+      end
+
+      if failures.empty?
+        redirect_to workspace_documents_path(@workspace),
+          notice: "Đã tải lên thành công #{successes.size} tài liệu."
+      elsif successes.any?
+        redirect_to workspace_documents_path(@workspace),
+          alert: "Đã tải lên #{successes.size} tài liệu thành công. Có #{failures.size} tệp lỗi: #{failures.join(', ')}."
+      else
+        @document = candidate
+        @document_context = @document
+        flash.now[:alert] = "Tải tài liệu thất bại: #{failures.join(', ')}."
+        render :new, status: :unprocessable_entity
+      end
     else
-      render :new, status: :unprocessable_entity
+      # Single file upload flow
+      file = files.first
+      custom_title = params.dig(:document, :title).presence || File.basename(file.original_filename, ".*").tr("_-", " ").strip
+
+      @document = Documents::Upload.new(
+        workspace: @workspace,
+        uploaded_by: Current.user,
+        attributes: { title: custom_title, file: file }
+      ).call
+
+      if @document.persisted?
+        enqueue_processing(@document)
+
+        redirect_to workspace_document_path(
+          @workspace,
+          @document
+        ), notice: "Tài liệu đã được tải lên thành công."
+      else
+        @document_context = @document
+        render :new, status: :unprocessable_entity
+      end
     end
   end
 
@@ -131,6 +187,6 @@ class DocumentsController < ApplicationController
   end
 
   def document_params
-    params.expect(document: [ :title, :file ])
+    params.fetch(:document, {}).permit(:title, :file, files: [])
   end
 end

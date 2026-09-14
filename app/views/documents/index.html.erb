@@ -5,17 +5,11 @@
 
   <div class="settings-content settings-content--wide">
     <section class="settings-section">
-      <header class="settings-section__header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+      <header class="settings-section__header" style="margin-bottom: 1.5rem;">
         <div>
           <h1 id="documents-title" style="font-size: 1.5rem; font-weight: 700; color: var(--ui-text); margin-bottom: 0.25rem;">Tài liệu</h1>
           <p style="font-size: 0.875rem; color: var(--ui-muted); margin: 0;">Trong <%= @workspace.name %></p>
         </div>
-
-        <% if policy(@document_context).create? %>
-          <%= link_to "Tải tài liệu lên",
-            new_workspace_document_path(@workspace),
-            class: "button button--secondary button--compact" %>
-        <% end %>
       </header>
 
       <div class="resource-list" id="documents">
@@ -52,22 +46,36 @@
       </div>
 
       <% if policy(@document_context).create? %>
-        <%= form_with model: [ @workspace, @document_context ], class: "upload-zone", style: "margin-top: 1.5rem;" do |form| %>
+        <%= form_with model: [ @workspace, @document_context ],
+                      class: "upload-zone",
+                      style: "margin-top: 1.5rem;",
+                      data: { controller: "file-upload" } do |form| %>
           <div class="upload-zone__inner">
             <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
-            <strong>Nhấn để tải lên hoặc kéo và thả</strong>
-            <p>Hỗ trợ tệp PDF tối đa 20 MB và <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang</p>
-            <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
-            <%= form.text_field :title,
+            <strong>Nhấn để tải lên hoặc kéo và thả nhiều tệp</strong>
+            <p>Hỗ trợ tệp PDF tối đa 20 MB và <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang mỗi tệp</p>
+
+            <div class="upload-title-container" data-file-upload-target="titleContainer">
+              <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
+              <%= form.text_field :title,
+                maxlength: 200,
+                class: "upload-title-field",
+                placeholder: "Tên tài liệu (để trống sẽ tự lấy theo tên tệp)",
+                data: { file_upload_target: "titleInput" } %>
+            </div>
+
+            <div class="selected-files-preview" data-file-upload-target="fileList" style="display: none;"></div>
+
+            <%= form.label :files, "Tệp PDF", class: "visually-hidden" %>
+            <%= form.file_field :files,
+              multiple: true,
               required: true,
-              maxlength: 200,
-              class: "upload-title-field",
-              placeholder: "Tên tài liệu" %>
-            <%= form.label :file, "Tệp PDF", class: "visually-hidden" %>
-            <%= form.file_field :file,
-              required: true,
-              accept: "application/pdf,.pdf" %>
-            <%= form.submit "Tải lên và xử lý", class: "button button--primary" %>
+              accept: "application/pdf,.pdf",
+              data: { file_upload_target: "input", action: "change->file-upload#filesChanged" } %>
+
+            <%= form.submit "Tải lên và xử lý",
+              class: "button button--primary",
+              data: { file_upload_target: "submitBtn" } %>
           </div>
         <% end %>
       <% end %>

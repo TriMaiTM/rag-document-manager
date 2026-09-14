@@ -1,0 +1,292 @@
+<% content_for :title, "Đánh giá Benchmark RAG · Admin · Codexys" %>
+
+<section class="settings-page">
+  <%= render "admin/tabs" %>
+
+  <div class="settings-content settings-content--wide">
+    <section class="settings-section">
+      <header class="settings-section__header">
+        <h1 style="display: flex; align-items: center; gap: 10px; margin: 0;">
+          <span>Đánh giá Benchmark Thực nghiệm</span>
+        </h1>
+      </header>
+
+      <!-- 1. Form Điều Khiển Thực Thi Benchmark -->
+      <div class="benchmark-console-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap;">
+          <h2 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>Cấu hình & Chạy Đánh Giá Mới</span>
+          </h2>
+          <% if @selected_report.present? %>
+            <div>
+              <%= link_to admin_evaluation_path(id: @selected_report["filename"].sub(/\.json\z/, ""), format: :json),
+                class: "button button--secondary",
+                style: "display: inline-flex; align-items: center; gap: 6px;" do %>
+                <%= ui_icon "download-outline" %>
+                <span>Tải Báo Cáo JSON</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <% if @dataset_exists && @dataset_cases.any? %>
+          <%= form_with url: admin_evaluations_path, method: :post, class: "form-stack", local: true do |f| %>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; align-items: flex-end;">
+              <div>
+                <label for="workspace_id" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                  Chọn Workspace
+                </label>
+                <%= f.select :workspace_id,
+                  options_for_select(@workspaces.map { |w| ["#{w.name} (#{w.documents.completed.count} tài liệu)", w.id] }, @selected_report&.dig("workspace_id")),
+                  {},
+                  class: "onboarding-input",
+                  style: "width: 100%; height: 42px; min-height: 42px; padding: 0 12px; font-size: 14px; box-sizing: border-box; display: block;" %>
+              </div>
+
+              <div>
+                <label for="k" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                  Số lượng Chunks truy xuất ($K$)
+                </label>
+                <%= f.select :k,
+                  options_for_select([["Top 3 Chunks", 3], ["Top 5 Chunks (Mặc định)", 5], ["Top 8 Chunks", 8], ["Top 10 Chunks", 10]], @selected_report&.dig("limit") || @default_k),
+                  {},
+                  class: "onboarding-input",
+                  style: "width: 100%; height: 42px; min-height: 42px; padding: 0 12px; font-size: 14px; box-sizing: border-box; display: block;" %>
+              </div>
+
+              <div>
+                <label for="max_cosine_distance" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155;">
+                  Ngưỡng Cosine Distance tối đa
+                </label>
+                <%= f.select :max_cosine_distance,
+                  options_for_select([
+                    ["0.35 (Chặt chẽ - Chống ảo giác cao)", 0.35],
+                    ["0.40 (Khuyến nghị chuẩn Baseline)", 0.40],
+                    ["0.50 (Mở rộng phạm vi)", 0.50],
+                    ["0.65 (Không lọc khoảng cách)", 0.65]
+                  ], @selected_report&.dig("max_cosine_distance") || @default_max_distance),
+                  {},
+                  class: "onboarding-input",
+                  style: "width: 100%; height: 42px; min-height: 42px; padding: 0 12px; font-size: 14px; box-sizing: border-box; display: block;" %>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; visibility: hidden;" aria-hidden="true">&nbsp;</label>
+                <button type="submit" class="button button--primary" style="width: 100%; height: 42px; min-height: 42px; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; box-sizing: border-box; margin: 0;">
+                  <span>Chạy Benchmark Ngay</span>
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: #64748b;">
+              <span>
+                <strong>Tập dữ liệu Ground Truth:</strong> <code>config/rag_evaluation.yml</code> (<%= @dataset_cases.size %> câu hỏi kiểm thử đối soát)
+              </span>
+              <span>
+                <strong>Ước tính:</strong> <%= @dataset_cases.size %> Embedding API calls (0 Generation tokens)
+              </span>
+            </div>
+          <% end %>
+        <% else %>
+          <div style="padding: 16px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; color: #9f1239; font-size: 0.9rem;">
+            <strong>Chưa sẵn sàng:</strong> Không tìm thấy tệp <code>config/rag_evaluation.yml</code> hoặc tập dữ liệu rỗng. Vui lòng kiểm tra lại cấu hình.
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 2. Thẻ Chỉ Số KPI Thực Nghiệm (Executive Metrics Cards) -->
+      <% if @selected_report.present? %>
+        <div style="margin-bottom: 28px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: #0f172a;">
+              Kết Quả Thực Nghiệm: <%= @selected_report["filename"] %>
+            </h2>
+            <span style="font-size: 0.85rem; color: #64748b;">
+              Workspace ID: <strong><%= @selected_report["workspace_id"] %></strong> | Top K: <strong><%= @selected_report["limit"] %></strong> | Max Distance: <strong><%= @selected_report["max_cosine_distance"] %></strong>
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <!-- KPI 1: Hit Rate -->
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                Hit Rate@<%= @selected_report["limit"] %> (Tỷ lệ tìm trúng)
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 2rem; font-weight: 800; color: <%= (@selected_report["hit_rate"].to_f >= 0.8) ? '#16a34a' : '#dc2626' %>;">
+                  <%= (@selected_report["hit_rate"].to_f * 100).round(1) %>%
+                </span>
+                <span style="font-size: 0.85rem; color: #64748b;">
+                  (<%= @selected_report["hit_count"] %>/<%= @selected_report["answerable_count"] %> câu)
+                </span>
+              </div>
+              <div style="margin-top: 8px;">
+                <% if @selected_report["target_hit_rate_met"] %>
+                  <span class="status-badge status-badge--completed" style="font-size: 0.75rem;">Đạt chỉ tiêu Hội đồng ($\ge 80\%$)</span>
+                <% else %>
+                  <span class="status-badge status-badge--failed" style="font-size: 0.75rem;">Chưa đạt ($\ge 80\%$)</span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- KPI 2: MRR -->
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                MRR@<%= @selected_report["limit"] %> (Điểm Thứ Hạng)
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 2rem; font-weight: 800; color: #2563eb;">
+                  <%= @selected_report["mean_reciprocal_rank"].to_f.round(3) %>
+                </span>
+                <span style="font-size: 0.85rem; color: #64748b;">(Thang 1.000)</span>
+              </div>
+              <div style="margin-top: 8px; font-size: 0.78rem; color: #64748b;">
+                Đo lường mức độ ưu tiên đặt đúng nguồn lên đầu danh sách
+              </div>
+            </div>
+
+            <!-- KPI 3: No-Answer Accuracy -->
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                Chống Ảo Giác (No-Answer)
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 2rem; font-weight: 800; color: <%= (@selected_report['no_answer_accuracy'].to_f >= 0.9) ? '#16a34a' : '#d97706' %>;">
+                  <%= (@selected_report["no_answer_accuracy"].to_f * 100).round(1) %>%
+                </span>
+                <span style="font-size: 0.85rem; color: #64748b;">
+                  (<%= @selected_report["no_answer_correct_count"] %>/<%= @selected_report["unanswerable_count"] %> câu bẫy)
+                </span>
+              </div>
+              <div style="margin-top: 8px; font-size: 0.78rem; color: #64748b;">
+                Tỷ lệ từ chối câu hỏi nằm ngoài tài liệu thành công
+              </div>
+            </div>
+
+            <!-- KPI 4: Latency -->
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                Thời Gian Phản Hồi (Latency)
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 2rem; font-weight: 800; color: #0f172a;">
+                  <%= @selected_report["average_milliseconds"].to_f.round(1) %>
+                </span>
+                <span style="font-size: 0.85rem; color: #64748b;">ms (P95: <%= @selected_report["p95_milliseconds"].to_f.round(1) %> ms)</span>
+              </div>
+              <div style="margin-top: 8px; font-size: 0.78rem; color: #64748b;">
+                pgvector search: <strong><%= @selected_report["average_vector_search_milliseconds"].to_f.round(1) %> ms</strong> (rất nhanh)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Bảng Phân Tích Chi Tiết Từng Câu Hỏi Đối Soát (Detailed Test Cases Table) -->
+        <div style="margin-bottom: 36px;">
+          <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 14px; color: #0f172a;">
+            Bảng Đối Soát Chi Tiết Từng Câu Hỏi (<%= @selected_report["results"]&.size || 0 %> Cases)
+          </h2>
+
+          <div style="overflow-x: auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+              <thead>
+                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #475569;">
+                  <th style="padding: 12px 16px; font-weight: 600;">Mã Case</th>
+                  <th style="padding: 12px 16px; font-weight: 600;">Câu Hỏi Kiểm Thử</th>
+                  <th style="padding: 12px 16px; font-weight: 600; text-align: center;">Trạng Thái</th>
+                  <th style="padding: 12px 16px; font-weight: 600;">Nguồn Kỳ Vọng (Ground Truth)</th>
+                  <th style="padding: 12px 16px; font-weight: 600; text-align: right;">Độ Trễ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@selected_report["results"] || []).each do |case_result| %>
+                  <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 16px; font-weight: 600; font-family: monospace; color: #334155;">
+                      <%= case_result["id"] %>
+                    </td>
+                    <td style="padding: 12px 16px; color: #0f172a; max-width: 320px;">
+                      <%= case_result["question"] %>
+                    </td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                      <% if case_result["error_class"].present? %>
+                        <span class="status-badge status-badge--failed" style="font-size: 0.75rem;">ERROR</span>
+                      <% elsif !case_result["answerable"] %>
+                        <% if case_result["correct"] %>
+                          <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; background: #e0f2fe; color: #0369a1;">NO_ANSWER CORRECT</span>
+                        <% else %>
+                          <span class="status-badge status-badge--failed" style="font-size: 0.75rem;">FALSE POSITIVE</span>
+                        <% end %>
+                      <% elsif case_result["hit"] %>
+                        <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #15803d;">
+                          HIT (Rank <%= case_result["hit_rank"] %>)
+                        </span>
+                      <% else %>
+                        <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; background: #fee2e2; color: #b91c1c;">
+                          MISS
+                        </span>
+                      <% end %>
+                    </td>
+                    <td style="padding: 12px 16px; color: #475569; font-size: 0.82rem;">
+                      <% if case_result["expected_sources"]&.any? %>
+                        <% case_result["expected_sources"].each do |s| %>
+                          <div>• <strong><%= s["document_title"] %></strong> (Trang <%= s["page_number"] || "bất kỳ" %>)</div>
+                        <% end %>
+                      <% else %>
+                        <span style="color: #94a3b8; font-style: italic;">Không có (Câu bẫy)</span>
+                      <% end %>
+                    </td>
+                    <td style="padding: 12px 16px; text-align: right; font-family: monospace; color: #64748b;">
+                      <%= case_result["duration_milliseconds"]&.round(1) %> ms
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- 4. Lịch Sử Các Lần Chạy Benchmark -->
+      <div>
+        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 14px; color: #0f172a;">
+          Lịch Sử Báo Cáo Thực Nghiệm Đã Lưu (<%= @reports.size %> báo cáo)
+        </h2>
+
+        <% if @reports.any? %>
+          <div class="resource-list">
+            <% @reports.each do |rep| %>
+              <div class="resource-row" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px;">
+                <div class="resource-primary">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <strong><%= rep[:filename] %></strong>
+                    <% if rep[:hit_rate] %>
+                      <span class="status-badge <%= (rep[:hit_rate] >= 0.8) ? 'status-badge--completed' : 'status-badge--failed' %>" style="font-size: 0.75rem;">
+                        Hit Rate: <%= (rep[:hit_rate] * 100).round(1) %>%
+                      </span>
+                      <span style="font-size: 0.8rem; color: #64748b;">MRR: <%= rep[:mean_reciprocal_rank]&.round(3) %></span>
+                    <% end %>
+                  </div>
+                  <small style="color: #64748b;">Khởi tạo lúc: <%= rep[:created_at].strftime("%H:%M:%S %d/%m/%Y") %></small>
+                </div>
+                <div class="resource-actions" style="display: flex; gap: 8px;">
+                  <%= link_to admin_evaluations_path(report_id: rep[:filename]), class: "button button--small #{(@selected_report&.dig('filename') == rep[:filename]) ? 'button--primary' : 'button--secondary'}" do %>
+                    <span>Xem Báo Cáo Này</span>
+                  <% end %>
+                  <%= link_to admin_evaluation_path(id: rep[:filename].sub(/\.json\z/, ""), format: :json), class: "button button--small button--secondary" do %>
+                    <%= ui_icon "download-outline" %>
+                    <span>Tải JSON</span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div style="padding: 24px; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+            Chưa có báo cáo thực nghiệm nào được lưu. Hãy chọn Workspace ở trên và bấm <strong>Chạy Benchmark Ngay</strong>.
+          </div>
+        <% end %>
+      </div>
+
+    </section>
+  </div>
+</section>

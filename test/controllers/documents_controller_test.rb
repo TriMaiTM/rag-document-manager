@@ -31,7 +31,7 @@ class DocumentsControllerTest <
     assert_response :success
     assert_select "h1", "Tài liệu"
     assert_select "a", @document.title
-    assert_select "a", "Tải tài liệu lên"
+    assert_select "form.upload-zone", count: 1
     assert_select "[data-controller='document-status']",
       count: 1
   end
@@ -162,6 +162,25 @@ class DocumentsControllerTest <
       @workspace,
       document
     )
+  end
+
+  test "owner uploads multiple PDFs at once" do
+    pdf1 = file_fixture_upload("sample.pdf", "application/pdf")
+    pdf2 = file_fixture_upload("sample_2.pdf", "application/pdf")
+
+    assert_enqueued_jobs 2, only: ProcessDocumentJob do
+      assert_difference("Document.count", 2) do
+        post workspace_documents_url(@workspace),
+          params: {
+            document: {
+              files: [ pdf1, pdf2 ]
+            }
+          }
+      end
+    end
+
+    assert_redirected_to workspace_documents_url(@workspace)
+    assert_match "Đã tải lên thành công 2 tài liệu", flash[:notice]
   end
 
   test "rejects a duplicate PDF without enqueuing processing" do

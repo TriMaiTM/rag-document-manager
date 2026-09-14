@@ -28,5 +28,6 @@ Rails.application.routes.draw do
     resources :workspaces, only: [ :index, :show ]
     resources :settings, only: [ :index, :create, :update ]
     patch "settings", to: "settings#update"
+    resources :evaluations, only: [ :index, :create, :show ], constraints: { id: /[^\/]+/ }
   end
 end

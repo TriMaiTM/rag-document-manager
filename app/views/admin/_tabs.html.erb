@@ -14,4 +14,8 @@
   <%= link_to "Cài đặt & Hệ thống",
     admin_settings_path,
     class: ["settings-tab", ("settings-tab--active" if current_page?(admin_settings_path))] %>
+
+  <%= link_to "Đánh giá Benchmark RAG",
+    admin_evaluations_path,
+    class: ["settings-tab", ("settings-tab--active" if request.path.start_with?("/admin/evaluations"))] %>
 </nav>
