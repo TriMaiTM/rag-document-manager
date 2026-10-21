@@ -11,7 +11,7 @@
           <p style="font-size: 0.875rem; color: var(--ui-muted); margin: 0;"><%= @document.file.filename %></p>
         </div>
 
-        <%= link_to "Tải PDF xuống",
+        <%= link_to (@document.pdf? ? "Tải PDF xuống" : "Tải #{@document.extension.upcase} xuống"),
           download_workspace_document_path(@workspace, @document),
           class: "button button--secondary button--compact" %>
       </header>
@@ -30,7 +30,7 @@
           <dd><%= @document.file.filename %></dd>
           <dt>Dung lượng</dt>
           <dd><%= document_file_size(@document) %></dd>
-          <dt>Số trang</dt>
+          <dt>Số trang / phân đoạn</dt>
           <dd><%= @document.page_count || "Chưa xác định" %></dd>
           <dt>Người tải lên</dt>
           <dd><%= @document.uploaded_by.email %></dd>
@@ -52,22 +52,57 @@
         <section class="surface-card surface-card--spaced" style="margin-bottom: 1.5rem;">
           <header class="surface-card__header">
             <div>
-              <h2>Nội dung PDF</h2>
-              <p>Xem trực tiếp toàn bộ trang tệp PDF trong ứng dụng.</p>
+              <h2>Nội dung tài liệu</h2>
+              <p>Xem trực tiếp nội dung tệp trong ứng dụng.</p>
             </div>
-            <%= link_to rails_blob_path(@document.file, disposition: "inline"), target: "_blank", class: "button button--secondary button--compact", rel: "noopener" do %>
-              <%= ui_icon "open-outline" %>
-              <span>Mở tab mới</span>
+            <% if @document.pdf? %>
+              <%= link_to rails_blob_path(@document.file, disposition: "inline"), target: "_blank", class: "button button--secondary button--compact", rel: "noopener" do %>
+                <%= ui_icon "open-outline" %>
+                <span>Mở tab mới</span>
+              <% end %>
             <% end %>
           </header>
 
-          <div class="pdf-viewer-container">
-            <iframe
-              src="<%= rails_blob_path(@document.file, disposition: "inline") %>"
-              title="<%= @document.title %>"
-              class="pdf-viewer-iframe">
-            </iframe>
-          </div>
+          <% if @document.pdf? %>
+            <div class="pdf-viewer-container">
+              <iframe
+                src="<%= rails_blob_path(@document.file, disposition: "inline") %>"
+                title="<%= @document.title %>"
+                class="pdf-viewer-iframe">
+              </iframe>
+            </div>
+          <% elsif @document.text_based? %>
+            <div class="text-viewer-container" style="background: var(--ui-surface-soft, #f8fafc); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); padding: 1.5rem; max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; color: var(--ui-text);">
+              <%= @document.file.download.force_encoding('UTF-8') %>
+            </div>
+          <% else %>
+            <% docx_data = document_docx_content(@document) %>
+            <div class="docx-preview-box" style="padding: 0.5rem 0; max-height: 560px; overflow-y: auto; font-size: 0.95rem; line-height: 1.8; color: var(--ui-text);">
+              <% if docx_data[:paragraphs].any? || docx_data[:tables].any? %>
+                <% docx_data[:paragraphs].each do |para| %>
+                  <p style="margin-bottom: 1.2rem; text-align: justify; word-break: break-word;"><%= para %></p>
+                <% end %>
+
+                <% if docx_data[:tables].any? %>
+                  <% docx_data[:tables].each do |table| %>
+                    <div style="margin: 1.5rem 0; overflow-x: auto;">
+                      <table style="width: 100%; border-collapse: collapse; border: 1px solid var(--ui-border); font-size: 0.875rem;">
+                        <% table.each_with_index do |row, r_idx| %>
+                          <tr style="<%= r_idx.zero? ? 'background: var(--ui-surface-soft, #f8fafc); font-weight: 600;' : '' %>">
+                            <% row.each do |cell| %>
+                              <td style="border: 1px solid var(--ui-border); padding: 0.6rem 0.75rem;"><%= cell %></td>
+                            <% end %>
+                          </tr>
+                        <% end %>
+                      </table>
+                    </div>
+                  <% end %>
+                <% end %>
+              <% else %>
+                <p style="color: var(--ui-muted); font-style: italic; text-align: center; padding: 2rem;">Tài liệu chưa có nội dung hoặc đang trong hàng đợi xử lý.</p>
+              <% end %>
+            </div>
+          <% end %>
         </section>
       <% end %>
 

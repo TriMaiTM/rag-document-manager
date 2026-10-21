@@ -53,6 +53,49 @@ class DocumentsControllerTest <
     assert_select "dd", "Chưa có"
   end
 
+  test "owner views docx document details" do
+    docx_doc = Document.new(
+      workspace: @workspace,
+      uploaded_by: users(:one),
+      title: "Word Guide"
+    )
+    docx_doc.file.attach(
+      io: file_fixture("sample.docx").open,
+      filename: "sample.docx",
+      content_type: Document::DOCX_CONTENT_TYPE
+    )
+    docx_doc.save!
+
+    get workspace_document_url(@workspace, docx_doc)
+
+    assert_response :success
+    assert_select "h1", "Word Guide"
+    assert_select "a", "Tải DOCX xuống"
+    assert_select ".docx-preview-box", count: 1
+    assert_select ".docx-viewer-body p", text: /Codexys Word Document Test/
+  end
+
+  test "owner views text document details" do
+    txt_doc = Document.new(
+      workspace: @workspace,
+      uploaded_by: users(:one),
+      title: "Plain Text Note"
+    )
+    txt_doc.file.attach(
+      io: file_fixture("sample.txt").open,
+      filename: "sample.txt",
+      content_type: "text/plain"
+    )
+    txt_doc.save!
+
+    get workspace_document_url(@workspace, txt_doc)
+
+    assert_response :success
+    assert_select "h1", "Plain Text Note"
+    assert_select "a", "Tải TXT xuống"
+    assert_select ".text-viewer-container", count: 1
+  end
+
   test "shows the page count and a safe processing error" do
     @document.update!(
       status: :failed,
@@ -181,6 +224,26 @@ class DocumentsControllerTest <
 
     assert_redirected_to workspace_documents_url(@workspace)
     assert_match "Đã tải lên thành công 2 tài liệu", flash[:notice]
+  end
+
+  test "owner uploads multiple mixed format documents at once" do
+    pdf = file_fixture_upload("sample.pdf", "application/pdf")
+    docx = file_fixture_upload("sample.docx", Document::DOCX_CONTENT_TYPE)
+    md = file_fixture_upload("sample.md", "text/markdown")
+
+    assert_enqueued_jobs 3, only: ProcessDocumentJob do
+      assert_difference("Document.count", 3) do
+        post workspace_documents_url(@workspace),
+          params: {
+            document: {
+              files: [ pdf, docx, md ]
+            }
+          }
+      end
+    end
+
+    assert_redirected_to workspace_documents_url(@workspace)
+    assert_match "Đã tải lên thành công 3 tài liệu", flash[:notice]
   end
 
   test "rejects a duplicate PDF without enqueuing processing" do

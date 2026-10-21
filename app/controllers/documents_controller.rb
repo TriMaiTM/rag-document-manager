@@ -43,7 +43,7 @@ class DocumentsController < ApplicationController
 
     if files.blank?
       @document = candidate
-      @document.errors.add(:file, "vui lòng chọn ít nhất một tệp PDF")
+      @document.errors.add(:file, "vui lòng chọn ít nhất một tệp tài liệu")
       @document_context = @document
       render :new, status: :unprocessable_entity and return
     end
@@ -114,7 +114,7 @@ class DocumentsController < ApplicationController
 
     send_data @document.file.download,
       filename: @document.file.filename.to_s,
-      type: Document::PDF_CONTENT_TYPE,
+      type: @document.file.content_type || Document::PDF_CONTENT_TYPE,
       disposition: "attachment"
   end
 

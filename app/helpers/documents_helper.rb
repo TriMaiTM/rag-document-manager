@@ -31,4 +31,29 @@ module DocumentsHelper
   def document_lifecycle_time(timestamp)
     timestamp&.strftime("%d/%m/%Y %H:%M:%S") || "Chưa có"
   end
+
+  def document_docx_content(document)
+    return { paragraphs: [], tables: [] } unless document.docx? && document.file.attached?
+
+    document.file.open do |file|
+      doc = Docx::Document.open(file.path)
+      paragraphs = doc.paragraphs.map do |p|
+        p.text.to_s.dup.force_encoding(Encoding::UTF_8).strip
+      end.reject(&:blank?)
+
+      tables = []
+      if doc.respond_to?(:tables) && doc.tables.any?
+        tables = doc.tables.map do |table|
+          table.rows.map do |row|
+            row.cells.map { |c| c.text.to_s.dup.force_encoding(Encoding::UTF_8).strip }
+          end
+        end
+      end
+
+      { paragraphs: paragraphs, tables: tables }
+    end
+  rescue StandardError => _e
+    chunks = document.document_chunks.order(:position).pluck(:content)
+    { paragraphs: chunks, tables: [] }
+  end
 end

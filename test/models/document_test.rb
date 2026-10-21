@@ -47,16 +47,56 @@ class DocumentTest < ActiveSupport::TestCase
       "phải có content type application/pdf"
   end
 
-  test "requires PDF extension" do
+  test "requires valid extension" do
     @document.file.attach(
-      io: StringIO.new("%PDF-1.4"),
-      filename: "document.txt",
-      content_type: "application/pdf"
+      io: StringIO.new("binary content"),
+      filename: "document.exe",
+      content_type: "application/octet-stream"
     )
 
     assert_not @document.valid?
     assert_includes @document.errors[:file],
-      "phải có phần mở rộng .pdf"
+      "phải có phần mở rộng .pdf, .docx, .txt hoặc .md"
+  end
+
+  test "is valid with a DOCX attachment" do
+    @document.file.attach(
+      io: file_fixture("sample.docx").open,
+      filename: "sample.docx",
+      content_type: Document::DOCX_CONTENT_TYPE
+    )
+
+    assert @document.valid?
+    assert @document.docx?
+    assert_not @document.pdf?
+    assert_equal "docx", @document.extension
+  end
+
+  test "is valid with a TXT attachment" do
+    @document.file.attach(
+      io: file_fixture("sample.txt").open,
+      filename: "sample.txt",
+      content_type: "text/plain"
+    )
+
+    assert @document.valid?
+    assert @document.text_based?
+    assert_not @document.pdf?
+    assert_equal "txt", @document.extension
+  end
+
+  test "is valid with a Markdown attachment" do
+    @document.file.attach(
+      io: file_fixture("sample.md").open,
+      filename: "sample.md",
+      content_type: "text/markdown"
+    )
+
+    assert @document.valid?
+    assert @document.markdown?
+    assert @document.text_based?
+    assert_not @document.docx?
+    assert_equal "md", @document.extension
   end
 
   test "rejects files larger than twenty megabytes" do

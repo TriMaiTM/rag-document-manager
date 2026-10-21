@@ -44,6 +44,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 gem "pdf-reader", "~> 2.15"
 gem "rtesseract"
+gem "docx"
 gem "pgvector"
 gem "neighbor"
 gem "aws-sdk-s3", require: false

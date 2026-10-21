@@ -105,6 +105,92 @@ class Documents::ExtractTextTest < ActiveSupport::TestCase
     end
   end
 
+  test "extracts text from a DOCX document" do
+    document = Document.new(
+      workspace: workspaces(:one),
+      uploaded_by: users(:one),
+      title: "DOCX test"
+    )
+    document.file.attach(
+      io: file_fixture("sample.docx").open,
+      filename: "sample.docx",
+      content_type: Document::DOCX_CONTENT_TYPE
+    )
+    document.save!
+    @documents << document
+
+    pages = extract(document)
+
+    assert_not_empty pages
+    assert_equal 1, pages.first.number
+    assert_includes pages.first.text, "Codexys Word Document Test"
+    assert_includes pages.first.text, "quản trị tri thức"
+  end
+
+  test "extracts text from a TXT document" do
+    document = Document.new(
+      workspace: workspaces(:one),
+      uploaded_by: users(:one),
+      title: "TXT test"
+    )
+    document.file.attach(
+      io: file_fixture("sample.txt").open,
+      filename: "sample.txt",
+      content_type: "text/plain"
+    )
+    document.save!
+    @documents << document
+
+    pages = extract(document)
+
+    assert_not_empty pages
+    assert_equal 1, pages.first.number
+    assert_includes pages.first.text, "Codexys Knowledge Hub"
+    assert_includes pages.first.text, "Hệ thống quản lý tài liệu"
+    assert_includes pages.first.text, "Plain Text thuần túy"
+  end
+
+  test "extracts text from a Markdown document" do
+    document = Document.new(
+      workspace: workspaces(:one),
+      uploaded_by: users(:one),
+      title: "MD test"
+    )
+    document.file.attach(
+      io: file_fixture("sample.md").open,
+      filename: "sample.md",
+      content_type: "text/markdown"
+    )
+    document.save!
+    @documents << document
+
+    pages = extract(document)
+
+    assert_not_empty pages
+    assert_equal 1, pages.first.number
+    assert_includes pages.first.text, "# Hướng Dẫn Sử Dụng Codexys"
+    assert_includes pages.first.text, "Hỗ trợ đa định dạng: PDF, Word, Markdown, Text."
+  end
+
+  test "rejects a malformed DOCX file" do
+    document = Document.new(
+      workspace: workspaces(:one),
+      uploaded_by: users(:one),
+      title: "Broken DOCX"
+    )
+    document.file.attach(
+      io: StringIO.new("PK\x03\x04corrupted zip stream"),
+      filename: "broken.docx",
+      content_type: Document::DOCX_CONTENT_TYPE
+    )
+    document.save!
+    @documents << document
+
+    assert_raises(Documents::ExtractText::UnsupportedFormatError) do
+      extract(document)
+    end
+  end
+
   private
 
   def extract(document)

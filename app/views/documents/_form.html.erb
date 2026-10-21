@@ -9,8 +9,7 @@
     <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
     <strong>Nhấn để tải lên hoặc kéo và thả nhiều tệp</strong>
     <p>
-      Chỉ nhận PDF, tối đa 20 MB và không quá
-      <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang mỗi tệp
+      Hỗ trợ tệp PDF, Word (.docx), Markdown (.md), Text (.txt) tối đa 20 MB
     </p>
 
     <div class="upload-title-container" data-file-upload-target="titleContainer">
@@ -25,11 +24,11 @@
 
     <div class="selected-files-preview" data-file-upload-target="fileList" style="display: none;"></div>
 
-    <%= form.label :files, "Tệp PDF", class: "visually-hidden" %>
+    <%= form.label :files, "Tệp tài liệu", class: "visually-hidden" %>
     <%= form.file_field :files,
       multiple: true,
       required: true,
-      accept: "application/pdf,.pdf",
+      accept: "application/pdf,.pdf,.docx,.txt,.md",
       data: { file_upload_target: "input", action: "change->file-upload#filesChanged" } %>
 
     <div class="form-actions">

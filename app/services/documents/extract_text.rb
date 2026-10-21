@@ -1,9 +1,12 @@
 require "pdf-reader"
+require "docx"
+require "zip"
 
 module Documents
   class ExtractText
     class Error < StandardError; end
     class UnsupportedPdfError < Error; end
+    class UnsupportedFormatError < Error; end
     class EmptyTextError < Error; end
     class PageLimitExceededError < Error
       attr_reader :page_count
@@ -12,13 +15,14 @@ module Documents
         @page_count = page_count
 
         super(
-          "PDF có #{page_count} trang, vượt giới hạn " \
+          "Tài liệu có #{page_count} trang, vượt giới hạn " \
             "#{MAX_PAGE_COUNT} trang"
         )
       end
     end
 
     MAX_PAGE_COUNT = 100
+    PAGE_TARGET_CHARS = 3_000
 
     Page = Data.define(:number, :text)
 
@@ -39,6 +43,9 @@ module Documents
       PDF::Reader::UnsupportedFeatureError => error
       raise UnsupportedPdfError,
         "Không thể đọc nội dung PDF: #{error.message}"
+    rescue Zip::Error => error
+      raise UnsupportedFormatError,
+        "Không thể đọc nội dung tệp Word: #{error.message}"
     end
 
     private
@@ -52,6 +59,24 @@ module Documents
     end
 
     def extract_pages(file)
+      case document_extension
+      when "pdf"
+        extract_pdf_pages(file)
+      when "docx"
+        extract_docx_pages(file)
+      when "txt", "md"
+        extract_plain_text_pages(file)
+      else
+        raise UnsupportedFormatError,
+          "Định dạng tệp .#{document_extension} không được hỗ trợ"
+      end
+    end
+
+    def document_extension
+      document.extension.presence || File.extname(document.file.filename.to_s).delete(".").downcase
+    end
+
+    def extract_pdf_pages(file)
       reader = PDF::Reader.new(file)
       validate_page_count!(reader.page_count)
 
@@ -79,6 +104,63 @@ module Documents
       pages
     end
 
+    def extract_docx_pages(file)
+      docx_doc = Docx::Document.open(file.path)
+      paragraphs = docx_doc.paragraphs.map do |p|
+        p.text.to_s.dup.force_encoding(Encoding::UTF_8).strip
+      end.reject(&:empty?)
+      content = paragraphs.join("\n\n")
+
+      if docx_doc.respond_to?(:tables) && docx_doc.tables.any?
+        table_sections = docx_doc.tables.map do |table|
+          table.rows.map do |row|
+            row.cells.map { |c| c.text.to_s.dup.force_encoding(Encoding::UTF_8).strip }.join(" | ")
+          end.join("\n")
+        end.reject(&:empty?)
+
+        content << "\n\n" << table_sections.join("\n\n") if table_sections.any?
+      end
+
+      normalized = normalize(content)
+      pages_from_text(normalized)
+    end
+
+    def extract_plain_text_pages(file)
+      raw_text = file.read.to_s.dup
+      raw_text.force_encoding(Encoding::UTF_8)
+      raw_text.sub!(/\A\xEF\xBB\xBF/, "") # Remove UTF-8 BOM if present
+
+      normalized = normalize(raw_text)
+      pages_from_text(normalized)
+    end
+
+    def pages_from_text(text)
+      return [ Page.new(number: 1, text: text) ] if text.length <= PAGE_TARGET_CHARS
+
+      lines = text.lines
+      pages = []
+      current_page_lines = []
+      current_chars = 0
+
+      lines.each do |line|
+        current_page_lines << line
+        current_chars += line.length
+
+        if current_chars >= PAGE_TARGET_CHARS
+          pages << Page.new(number: pages.size + 1, text: current_page_lines.join.strip)
+          current_page_lines = []
+          current_chars = 0
+        end
+      end
+
+      if current_page_lines.any?
+        pages << Page.new(number: pages.size + 1, text: current_page_lines.join.strip)
+      end
+
+      validate_page_count!(pages.size)
+      pages
+    end
+
     def validate_page_count!(page_count)
       return if page_count <= MAX_PAGE_COUNT
 
@@ -89,17 +171,23 @@ module Documents
       return if pages.any? { |page| page.text.present? }
 
       raise EmptyTextError,
-        "PDF không chứa nội dung văn bản có thể trích xuất"
+        "Tài liệu không chứa nội dung văn bản có thể trích xuất"
     end
 
     def normalize(text)
-      text
-        .encode(
+      str = text.to_s.dup
+      str.force_encoding(Encoding::UTF_8) if str.encoding != Encoding::UTF_8
+
+      unless str.valid_encoding?
+        str = str.encode(
           Encoding::UTF_8,
           invalid: :replace,
           undef: :replace,
           replace: ""
         )
+      end
+
+      str
         .gsub("\r\n", "\n")
         .gsub("\r", "\n")
         .lines

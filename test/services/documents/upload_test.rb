@@ -215,6 +215,92 @@ class Documents::UploadTest < ActiveSupport::TestCase
     uploaded_file&.tempfile&.close!
   end
 
+  test "uploads a valid DOCX file" do
+    uploaded_file = uploaded_fixture(
+      "sample.docx",
+      Document::DOCX_CONTENT_TYPE
+    )
+
+    assert_difference("Document.count", 1) do
+      document = upload(
+        title: "Word Guide",
+        file: uploaded_file
+      )
+
+      assert document.persisted?
+      assert document.docx?
+      assert_equal Document::DOCX_CONTENT_TYPE, document.file.content_type
+    end
+  ensure
+    uploaded_file&.tempfile&.close!
+  end
+
+  test "uploads a valid TXT file" do
+    uploaded_file = uploaded_fixture(
+      "sample.txt",
+      "text/plain"
+    )
+
+    assert_difference("Document.count", 1) do
+      document = upload(
+        title: "Text Note",
+        file: uploaded_file
+      )
+
+      assert document.persisted?
+      assert document.text_based?
+      assert_equal "text/plain", document.file.content_type
+    end
+  ensure
+    uploaded_file&.tempfile&.close!
+  end
+
+  test "uploads a valid Markdown file" do
+    uploaded_file = uploaded_fixture(
+      "sample.md",
+      "text/markdown"
+    )
+
+    assert_difference("Document.count", 1) do
+      document = upload(
+        title: "Markdown Doc",
+        file: uploaded_file
+      )
+
+      assert document.persisted?
+      assert document.markdown?
+      assert_equal "text/markdown", document.file.content_type
+    end
+  ensure
+    uploaded_file&.tempfile&.close!
+  end
+
+  test "rejects an unsupported file type" do
+    tempfile = Tempfile.new([ "bad", ".exe" ])
+    tempfile.binmode
+    tempfile.write("MZ executable header")
+    tempfile.rewind
+
+    uploaded_file = ActionDispatch::Http::UploadedFile.new(
+      tempfile: tempfile,
+      filename: "danger.exe",
+      type: "application/octet-stream"
+    )
+
+    assert_no_difference("Document.count") do
+      document = upload(
+        title: "Executable file",
+        file: uploaded_file
+      )
+
+      assert_not document.persisted?
+      assert_includes document.errors[:file],
+        "không phải là định dạng tệp hợp lệ (chỉ hỗ trợ PDF, Word, Markdown, Text)"
+    end
+  ensure
+    tempfile.close!
+  end
+
   private
 
   def upload(

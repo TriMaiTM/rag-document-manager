@@ -22,10 +22,18 @@ module Documents
       return save_without_file(document) unless file
       return document unless metadata_valid?(document)
 
-      unless actual_pdf?
+      if file_extension == "pdf" && !actual_pdf?
         document.errors.add(
           :file,
           "không phải là tệp PDF hợp lệ"
+        )
+        return document
+      end
+
+      unless valid_document_format?
+        document.errors.add(
+          :file,
+          "không phải là định dạng tệp hợp lệ (chỉ hỗ trợ PDF, Word, Markdown, Text)"
         )
         return document
       end
@@ -95,14 +103,61 @@ module Documents
       rewind_file
     end
 
+    def valid_document_format?
+      return false unless uploaded_file?
+      return false unless Document::ALLOWED_EXTENSIONS.include?(file_extension)
+
+      case file_extension
+      when "pdf"
+        actual_pdf?
+      when "docx"
+        docx_signature?
+      when "txt", "md"
+        valid_text_encoding?
+      else
+        false
+      end
+    rescue IOError, SystemCallError
+      false
+    end
+
+    def file_extension
+      File.extname(file.original_filename.to_s).delete(".").downcase
+    end
+
+    def docx_signature?
+      rewind_file
+      file.tempfile.read(4) == "PK\x03\x04"
+    ensure
+      rewind_file
+    end
+
+    def valid_text_encoding?
+      rewind_file
+      sample = file.tempfile.read(8192) || ""
+      sample.force_encoding(Encoding::UTF_8).valid_encoding?
+    ensure
+      rewind_file
+    end
+
     def attach_file(document)
       rewind_file
 
       document.file.attach(
         io: file.tempfile,
         filename: file.original_filename,
-        content_type: Document::PDF_CONTENT_TYPE
+        content_type: resolved_content_type
       )
+    end
+
+    def resolved_content_type
+      case file_extension
+      when "pdf" then Document::PDF_CONTENT_TYPE
+      when "docx" then Document::DOCX_CONTENT_TYPE
+      when "md" then "text/markdown"
+      when "txt" then "text/plain"
+      else detected_content_type
+      end
     end
 
     def content_sha256

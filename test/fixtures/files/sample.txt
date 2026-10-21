@@ -1,0 +1,4 @@
+Codexys Knowledge Hub
+Hệ thống quản lý tài liệu và hỏi đáp RAG thông minh.
+Tài liệu hỗ trợ định dạng Plain Text thuần túy.
+Cung cấp khả năng tìm kiếm ngữ nghĩa chính xác dựa trên vector embedding.

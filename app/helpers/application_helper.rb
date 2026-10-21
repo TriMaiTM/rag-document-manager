@@ -8,13 +8,14 @@ module ApplicationHelper
       action_name.in?([ "edit", "update" ])
   end
 
-  def ui_icon(name, class_name: nil)
+  def ui_icon(name, class_name: nil, **options)
     content_tag(
       "ion-icon",
       nil,
       name: name,
       class: [ "ui-icon", class_name ].compact,
-      aria: { hidden: true }
+      aria: { hidden: true },
+      **options
     )
   end
 

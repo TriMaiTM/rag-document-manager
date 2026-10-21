@@ -28,9 +28,9 @@
                 <div class="status-badge-slot">
                   <%= render "processing_status", document: document %>
                 </div>
-                <%= link_to workspace_document_path(@workspace, document), class: "button button--secondary doc-preview-btn", title: "Xem nội dung PDF" do %>
+                <%= link_to workspace_document_path(@workspace, document), class: "button button--secondary doc-preview-btn", title: "Xem chi tiết tài liệu" do %>
                   <%= ui_icon "eye-outline" %>
-                  <span>Xem PDF</span>
+                  <span>Xem chi tiết</span>
                 <% end %>
               </div>
             </article>
@@ -39,7 +39,7 @@
           <div class="empty-state">
             <div>
               <h2>Workspace chưa có tài liệu</h2>
-              <p>Tải PDF lên để Codexys trích xuất nội dung, tạo embedding và bắt đầu hỏi đáp.</p>
+              <p>Tải tài liệu lên để Codexys trích xuất nội dung, tạo embedding và bắt đầu hỏi đáp.</p>
             </div>
           </div>
         <% end %>
@@ -53,7 +53,7 @@
           <div class="upload-zone__inner">
             <%= ui_icon "cloud-upload-outline", class_name: "upload-zone__icon" %>
             <strong>Nhấn để tải lên hoặc kéo và thả nhiều tệp</strong>
-            <p>Hỗ trợ tệp PDF tối đa 20 MB và <%= Documents::ExtractText::MAX_PAGE_COUNT %> trang mỗi tệp</p>
+            <p>Hỗ trợ tệp PDF, Word (.docx), Markdown (.md), Text (.txt) tối đa 20 MB</p>
 
             <div class="upload-title-container" data-file-upload-target="titleContainer">
               <%= form.label :title, "Tên tài liệu", class: "visually-hidden" %>
@@ -66,11 +66,11 @@
 
             <div class="selected-files-preview" data-file-upload-target="fileList" style="display: none;"></div>
 
-            <%= form.label :files, "Tệp PDF", class: "visually-hidden" %>
+            <%= form.label :files, "Tệp tài liệu", class: "visually-hidden" %>
             <%= form.file_field :files,
               multiple: true,
               required: true,
-              accept: "application/pdf,.pdf",
+              accept: "application/pdf,.pdf,.docx,.txt,.md",
               data: { file_upload_target: "input", action: "change->file-upload#filesChanged" } %>
 
             <%= form.submit "Tải lên và xử lý",

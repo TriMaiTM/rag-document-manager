@@ -1,6 +1,16 @@
 class Document < ApplicationRecord
   MAX_FILE_SIZE = 20.megabytes
   PDF_CONTENT_TYPE = "application/pdf"
+  DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  TEXT_CONTENT_TYPES = [ "text/plain", "text/markdown", "text/x-markdown" ].freeze
+
+  ALLOWED_CONTENT_TYPES = [
+    PDF_CONTENT_TYPE,
+    DOCX_CONTENT_TYPE,
+    *TEXT_CONTENT_TYPES
+  ].freeze
+
+  ALLOWED_EXTENSIONS = %w[pdf docx txt md].freeze
 
   belongs_to :workspace
   belongs_to :uploaded_by,
@@ -46,9 +56,29 @@ class Document < ApplicationRecord
     allow_nil: true
 
   validate :file_must_be_attached
-  validate :file_must_be_pdf
+  validate :file_must_be_allowed_type
   validate :file_size_must_be_allowed
   validate :lifecycle_timestamps_must_match_status
+
+  def pdf?
+    extension == "pdf"
+  end
+
+  def docx?
+    extension == "docx"
+  end
+
+  def text_based?
+    %w[txt md].include?(extension)
+  end
+
+  def markdown?
+    extension == "md"
+  end
+
+  def extension
+    file.attached? ? file.filename.extension_without_delimiter.to_s.downcase : ""
+  end
 
   private
 
@@ -109,15 +139,34 @@ class Document < ApplicationRecord
     errors.add(:file, "phải được chọn")
   end
 
-  def file_must_be_pdf
+  def file_must_be_allowed_type
     return unless file.attached?
 
-    unless file.blob.content_type == PDF_CONTENT_TYPE
-      errors.add(:file, "phải có content type application/pdf")
+    ext = extension
+    content_type = file.blob.content_type
+
+    unless ALLOWED_EXTENSIONS.include?(ext)
+      errors.add(:file, "phải có phần mở rộng .pdf, .docx, .txt hoặc .md")
+      return
     end
 
-    unless file.filename.extension_without_delimiter.downcase == "pdf"
-      errors.add(:file, "phải có phần mở rộng .pdf")
+    valid_content_type = case ext
+    when "pdf"
+      content_type == PDF_CONTENT_TYPE
+    when "docx"
+      content_type == DOCX_CONTENT_TYPE || content_type == "application/zip"
+    when "txt", "md"
+      TEXT_CONTENT_TYPES.include?(content_type) || content_type == "application/octet-stream"
+    else
+      false
+    end
+
+    unless valid_content_type
+      if ext == "pdf"
+        errors.add(:file, "phải có content type application/pdf")
+      else
+        errors.add(:file, "loại tệp không hợp lệ (#{content_type})")
+      end
     end
   end
 

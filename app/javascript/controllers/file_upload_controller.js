@@ -36,7 +36,7 @@ export default class extends Controller {
         this.fileListTarget.innerHTML = `
           <div class="selected-files-box">
             <div class="selected-file-row">
-              <span class="file-name">📄 ${file.name}</span>
+              <span class="file-name">${this.fileIcon(file.name)} ${file.name}</span>
               <span class="file-size">${this.formatSize(file.size)}</span>
             </div>
           </div>
@@ -56,18 +56,28 @@ export default class extends Controller {
           const f = files[i]
           itemsHtml += `
             <div class="selected-file-row">
-              <span class="file-name">📄 ${f.name}</span>
+              <span class="file-name">${this.fileIcon(f.name)} ${f.name}</span>
               <span class="file-size">${this.formatSize(f.size)}</span>
             </div>
           `
         }
         this.fileListTarget.innerHTML = `
           <div class="selected-files-box">
-            <div class="selected-files-summary">Đã chọn <strong>${files.length}</strong> tệp PDF (Tên tài liệu sẽ tạo tự động):</div>
+            <div class="selected-files-summary">Đã chọn <strong>${files.length}</strong> tệp tài liệu (Tên tài liệu sẽ tạo tự động):</div>
             <div class="selected-files-scroll">${itemsHtml}</div>
           </div>
         `
       }
+    }
+  }
+
+  fileIcon(filename) {
+    const ext = filename.split(".").pop().toLowerCase()
+    switch (ext) {
+      case "pdf": return "📕"
+      case "docx": return "📘"
+      case "md": return "📑"
+      default: return "📄"
     }
   }
 
